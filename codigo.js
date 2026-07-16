@@ -1,4 +1,4 @@
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/+esm';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/+esm';
 
   const SUPABASE_URL = 'https://wrtmlucrxzewynnnikzh.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_qJcUe3t_K5Yl0m7lkV3C_A_5bcdtOFs';
@@ -36,6 +36,8 @@
   ];
   let currentTemario = [...temarioEmbebido];
   let chartTiempo, chartRadar, chartEvolucion, chartSueno;
+  // NUEVO: Variables para los gráficos de análisis por materia
+  let chartFaseLinea, chartMejoraBarras, chartRadarMateria;
 
   function actualizarUI(s) {
     sessionActual = s;
@@ -526,9 +528,7 @@
         wrap.querySelectorAll('[data-del-sueno]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.delSueno;
-        // 1. Eliminar localmente
         await db.sueno.delete(id);
-        // 2. Eliminar directamente en Supabase
         const { error } = await supabase.from('sueno').delete().eq('id', id);
         if (error) {
           console.error('Error al eliminar en Supabase:', error);
@@ -536,7 +536,6 @@
         } else {
           showToast('Sueño eliminado ✅');
         }
-        // 3. Refrescar vistas
         actualizarSleepHistorial();
         actualizarGraficoSueno();
       });
@@ -673,6 +672,287 @@
     actualizarChecklist(); actualizarMetas();
   }
 
+  // ==================== NUEVO: ANÁLISIS POR MATERIA (Niveles 1-4) ====================
+
+  // Filtro de materia
+  let materiaFiltro = 'todas';
+  document.getElementById('filtroMateriaMetricas').addEventListener('change', async function() {
+    materiaFiltro = this.value;
+    await actualizarMetricasAvanzadas();
+  });
+
+  // Poblar el selector de materia del radar (y del filtro)
+  async function poblarSelectoresMateria() {
+    // Para el filtro general
+    const selFiltro = document.getElementById('filtroMateriaMetricas');
+    const mats = await obtenerMateriasUnicas();
+    selFiltro.innerHTML = '<option value="todas">Todas</option>';
+    mats.forEach(m => { selFiltro.innerHTML += `<option value="${m}">${m}</option>`; });
+    // Para el radar
+    const selRadar = document.getElementById('selMateriaRadar');
+    selRadar.innerHTML = '';
+    mats.forEach(m => { selRadar.innerHTML += `<option value="${m}">${m}</option>`; });
+    selRadar.addEventListener('change', () => actualizarRadarMateria());
+  }
+
+  async function obtenerMateriasUnicas() {
+    const problemas = await db.sessions.where('tipo').equals('problema').toArray();
+    return [...new Set(problemas.map(p => p.materia).filter(Boolean))].sort();
+  }
+
+  // Obtener problemas filtrados por materia (si materiaFiltro != 'todas')
+  async function getProblemasFiltrados() {
+    let problemas = await db.sessions.where('tipo').equals('problema').toArray();
+    if (materiaFiltro !== 'todas') {
+      problemas = problemas.filter(p => p.materia === materiaFiltro);
+    }
+    return problemas;
+  }
+
+  // Nivel 1: Evolución de tasa de aciertos por materia y fase
+  async function actualizarChartFaseLinea() {
+    const ctx = document.getElementById('chartFaseLinea')?.getContext('2d');
+    if (!ctx) return;
+    if (chartFaseLinea) chartFaseLinea.destroy();
+
+    const problemas = await getProblemasFiltrados();
+    if (problemas.length === 0) return;
+
+    // Agrupar por materia y luego por fecha (o sesión). Queremos una línea por materia, con puntos coloreados según fase.
+    // Simplificamos: cada línea es una materia. Eje X: orden de sesiones (índice). Y: tasa de aciertos acumulada por sesión o promedio móvil. Pero el texto sugiere evolución temporal con colores por fase, así que mejor un gráfico de dispersión con línea por materia.
+    // Vamos a crear un dataset por materia. Cada punto tiene (índice de sesión, tasa de aciertos de esa sesión). Coloreamos cada punto según fase.
+    // Agrupar problemas por sesion_id y materia.
+    const sesiones = {}; // key: materia|||sesion_id
+    problemas.forEach(p => {
+      const key = p.materia + '|||' + p.sesion_id;
+      if (!sesiones[key]) sesiones[key] = { materia: p.materia, fase: p.fase, fecha: p.fecha, bien: 0, mal: 0 };
+      if (p.resultado === 'bien') sesiones[key].bien++;
+      else if (p.resultado === 'mal') sesiones[key].mal++;
+    });
+
+    // Por cada materia, ordenar sesiones por fecha o timestamp
+    const materias = [...new Set(Object.values(sesiones).map(s => s.materia))];
+    const datasets = [];
+    const coloresFase = { A1: '#5c7cfa', B1: '#3dd6c8', A2: '#ffb347', B2: '#fa5c7c' };
+
+    for (const mat of materias) {
+      const sesionesMat = Object.values(sesiones).filter(s => s.materia === mat).sort((a,b) => a.fecha.localeCompare(b.fecha) || a.sesion_id?.localeCompare(b.sesion_id));
+      const data = sesionesMat.map((s, idx) => {
+        const tasa = s.bien + s.mal > 0 ? Math.round(s.bien / (s.bien + s.mal) * 100) : null;
+        return { x: idx + 1, y: tasa, fase: s.fase, fecha: s.fecha };
+      });
+      datasets.push({
+        label: mat,
+        data: data,
+        backgroundColor: data.map(d => coloresFase[d.fase] || '#ccc'),
+        borderColor: 'gray',
+        showLine: true,
+        lineTension: 0.2,
+        pointRadius: 6,
+        spanGaps: false
+      });
+    }
+
+    chartFaseLinea = new Chart(ctx, {
+      type: 'scatter',
+      data: { datasets },
+      options: {
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: 'Nº de sesión' } },
+          y: { beginAtZero: true, max: 100, title: { display: true, text: 'Tasa aciertos %' } }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const point = ctx.dataset.data[ctx.dataIndex];
+                return `${ctx.dataset.label}: ${point.y}% (${point.fecha}) - Fase ${point.fase}`;
+              }
+            }
+          },
+          legend: { position: 'bottom' }
+        }
+      }
+    });
+  }
+
+  // Nivel 2: Mejora relativa por materia (barras agrupadas)
+  async function actualizarChartMejoraBarras() {
+    const ctx = document.getElementById('chartMejoraBarras')?.getContext('2d');
+    if (!ctx) return;
+    if (chartMejoraBarras) chartMejoraBarras.destroy();
+
+    const problemas = await getProblemasFiltrados();
+    if (problemas.length === 0) return;
+
+    // Calcular tasa de aciertos para cada materia y fase
+    const resumen = {}; // materia: { A1: { bien, mal }, B1: { ... } }
+    problemas.forEach(p => {
+      if (!resumen[p.materia]) resumen[p.materia] = {};
+      if (!resumen[p.materia][p.fase]) resumen[p.materia][p.fase] = { bien: 0, mal: 0 };
+      if (p.resultado === 'bien') resumen[p.materia][p.fase].bien++;
+      else if (p.resultado === 'mal') resumen[p.materia][p.fase].mal++;
+    });
+
+    const materias = Object.keys(resumen);
+    // Fases fijas para comparar: A1 -> B1, A2 -> B2
+    const fasesBase = ['A1','A2'];
+    const fasesComp = ['B1','B2'];
+    const datasets = [];
+    fasesBase.forEach((base, i) => {
+      const comp = fasesComp[i];
+      const data = materias.map(mat => {
+        const b = resumen[mat][base];
+        const c = resumen[mat][comp];
+        if (!b || !c) return null;
+        const tasaBase = b.bien + b.mal > 0 ? b.bien/(b.bien+b.mal)*100 : 0;
+        const tasaComp = c.bien + c.mal > 0 ? c.bien/(c.bien+c.mal)*100 : 0;
+        return tasaComp - tasaBase;
+      });
+      datasets.push({
+        label: `${comp} - ${base} (%)`,
+        data: data,
+        backgroundColor: comp === 'B1' ? 'rgba(61,214,200,0.7)' : 'rgba(250,92,124,0.7)'
+      });
+    });
+
+    chartMejoraBarras = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: materias, datasets },
+      options: {
+        responsive: true,
+        scales: { y: { title: { display: true, text: 'Mejora (% puntos)' } } },
+        plugins: { legend: { position: 'bottom' } }
+      }
+    });
+  }
+
+  // Nivel 3: Radar por materia (un selector para elegir materia)
+  async function actualizarRadarMateria() {
+    const ctx = document.getElementById('chartRadarMateria')?.getContext('2d');
+    if (!ctx) return;
+    if (chartRadarMateria) chartRadarMateria.destroy();
+
+    const materia = document.getElementById('selMateriaRadar').value;
+    if (!materia) return;
+
+    const problemas = await db.sessions.where('tipo').equals('problema').and(p => p.materia === materia).toArray();
+    if (problemas.length === 0) return;
+
+    const total = problemas.length;
+    const bien = problemas.filter(p => p.resultado === 'bien').length;
+    const mal = problemas.filter(p => p.resultado === 'mal').length;
+    const tiempoTotal = problemas.reduce((a, p) => a + (p.tiempo_s || 0), 0);
+    const conjeturas = await db.conjeturas.where('materia').equals(materia).count();
+
+    const velocidad = total ? Math.min(100, Math.round((total/(tiempoTotal/60))*10)) : 0;
+    const precision = bien+mal > 0 ? Math.round(bien/(bien+mal)*100) : 0;
+    const retencion = problemas.filter(p=>p.modo==='B' && p.resultado==='bien').length / (problemas.filter(p=>p.modo==='B').length||1)*100;
+    const consolidacion = total ? problemas.filter(p=>p.modo==='B').length/total*100 : 0;
+    const generacionC = total ? problemas.filter(p=>p.modo==='C').length/total*100 : 0;
+
+    chartRadarMateria = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: ['Velocidad','Precisión','Retención','Consolidación','Generación C'],
+        datasets: [{
+          label: materia,
+          data: [velocidad, precision, retencion, consolidacion, generacionC],
+          backgroundColor: 'rgba(92,124,250,0.2)'
+        }]
+      },
+      options: {
+        scales: { r: { beginAtZero: true, max: 100 } }
+      }
+    });
+  }
+
+  // Nivel 4: Tabla agregada
+  async function actualizarTablaAgregada() {
+    const container = document.getElementById('tablaMetricasAgregadas');
+    const problemas = await getProblemasFiltrados();
+    if (problemas.length === 0) {
+      container.innerHTML = '<p>Sin datos.</p>';
+      return;
+    }
+
+    const fases = ['A1','B1','A2','B2'];
+    // Estructura: { materia: { A1: { ejercicios, correctos, incorrectos, tiempoTotal, bloomTotal, bloomCount, conjeturas } } }
+    const agg = {};
+    problemas.forEach(p => {
+      if (!agg[p.materia]) agg[p.materia] = {};
+      if (!agg[p.materia][p.fase]) agg[p.materia][p.fase] = { ejercicios: 0, correctos: 0, incorrectos: 0, tiempo: 0, bloom: 0, bloomCount: 0 };
+      const faseData = agg[p.materia][p.fase];
+      faseData.ejercicios++;
+      if (p.resultado === 'bien') faseData.correctos++;
+      else if (p.resultado === 'mal') faseData.incorrectos++;
+      faseData.tiempo += (p.tiempo_s || 0);
+      if (p.nivel_bloom) { faseData.bloom += p.nivel_bloom; faseData.bloomCount++; }
+    });
+    // Agregar conjeturas (simplificado: total de conjeturas por materia, no por fase, ya que conjeturas no tienen fase)
+    const conjeturasPorMateria = {};
+    const conjs = await db.conjeturas.toArray();
+    conjs.forEach(c => {
+      if (c.materia) conjeturasPorMateria[c.materia] = (conjeturasPorMateria[c.materia] || 0) + 1;
+    });
+
+    const materias = Object.keys(agg).sort();
+    let html = '<table><thead><tr><th>Materia</th><th>Fase</th><th>Ejercicios</th><th>Tasa Aciertos</th><th>Tiempo Prom (s)</th><th>Bloom Medio</th><th>Conjeturas</th></tr></thead><tbody>';
+    for (const mat of materias) {
+      const conjsMat = conjeturasPorMateria[mat] || 0;
+      for (const fase of fases) {
+        const d = agg[mat][fase];
+        if (!d || d.ejercicios === 0) continue;
+        const tasa = d.correctos + d.incorrectos > 0 ? Math.round(d.correctos/(d.correctos+d.incorrectos)*100) : 0;
+        const tiempoProm = d.ejercicios ? (d.tiempo / d.ejercicios).toFixed(1) : '-';
+        const bloomMedio = d.bloomCount ? (d.bloom / d.bloomCount).toFixed(1) : '-';
+        html += `<tr>
+          <td>${mat}</td><td>${fase}</td><td>${d.ejercicios}</td><td>${tasa}%</td>
+          <td>${tiempoProm}</td><td>${bloomMedio}</td><td>${conjsMat}</td>
+        </tr>`;
+      }
+    }
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  async function actualizarMetricasAvanzadas() {
+    await actualizarChartFaseLinea();
+    await actualizarChartMejoraBarras();
+    // El radar se actualiza solo al cambiar su selector, pero lo refrescamos si hay materia seleccionada
+    if (document.getElementById('selMateriaRadar').value) {
+      await actualizarRadarMateria();
+    }
+    await actualizarTablaAgregada();
+  }
+
+  // Llamada inicial cuando se muestra el panel Métricas
+  // Modificar el listener de pestañas para que también actualice estos gráficos
+  const originalTabNavHandler = document.getElementById('tabNav').onclick;
+  document.getElementById('tabNav').addEventListener('click', async function(e) {
+    if (!e.target.classList.contains('tab-btn')) return;
+    // El código original ya maneja el cambio de paneles, pero añadimos llamada extra para Métricas
+    if (e.target.dataset.panel === 'panelMetricas') {
+      // Esperamos un poco a que el panel esté visible y luego poblamos selectores
+      await poblarSelectoresMateria();
+      await actualizarMetricasAvanzadas();
+    }
+  });
+
+  // También actualizar al cambiar el filtro general (ya está enlazado)
+  // Y al iniciar la app, después del primer sync
+  const originalInitApp = initApp;
+  initApp = async function() {
+    await originalInitApp();
+    await poblarSelectoresMateria();
+    if (document.getElementById('panelMetricas').classList.contains('active')) {
+      await actualizarMetricasAvanzadas();
+    }
+  };
+
+  // ==================== FIN NUEVO ====================
+
   document.getElementById('btnGuardarSueno').addEventListener('click', async () => {
     const fecha = document.getElementById('fechaSueno').value;
     const acostar = document.getElementById('acostarSueno').value;
@@ -731,7 +1011,7 @@
     document.getElementById(e.target.dataset.panel).classList.add('active');
     if(e.target.dataset.panel==='panelHistorial') actualizarHistorial();
     if(e.target.dataset.panel==='panelProgreso') actualizarProgreso();
-    if(e.target.dataset.panel==='panelMetricas') actualizarMetricas();
+    if(e.target.dataset.panel==='panelMetricas') { actualizarMetricas(); /* La llamada a avanzadas se hace en el listener adicional */ }
     if(e.target.dataset.panel==='panelSueno') { actualizarSleepHistorial(); actualizarGraficoSueno(); }
     if(e.target.dataset.panel==='panelConjeturas') actualizarConjeturasFull();
     if(e.target.dataset.panel==='panelChecklist') actualizarChecklist();
