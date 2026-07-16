@@ -867,26 +867,52 @@
       return h * 60 + m;
     });
     chartSuenoInst = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: 'Calidad (1-10)', data: calidadData, borderColor: '#5c7cfa', backgroundColor: 'transparent', yAxisID: 'y', tension: 0.3, pointRadius: 4 },
-          { label: 'Hora acostarse (min)', data: acostarMin, borderColor: '#ffb347', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 },
-          { label: 'Hora despertar (min)', data: despertarMin, borderColor: '#3dd6c8', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 }
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: { type: 'linear', display: true, position: 'left', min: 1, max: 10, title: { display: true, text: 'Calidad (1-10)' } },
-          y1: {
-            type: 'linear', display: true, position: 'right', min: 0, max: 1440, title: { display: true, text: 'Minutos desde medianoche' },
-            ticks: { callback: function(value) { const h = Math.floor(value / 60); const m = value % 60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; } }
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      { label: 'Calidad (1-10)', data: calidadData, borderColor: '#5c7cfa', backgroundColor: 'transparent', yAxisID: 'y', tension: 0.3, pointRadius: 4 },
+      { label: 'Hora acostarse (min)', data: acostarMin, borderColor: '#ffb347', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 },
+      { label: 'Hora despertar (min)', data: despertarMin, borderColor: '#3dd6c8', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: { type: 'linear', display: true, position: 'left', min: 1, max: 10, title: { display: true, text: 'Calidad (1-10)' } },
+      y1: {
+        type: 'linear', display: true, position: 'right', min: 0, max: 1440, title: { display: true, text: 'Minutos desde medianoche' },
+        ticks: {
+          callback: function(value) {
+            const h = Math.floor(value / 60);
+            const m = value % 60;
+            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
           }
         }
       }
-    });
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            let label = context.dataset.label || '';
+            if (label) label += ': ';
+            if (context.dataset.yAxisID === 'y1') {
+              // Es una hora en minutos
+              const mins = context.parsed.y;
+              const h = Math.floor(mins / 60);
+              const m = mins % 60;
+              label += `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+            } else {
+              label += context.parsed.y;
+            }
+            return label;
+          }
+        }
+      }
+    }
+  }
+});
   }
   async function actualizarMetas() {
     const hoy = new Date().toISOString().split('T')[0];
