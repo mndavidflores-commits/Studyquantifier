@@ -1,4 +1,4 @@
-<!-- estudio_v25.html -->
+<!-- estudio_v25.html · COMPLETO Y CORREGIDO -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -92,18 +92,70 @@
       <button class="tab-btn" data-panel="panelMetas">Metas</button>
     </nav>
 
-    <!-- Panel Sesión (sin cambios) -->
+    <!-- Panel Sesión -->
     <div class="panel active" id="panelSesion">
-      <!-- ... mismo contenido de la v24 ... -->
+      <div class="card"><h3>Configuración de la sesión</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div><label>Fase</label><select id="selFase"><option value="A1">A1</option><option value="B1">B1</option><option value="A2">A2</option><option value="B2">B2</option></select></div>
+          <div><label>Modo</label><select id="selModo"><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></div>
+          <div><label>Materia</label><select id="selMateria"></select></div>
+          <div><label>Subtema</label><select id="selSubtema"></select></div>
+        </div>
+        <div id="agregarMateriaRow" style="display:none; margin-top:6px;"><input type="text" id="nuevaMateria" placeholder="Nueva materia"><button id="btnAgregarMateria">Agregar</button></div>
+        <div id="agregarSubtemaRow" style="display:none; margin-top:6px;"><input type="text" id="nuevoSubtema" placeholder="Nuevo subtema"><button id="btnAgregarSubtema">Agregar</button></div>
+      </div>
+      <div class="card"><h3>Pomodoro</h3>
+        <div class="pomo-circle" id="pomoCircle">90:00</div>
+        <div id="pomoStatus" style="text-align:center;">Foco</div>
+        <div class="btn-row" style="justify-content:center;" id="pomoControls">
+          <button class="primary" id="btnPomoStart">Iniciar</button>
+          <button id="btnPomoPause" style="display:none;">Pausar</button>
+          <button id="btnPomoResume" style="display:none;">Reanudar</button>
+          <button id="btnPomoStop" class="danger" style="display:none;">Detener</button>
+          <button id="btnPomoReset" style="display:none;">Reiniciar</button>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
+          <div><label>Foco (min)</label><input type="number" id="pomoWork" value="90" min="1"></div>
+          <div><label>Descanso (min)</label><input type="number" id="pomoBreak" value="20" min="1"></div>
+          <div><label>Lectura</label><div class="btn-row"><button id="btnLecturaStart" class="small action-btn">▶</button><button id="btnLecturaStop" class="small action-btn">⏹</button><span id="lecturaAcumulado" style="font-family:var(--mono);">0:00</span></div></div>
+        </div>
+        <button id="btnDistraje" class="small action-btn" style="margin-top:8px;">Me distraje</button>
+      </div>
+      <div class="card"><h3>Temporizador ciego</h3>
+        <div><label>N.º Problema</label><input type="number" id="numProblema" value="1" min="1"></div>
+        <div class="timer-display blind" id="timerDisplay">00:00.0</div>
+        <div id="timerLabel" style="text-align:center;">En pausa</div>
+        <div class="btn-row" style="justify-content:center;" id="timerControls">
+          <button class="primary" id="btnStartTimer">Iniciar</button>
+          <button id="btnStopTimer" disabled>Detener</button>
+        </div>
+      </div>
+      <div class="card" id="cardResultado" style="display:none;"><h3>Resultado</h3>
+        <div id="tiempoMostrado" style="font-family:monospace;"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div><label>Resultado</label><div class="toggle-group" id="toggleResultado"><button class="toggle-btn" data-val="bien">Bien</button><button class="toggle-btn" data-val="mal">Mal</button><button class="toggle-btn" data-val="no_resuelto">No resuelto</button></div></div>
+          <div id="divCodigoError" style="display:none;"><label>Error</label><select id="selCodigoError"></select></div>
+          <div id="divConfianza"><label>Confianza</label><select id="selConfianza"><option value="3" selected>3</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="5">5</option></select></div>
+          <div><label>Bloom</label><select id="selBloom"><option value="3" selected>3</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
+          <div><label>Dificultad</label><select id="selDifExp"><option value="3" selected>3</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="5">5</option></select></div>
+          <div><label>Intentos</label><input type="number" id="numIntentos" value="1" min="1"></div>
+        </div>
+        <div class="btn-row" style="margin-top:10px;"><button id="btnDescartarProblema">Descartar</button><button id="btnSiguienteProblema" class="primary">Siguiente problema</button></div>
+      </div>
+      <div class="card"><h3>Conjeturas</h3>
+        <textarea id="textoConjetura" placeholder="Escribe tu conjetura..."></textarea>
+        <button class="primary" id="btnGuardarConjetura" style="margin-top:6px;">Guardar</button>
+        <div id="listaConjeturasSesion" style="max-height:200px; overflow-y:auto; margin-top:8px;"></div>
+      </div>
     </div>
 
-    <!-- Panel Historial (sin cambios) -->
+    <!-- Panel Historial -->
     <div class="panel" id="panelHistorial"><div class="card" id="historialContainer"></div></div>
 
-    <!-- Panel Progreso (sin cambios) -->
+    <!-- Panel Progreso -->
     <div class="panel" id="panelProgreso"><div class="card" id="progresoTemaTableWrap"></div></div>
 
-    <!-- Panel Métricas (sin cambios) -->
+    <!-- Panel Métricas -->
     <div class="panel" id="panelMetricas">
       <div class="card"><h3>Resumen</h3><div id="metricasGenerales" style="display:flex;flex-wrap:wrap;gap:14px;"></div></div>
       <div class="card"><h3>Tiempo promedio por materia</h3><div class="chart-container"><canvas id="chartTiempoMateria"></canvas></div></div>
@@ -134,10 +186,10 @@
       </div>
     </div>
 
-    <!-- Panel Conjeturas (sin cambios) -->
+    <!-- Panel Conjeturas -->
     <div class="panel" id="panelConjeturas"><div class="card" id="listaConjeturasFull"></div></div>
 
-    <!-- Panel Checklist (sin cambios) -->
+    <!-- Panel Checklist -->
     <div class="panel" id="panelChecklist">
       <div class="card">
         <h3>Checklist de temas completados</h3>
@@ -147,7 +199,7 @@
       </div>
     </div>
 
-    <!-- Panel Metas (sin cambios) -->
+    <!-- Panel Metas -->
     <div class="panel" id="panelMetas">
       <div class="card">
         <label>Meta diaria (h)</label><input type="number" id="metaDiaria" value="3" step="0.5">
@@ -162,7 +214,7 @@
       </div>
     </div>
 
-    <!-- Modal resumen (sin cambios) -->
+    <!-- Modal resumen -->
     <div class="modal-overlay" id="modalResumen" style="display:none;">
       <div class="modal">
         <h3>Resumen de la sesión</h3>
@@ -197,7 +249,6 @@
     sync_metadata: 'key'
   });
 
-  // ------------------- ESTADO GLOBAL -------------------
   const State = {
     IDLE: 'IDLE', FOCUS_RUNNING: 'FOCUS_RUNNING', FOCUS_PAUSED: 'FOCUS_PAUSED',
     BREAK_RUNNING: 'BREAK_RUNNING', BREAK_PAUSED: 'BREAK_PAUSED', SESSION_ENDING: 'SESSION_ENDING'
@@ -218,7 +269,7 @@
   let currentTemario = [...temarioEmbebido];
   let chartTiempo, chartRadar, chartEvolucion, chartSueno;
 
-  // ------------------- AUTENTICACIÓN -------------------
+  // --- Autenticación ---
   function actualizarUI(s) {
     sessionActual = s;
     if (s?.user) {
@@ -248,7 +299,7 @@
     actualizarUI(null);
   });
 
-  // ------------------- SINCRONIZACIÓN -------------------
+  // --- Sincronización ---
   async function pushChanges() {
     const ops = await db.outbox.toArray();
     for (const op of ops) {
@@ -292,7 +343,7 @@
     return id;
   }
 
-  // ------------------- FUNCIONES UI (Pomodoro, Temporizador, etc.) -------------------
+  // --- Funciones UI (v23) ---
   function formatTime(sec) {
     if (isNaN(sec) || sec < 0) sec = 0;
     const m = Math.floor(sec / 60), s = Math.floor(sec % 60), d = Math.floor((sec % 1) * 10);
@@ -445,7 +496,7 @@
     document.getElementById('modalResumen').style.display = 'flex';
   }
 
-  // ------------------- EVENTOS POMODORO -------------------
+  // Pomodoro eventos
   document.getElementById('btnPomoStart').addEventListener('click', () => {
     if (session.state !== State.IDLE) return;
     session.remainingSeconds = parseInt(document.getElementById('pomoWork').value) * 60;
@@ -538,7 +589,7 @@
     stopLecturaInterval();
   });
 
-  // ------------------- TEMPORIZADOR CIEGO -------------------
+  // Temporizador ciego
   function updateBlindDisplay() {
     document.getElementById('timerDisplay').textContent = formatTime(blindTimer.seconds);
     document.getElementById('timerDisplay').classList.toggle('blind', blindTimer.running);
@@ -634,7 +685,7 @@
     document.getElementById('numProblema').disabled = false;
   });
 
-  // ------------------- CONJETURAS -------------------
+  // Conjeturas
   document.getElementById('btnGuardarConjetura').addEventListener('click', async () => {
     const texto = document.getElementById('textoConjetura').value.trim(); if (!texto) return;
     const materia = document.getElementById('selMateria').value, subtema = document.getElementById('selSubtema').value;
@@ -654,7 +705,7 @@
     actualizarConjeturasFull();
   });
 
-  // ------------------- ACTUALIZAR VISTAS -------------------
+  // Actualizar vistas
   async function actualizarHistorial() {
     const container = document.getElementById('historialContainer');
     const allSessions = await db.sessions.orderBy('timestamp').reverse().toArray();
@@ -689,12 +740,202 @@
     if(lastPomo) lastPomo.classList.add('expanded');
     container.onclick = (e) => { const row = e.target.closest('.pomo-row'); if(row) row.classList.toggle('expanded'); };
   }
-  async function actualizarConjeturasSesion() { /* ... igual que antes ... */ }
-  async function actualizarConjeturasFull() { /* ... igual que antes ... */ }
-  async function actualizarMetricas() { /* ... igual que antes ... */ }
-  async function actualizarProgreso() { /* ... igual que antes ... */ }
+  async function actualizarConjeturasSesion() {
+    const conjs = await db.conjeturas.orderBy('timestamp').reverse().limit(20).toArray();
+    const wrap = document.getElementById('listaConjeturasSesion');
+    if (!conjs.length) { wrap.innerHTML = 'Sin conjeturas.'; return; }
+    let html = '<table><tr><th>Conjetura</th><th>Materia</th><th>Ejercicio</th><th>Subtema</th><th>Fecha</th></tr>';
+    conjs.forEach(c => { const d = new Date(c.timestamp); html += `<tr><td>${c.texto}</td><td>${c.materia||''}</td><td>${c.problema_num||''}</td><td>${c.subtema_id||''}</td><td>${d.toLocaleTimeString()}</td></tr>`; });
+    html += '</table>'; wrap.innerHTML = html;
+  }
+  async function actualizarConjeturasFull() {
+    const conjs = await db.conjeturas.orderBy('timestamp').reverse().toArray();
+    const wrap = document.getElementById('listaConjeturasFull');
+    if (!conjs.length) { wrap.innerHTML = 'Sin conjeturas.'; return; }
+    let html = '<table><tr><th>Conjetura</th><th>Materia</th><th>Ejercicio</th><th>Subtema</th><th>Fecha</th></tr>';
+    conjs.forEach(c => { const d = new Date(c.timestamp); html += `<tr><td>${c.texto}</td><td>${c.materia||''}</td><td>${c.problema_num||''}</td><td>${c.subtema_id||''}</td><td>${d.toLocaleString()}</td></tr>`; });
+    html += '</table>'; wrap.innerHTML = html;
+  }
+  async function actualizarMetricas() {
+    const problemas = await db.sessions.where('tipo').equals('problema').toArray();
+    const bien = problemas.filter(s => s.resultado === 'bien').length, mal = problemas.filter(s => s.resultado === 'mal').length;
+    const total = problemas.length, tiempoTotal = problemas.reduce((a, s) => a + (s.tiempo_s || 0), 0);
+    const conjeturasTotal = await db.conjeturas.count();
+    const conjPorMin = tiempoTotal ? (conjeturasTotal / (tiempoTotal / 60)).toFixed(2) : '0';
+    document.getElementById('metricasGenerales').innerHTML = `
+      <span>Tasa aciertos: ${bien+mal>0?Math.round(bien/(bien+mal)*100):0}%</span>
+      <span>Tiempo prom: ${total?formatTime(tiempoTotal/total):'-'}</span>
+      <span>Conjeturas/min: ${conjPorMin}</span>
+      <span>Total: ${total}</span>
+    `;
+    if (chartTiempo) chartTiempo.destroy();
+    const ctxBar = document.getElementById('chartTiempoMateria')?.getContext('2d');
+    if (ctxBar) {
+      const mats = {};
+      problemas.forEach(s => { if (!mats[s.materia]) mats[s.materia] = { total:0, count:0 }; mats[s.materia].total += (s.tiempo_s||0); mats[s.materia].count++; });
+      const labels = Object.keys(mats);
+      const data = labels.map(m => mats[m].count ? Math.round(mats[m].total/mats[m].count) : 0);
+      chartTiempo = new Chart(ctxBar, { type: 'bar', data: { labels, datasets: [{ label: 'Tiempo prom (s)', data, backgroundColor: 'rgba(92,124,250,0.6)' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
+    }
+    if (chartRadar) chartRadar.destroy();
+    const ctxRadar = document.getElementById('chartRadar')?.getContext('2d');
+    if (ctxRadar) {
+      const velocidad = total ? Math.min(100, Math.round((total/(tiempoTotal/60))*10)) : 0;
+      const precision = bien+mal>0 ? Math.round(bien/(bien+mal)*100) : 0;
+      const retencion = problemas.filter(s=>s.modo==='B' && s.resultado==='bien').length / (problemas.filter(s=>s.modo==='B').length||1)*100;
+      const consolidacion = total ? problemas.filter(s=>s.modo==='B').length/total*100 : 0;
+      const generacionC = total ? problemas.filter(s=>s.modo==='C').length/total*100 : 0;
+      chartRadar = new Chart(ctxRadar, { type: 'radar', data: { labels: ['Velocidad','Precisión','Retención','Consolidación','Generación C'], datasets: [{ data: [velocidad,precision,retencion,consolidacion,generacionC], backgroundColor: 'rgba(92,124,250,0.2)' }] }, options: { scales: { r: { beginAtZero: true, max: 100 } } } });
+    }
+    if (chartEvolucion) chartEvolucion.destroy();
+    const ctxLine = document.getElementById('chartEvolucion')?.getContext('2d');
+    if (ctxLine) {
+      const dias = {};
+      problemas.forEach(s => { const dia = s.fecha || new Date(s.timestamp).toISOString().split('T')[0]; if (!dias[dia]) dias[dia] = { bien:0, mal:0 }; if (s.resultado === 'bien') dias[dia].bien++; else if (s.resultado === 'mal') dias[dia].mal++; });
+      const sorted = Object.keys(dias).sort();
+      const labels = sorted;
+      const data = sorted.map(d => { const b = dias[d].bien, m = dias[d].mal; return b+m>0 ? Math.round(b/(b+m)*100) : null; });
+      chartEvolucion = new Chart(ctxLine, { type: 'line', data: { labels, datasets: [{ label: 'Tasa aciertos %', data, borderColor: '#3dd6c8' }] }, options: { responsive: true } });
+    }
+  }
+  async function actualizarProgreso() {
+    const wrap = document.getElementById('progresoTemaTableWrap');
+    const problemas = await db.sessions.where('tipo').equals('problema').toArray();
+    const agg = {};
+    problemas.forEach(s => { const k = s.materia+'|||'+s.subtema_id; if(!agg[k]) agg[k] = {materia:s.materia, subtema:s.subtema_nombre||s.subtema_id, intentos:0, bien:0}; agg[k].intentos++; if(s.resultado==='bien') agg[k].bien++; });
+    let html = '<table><tr><th>Materia</th><th>Subtema</th><th>Intentos</th><th>Aciertos</th></tr>';
+    Object.values(agg).forEach(r => html+=`<tr><td>${r.materia}</td><td>${r.subtema}</td><td>${r.intentos}</td><td>${r.intentos?Math.round(r.bien/r.intentos*100):0}%</td></tr>`);
+    html+='</table>'; wrap.innerHTML=html;
+  }
+  async function actualizarSleepHistorial() {
+    const wrap = document.getElementById('sleepHistorialTable');
+    const registros = await db.sueno.orderBy('fecha').reverse().toArray();
+    if (!registros.length) {
+      wrap.innerHTML = '<p style="color:var(--text2);">Sin registros de sueño.</p>';
+      return;
+    }
+    let html = `<table><thead><tr><th>Fecha</th><th>Horas</th><th>Calidad</th><th>Acostarse</th><th>Despertar</th><th></th></tr></thead><tbody>`;
+    registros.forEach(r => {
+      html += `<tr>
+        <td>${r.fecha}</td><td>${r.horas}h</td><td>${'★'.repeat(r.calidad)}${'☆'.repeat(10-r.calidad)}</td>
+        <td>${r.acostar||'-'}</td><td>${r.despertar||'-'}</td>
+        <td><button class="small danger" data-del-sueno="${r.id}">X</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('[data-del-sueno]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.delSueno;
+        await db.sueno.delete(id);
+        await db.outbox.put({ table:'sueno', record_id: id, operation: 'delete', data: { id }, onConflict: 'id', created_at: new Date().toISOString() });
+        await syncAll();
+        actualizarSleepHistorial();
+        actualizarGraficoSueno();
+      });
+    });
+  }
+  let chartSuenoInst = null;
+  async function actualizarGraficoSueno() {
+    const ctx = document.getElementById('chartSueno')?.getContext('2d');
+    if (!ctx) return;
+    if (chartSuenoInst) chartSuenoInst.destroy();
+    const registros = await db.sueno.orderBy('fecha').toArray();
+    if (registros.length === 0) return;
+    const labels = registros.map(r => r.fecha);
+    const calidadData = registros.map(r => r.calidad);
+    const acostarMin = registros.map(r => {
+      if (!r.acostar) return null;
+      const [h, m] = r.acostar.split(':').map(Number);
+      return h * 60 + m;
+    });
+    const despertarMin = registros.map(r => {
+      if (!r.despertar) return null;
+      const [h, m] = r.despertar.split(':').map(Number);
+      return h * 60 + m;
+    });
+    chartSuenoInst = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Calidad (1-10)', data: calidadData, borderColor: '#5c7cfa', backgroundColor: 'transparent', yAxisID: 'y', tension: 0.3, pointRadius: 4 },
+          { label: 'Hora acostarse (min)', data: acostarMin, borderColor: '#ffb347', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 },
+          { label: 'Hora despertar (min)', data: despertarMin, borderColor: '#3dd6c8', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { type: 'linear', display: true, position: 'left', min: 1, max: 10, title: { display: true, text: 'Calidad (1-10)' } },
+          y1: {
+            type: 'linear', display: true, position: 'right', min: 0, max: 1440, title: { display: true, text: 'Minutos desde medianoche' },
+            ticks: { callback: function(value) { const h = Math.floor(value / 60); const m = value % 60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; } }
+          }
+        }
+      }
+    });
+  }
+  async function actualizarMetas() {
+    const hoy = new Date().toISOString().split('T')[0];
+    const sessionsHoy = await db.sessions.where('fecha').equals(hoy).and(s=>s.tipo==='pomodoro').toArray();
+    const minHoy = sessionsHoy.reduce((a,s)=>a+(s.tiempo_pomodoro||0),0)/3600;
+    const metaDiaria = parseFloat(document.getElementById('metaDiaria').value)||3;
+    document.getElementById('progresoDiario').textContent = `${minHoy.toFixed(1)}h / ${metaDiaria}h`;
+    document.getElementById('progressDiario').style.width = Math.min(100, (minHoy/metaDiaria)*100)+'%';
+    const inicio = new Date(); inicio.setDate(inicio.getDate()-inicio.getDay()+1);
+    const sessionsSem = await db.sessions.where('fecha').between(inicio.toISOString().split('T')[0], hoy, true, true).and(s=>s.tipo==='pomodoro').toArray();
+    const minSem = sessionsSem.reduce((a,s)=>a+(s.tiempo_pomodoro||0),0)/3600;
+    const metaSemanal = parseFloat(document.getElementById('metaSemanal').value)||15;
+    document.getElementById('progresoSemanal').textContent = `${minSem.toFixed(1)}h / ${metaSemanal}h`;
+    document.getElementById('progressSemanal').style.width = Math.min(100, (minSem/metaSemanal)*100)+'%';
+  }
+  async function actualizarChecklist() {
+    const container = document.getElementById('checklistContainer');
+    const completados = await db.checklist.toArray();
+    const ids = new Map(completados.map(c=>[c.subtema_id, c.fecha_completado]));
+    const subtemasExtra = await db.subtemas_extra.toArray();
+    const todasMaterias = [...new Set(currentTemario.map(t=>t.materia))];
+    subtemasExtra.forEach(e=>{ if(!todasMaterias.includes(e.materia)) todasMaterias.push(e.materia); });
+    let totalSubtemas = 0;
+    let html = '';
+    for(const mat of todasMaterias) {
+      const tem = currentTemario.filter(t=>t.materia===mat);
+      const extras = subtemasExtra.filter(e=>e.materia===mat);
+      const subs = [...tem.map(t=>({id:t.id.toString(), nombre:t.nombre, etapa:t.etapa})), ...extras.map(e=>({id:'extra_'+e.id, nombre:e.nombre, etapa:e.etapa||'Personalizado'}))];
+      if(!subs.length) continue;
+      html+=`<h4>${mat}</h4>`;
+      subs.forEach(st=>{ const fechaComp = ids.has(st.id) ? ` (${ids.get(st.id)})` : ''; html+=`<label><input type="checkbox" class="checklist-cb" data-stid="${st.id}" ${ids.has(st.id)?'checked':''}> ${st.nombre} (${st.etapa||''})${fechaComp}</label><br>`; totalSubtemas++; });
+    }
+    container.innerHTML = html;
+    const completado = completados.length;
+    const pct = totalSubtemas ? Math.round(completado/totalSubtemas*100) : 0;
+    document.getElementById('progressChecklist').style.width = pct+'%';
+    document.getElementById('checklistPercent').textContent = pct+'% completado ('+completado+'/'+totalSubtemas+')';
+    container.querySelectorAll('.checklist-cb').forEach(cb=>cb.addEventListener('change', async function(){
+      const stid = this.dataset.stid;
+      if(this.checked) await guardarLocalYOutbox('checklist','checklist',{subtema_id:stid, fecha_completado:new Date().toISOString().split('T')[0]}, 'subtema_id,user_id');
+      else {
+        await db.checklist.where('subtema_id').equals(stid).delete();
+        await db.outbox.put({table:'checklist', record_id:stid, operation:'delete', data:{subtema_id:stid, user_id:sessionActual.user.id}, onConflict:'subtema_id,user_id', created_at:new Date().toISOString()});
+        await syncAll();
+      }
+      actualizarChecklist();
+    }));
+  }
+  function actualizarTodo() {
+    actualizarHistorial();
+    actualizarProgreso();
+    actualizarMetricas();
+    actualizarSleepHistorial();
+    actualizarGraficoSueno();
+    actualizarConjeturasSesion();
+    actualizarConjeturasFull();
+    actualizarChecklist();
+    actualizarMetas();
+  }
 
-  // ------------------- SUEÑO (MEJORADO) -------------------
+  // Sueño
   document.getElementById('btnGuardarSueno').addEventListener('click', async () => {
     const fecha = document.getElementById('fechaSueno').value;
     const horas = parseFloat(document.getElementById('horasSueno').value);
@@ -715,146 +956,14 @@
     actualizarGraficoSueno();
   });
 
-  async function actualizarSleepHistorial() {
-    const wrap = document.getElementById('sleepHistorialTable');
-    const registros = await db.sueno.orderBy('fecha').reverse().toArray(); // TODOS los registros
-    if (!registros.length) {
-      wrap.innerHTML = '<p style="color:var(--text2);">Sin registros de sueño.</p>';
-      return;
-    }
-    let html = `<table><thead><tr><th>Fecha</th><th>Horas</th><th>Calidad</th><th>Acostarse</th><th>Despertar</th><th></th></tr></thead><tbody>`;
-    registros.forEach(r => {
-      html += `<tr>
-        <td>${r.fecha}</td><td>${r.horas}h</td><td>${'★'.repeat(r.calidad)}${'☆'.repeat(10-r.calidad)}</td>
-        <td>${r.acostar||'-'}</td><td>${r.despertar||'-'}</td>
-        <td><button class="small danger" data-del-sueno="${r.id}">X</button></td>
-      </tr>`;
-    });
-    html += '</tbody></table>';
-    wrap.innerHTML = html;
-    // Eventos para eliminar
-    wrap.querySelectorAll('[data-del-sueno]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const id = btn.dataset.delSueno;
-        await db.sueno.delete(id);
-        await db.outbox.put({ table:'sueno', record_id: id, operation: 'delete', data: { id }, onConflict: 'id', created_at: new Date().toISOString() });
-        await syncAll();
-        actualizarSleepHistorial();
-        actualizarGraficoSueno();
-      });
-    });
-  }
-
-  let chartSuenoInst = null;
-  async function actualizarGraficoSueno() {
-    const ctx = document.getElementById('chartSueno')?.getContext('2d');
-    if (!ctx) return;
-    if (chartSuenoInst) chartSuenoInst.destroy();
-    const registros = await db.sueno.orderBy('fecha').toArray(); // orden ascendente
-    if (registros.length === 0) return;
-
-    const labels = registros.map(r => r.fecha);
-    const calidadData = registros.map(r => r.calidad);
-    // Convertir horas a minutos desde medianoche
-    const acostarMin = registros.map(r => {
-      if (!r.acostar) return null;
-      const [h, m] = r.acostar.split(':').map(Number);
-      return h * 60 + m;
-    });
-    const despertarMin = registros.map(r => {
-      if (!r.despertar) return null;
-      const [h, m] = r.despertar.split(':').map(Number);
-      return h * 60 + m;
-    });
-
-    chartSuenoInst = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          {
-            label: 'Calidad (1-10)',
-            data: calidadData,
-            borderColor: '#5c7cfa',
-            backgroundColor: 'transparent',
-            yAxisID: 'y',
-            tension: 0.3,
-            pointRadius: 4
-          },
-          {
-            label: 'Hora acostarse (min)',
-            data: acostarMin,
-            borderColor: '#ffb347',
-            backgroundColor: 'transparent',
-            yAxisID: 'y1',
-            tension: 0.3,
-            pointRadius: 4
-          },
-          {
-            label: 'Hora despertar (min)',
-            data: despertarMin,
-            borderColor: '#3dd6c8',
-            backgroundColor: 'transparent',
-            yAxisID: 'y1',
-            tension: 0.3,
-            pointRadius: 4
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            type: 'linear',
-            display: true,
-            position: 'left',
-            min: 1,
-            max: 10,
-            title: { display: true, text: 'Calidad (1-10)' }
-          },
-          y1: {
-            type: 'linear',
-            display: true,
-            position: 'right',
-            min: 0,
-            max: 1440,
-            title: { display: true, text: 'Minutos desde medianoche' },
-            ticks: {
-              callback: function(value) {
-                const h = Math.floor(value / 60);
-                const m = value % 60;
-                return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-              }
-            }
-          }
-        }
-      }
-    });
-  }
-
-  async function actualizarMetas() { /* ... igual que antes ... */ }
-  async function actualizarChecklist() { /* ... igual que antes ... */ }
-
-  function actualizarTodo() {
-    actualizarHistorial();
-    actualizarProgreso();
-    actualizarMetricas();
-    actualizarSleepHistorial();
-    actualizarGraficoSueno();
-    actualizarConjeturasSesion();
-    actualizarConjeturasFull();
-    actualizarChecklist();
-    actualizarMetas();
-  }
-
-  // ------------------- METAS -------------------
+  // Metas
   document.getElementById('btnGuardarMetas').addEventListener('click', async () => {
     await guardarLocalYOutbox('metas','metas',{key:'metaDiaria', value:parseFloat(document.getElementById('metaDiaria').value)||3}, 'key,user_id');
     await guardarLocalYOutbox('metas','metas',{key:'metaSemanal', value:parseFloat(document.getElementById('metaSemanal').value)||15}, 'key,user_id');
     actualizarMetas();
   });
 
-  // ------------------- EXPORT/IMPORT -------------------
+  // Export/Import
   document.getElementById('btnExport').addEventListener('click', async () => {
     const data = {
       sessions: await db.sessions.toArray(),
@@ -887,7 +996,7 @@
     this.value='';
   });
 
-  // ------------------- PESTAÑAS -------------------
+  // Pestañas
   document.getElementById('tabNav').addEventListener('click', e => {
     if(!e.target.classList.contains('tab-btn')) return;
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -905,7 +1014,7 @@
 
   function showToast(msg, d=2600) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),d); }
 
-  // ------------------- POBLAR SELECTORES -------------------
+  // Poblar selectores
   async function poblarMaterias() {
     const sel = document.getElementById('selMateria');
     const matsDB = await db.materias.toArray();
@@ -971,7 +1080,7 @@
     currentProblemaNum=1; document.getElementById('numProblema').value=1;
   });
 
-  // ------------------- PWA -------------------
+  // PWA
   function registerSW() {
     if('serviceWorker' in navigator) {
       const blob = new Blob(["const CACHE='estudio-v25';self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['/'])));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==CACHE).map(n=>caches.delete(n)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});"], {type:'application/javascript'});
@@ -980,7 +1089,7 @@
   }
   registerSW();
 
-  // ------------------- INICIALIZACIÓN -------------------
+  // Inicialización
   async function initApp() {
     await syncAll();
     await poblarMaterias();
