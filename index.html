@@ -172,7 +172,7 @@
             <label>Horas dormidas (calculadas)</label>
             <span id="horasCalculadas" style="font-size:1.2rem; font-weight:bold; color:var(--accent3);">--</span>
           </div>
-          <div><label>Calidad (1-10)</label><input type="number" id="calidadSueno" min="1" max="10" placeholder="1=mala, 10=excelente"></div>
+          <div><label>Calidad (1-10)</label><input type="number" id="calidadSueno" min="1" max="10" step="0.5" placeholder="1=mala, 10=excelente"></div>
           <div><label>😴 Hora de acostarse</label><input type="time" id="acostarSueno"></div>
           <div><label>⏰ Hora de despertar</label><input type="time" id="despertarSueno"></div>
         </div>
@@ -828,7 +828,8 @@
     let html = `<table><thead><tr><th>Fecha</th><th>Horas</th><th>Calidad</th><th>Acostarse</th><th>Despertar</th><th></th></tr></thead><tbody>`;
     registros.forEach(r => {
       html += `<tr>
-        <td>${r.fecha}</td><td>${r.horas}h</td><td>${'★'.repeat(r.calidad)}${'☆'.repeat(10-r.calidad)}</td>
+        <td>${r.fecha}</td><td>${r.horas}h</td>
+        <td>${'★'.repeat(Math.floor(r.calidad))}${'☆'.repeat(10 - Math.floor(r.calidad))} ${r.calidad}/10</td>
         <td>${r.acostar||'-'}</td><td>${r.despertar||'-'}</td>
         <td><button class="small danger" data-del-sueno="${r.id}">X</button></td>
       </tr>`;
@@ -952,7 +953,7 @@
     const acostar = document.getElementById('acostarSueno').value;
     const despertar = document.getElementById('despertarSueno').value;
     const horas = calcularHoras(acostar, despertar);
-    const calidad = parseInt(document.getElementById('calidadSueno').value);
+    const calidad = parseFloat(document.getElementById('calidadSueno').value);
     if(!fecha||isNaN(calidad)) return;
     await guardarLocalYOutbox('sueno','sueno',{
       fecha, horas, calidad,
