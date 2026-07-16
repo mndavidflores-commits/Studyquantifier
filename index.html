@@ -237,17 +237,17 @@
   const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
   const db = new Dexie('EstudioDBv25');
-  db.version(1).stores({
-    sessions: 'id, updated_at, sesion_id, tipo',
-    conjeturas: 'id, updated_at, sesion_id',
-    sueno: 'id, updated_at',
+  db.version(2).stores({
+    sessions: 'id, updated_at, sesion_id, tipo, fecha, timestamp',
+    conjeturas: 'id, updated_at, sesion_id, timestamp',
+    sueno: 'id, updated_at, fecha',
     materias: 'id, nombre, updated_at',
     subtemas_extra: 'id, materia, nombre, updated_at',
     checklist: 'subtema_id, updated_at',
     metas: 'key, updated_at',
     outbox: '++localId, table, record_id, operation, data, created_at',
     sync_metadata: 'key'
-  });
+});
 
   const State = {
     IDLE: 'IDLE', FOCUS_RUNNING: 'FOCUS_RUNNING', FOCUS_PAUSED: 'FOCUS_PAUSED',
