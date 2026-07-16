@@ -1,11 +1,11 @@
-<!-- estudio_v25.html · COMPLETO Y CORREGIDO -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Estudio v25</title>
-  <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkVzdHVkaW8gdjI1IiwKICAic2hvcnRfbmFtZSI6ICJFc3R1ZGlvIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwZDBkMWEiLAogICJ0aGVtZV9jb2xvciI6ICIjMGQwZDFhIiwKICAiZGVzY3JpcHRpb24iOiAiSGVycmFtaWVudGEgZGUgcmVnaXN0cm8gZGUgZXN0dWRpbyBjb24gdGF4b25vbcOtYSBBL0IvQyB5IGZhc2VzIEExLUIyIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxOTIgMTkyJyUzRSUzQ3JlY3Qgd2lkdGg9JzE5MicgaGVpZ2h0PScxOTInIHJ4PSczMicgZmlsbD0nIzBkMGQxYScvJTNFJTNDdGV4dCB4PSc5NicgeT0nMTEwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmb250LXNpemU9JzcyJyBmaWxsPScjNWM3Y2ZhJyBmb250LWZhbWlseT0nc2Fucy1zZXJpZicgZm9udC13ZWlnaHQ9J2JvbGQnJTNFRSM8L3RleHQ+PC9zdmc+IgogICAgfQogIF0KfQ==">  <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
+  <title>Estudio v26</title>
+  <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkVzdHVkaW8gdjI2IiwKICAic2hvcnRfbmFtZSI6ICJFc3R1ZGlvIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwZDBkMWEiLAogICJ0aGVtZV9jb2xvciI6ICIjMGQwZDFhIiwKICAiZGVzY3JpcHRpb24iOiAiSGVycmFtaWVudGEgZGUgcmVnaXN0cm8gZGUgZXN0dWRpbyBjb24gdGF4b25vbcOtYSBBL0IvQyB5IGZhc2VzIEExLUIyIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxOTIgMTkyJyUzRSUzQ3JlY3Qgd2lkdGg9JzE5MicgaGVpZ2h0PScxOTInIHJ4PSczMicgZmlsbD0nIzBkMGQxYScvJTNFJTNDdGV4dCB4PSc5NicgeT0nMTEwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmb250LXNpemU9JzcyJyBmaWxsPScjNWM3Y2ZhJyBmb250LWZhbWlseT0nc2Fucy1zZXJpZicgZm9udC13ZWlnaHQ9J2JvbGQnJTNFRSM8L3RleHQ+PC9zdmc+IgogICAgfQogIF0KfQ==">
+  <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root {
@@ -68,10 +68,9 @@
     <button id="btn-login" style="display:none;">Iniciar sesión con Google</button>
     <button id="btn-logout" style="display:none;">Cerrar sesión</button>
   </div>
-
   <div id="app-content" style="display:none;">
     <header style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-      <div><h1 style="color:#fff;">Estudio v25</h1><span class="badge" style="font-size:0.7rem; background:var(--surface2); padding:4px 12px; border-radius:20px; color:var(--text2);">A/B/C · A1-B2</span></div>
+      <div><h1 style="color:#fff;">Estudio v26</h1><span class="badge" style="font-size:0.7rem; background:var(--surface2); padding:4px 12px; border-radius:20px; color:var(--text2);">A/B/C · A1-B2</span></div>
       <div class="btn-row">
         <button id="btnExport" class="small">Exportar</button>
         <button id="btnImport" class="small">Importar</button>
@@ -150,10 +149,8 @@
 
     <!-- Panel Historial -->
     <div class="panel" id="panelHistorial"><div class="card" id="historialContainer"></div></div>
-
     <!-- Panel Progreso -->
     <div class="panel" id="panelProgreso"><div class="card" id="progresoTemaTableWrap"></div></div>
-
     <!-- Panel Métricas -->
     <div class="panel" id="panelMetricas">
       <div class="card"><h3>Resumen</h3><div id="metricasGenerales" style="display:flex;flex-wrap:wrap;gap:14px;"></div></div>
@@ -162,7 +159,7 @@
       <div class="card"><h3>Evolución de la tasa de aciertos (por día)</h3><div class="chart-container"><canvas id="chartEvolucion"></canvas></div></div>
     </div>
 
-    <!-- Panel Sueño MEJORADO -->
+    <!-- Panel Sueño -->
     <div class="panel" id="panelSueno">
       <div class="card">
         <h3>Registrar sueño</h3>
@@ -172,9 +169,9 @@
             <label>Horas dormidas (calculadas)</label>
             <span id="horasCalculadas" style="font-size:1.2rem; font-weight:bold; color:var(--accent3);">--</span>
           </div>
-          <div><label>Calidad (1-10)</label><input type="number" id="calidadSueno" min="1" max="10" step="0.5" placeholder="1=mala, 10=excelente"></div>
-          <div><label>😴 Hora de acostarse</label><input type="time" id="acostarSueno"></div>
-          <div><label>⏰ Hora de despertar</label><input type="time" id="despertarSueno"></div>
+          <div><label>Calidad (0-10)</label><input type="number" id="calidadSueno" min="0" max="10" step="0.5" placeholder="0=mala, 10=excelente"></div>
+          <div><label>Hora de acostarse</label><input type="time" id="acostarSueno"></div>
+          <div><label>Hora de despertar</label><input type="time" id="despertarSueno"></div>
         </div>
         <button class="primary" id="btnGuardarSueno" style="margin-top:10px;">Guardar sueño</button>
       </div>
@@ -190,7 +187,6 @@
 
     <!-- Panel Conjeturas -->
     <div class="panel" id="panelConjeturas"><div class="card" id="listaConjeturasFull"></div></div>
-
     <!-- Panel Checklist -->
     <div class="panel" id="panelChecklist">
       <div class="card">
@@ -200,7 +196,6 @@
         <div id="checklistContainer" style="max-height:50vh;overflow-y:auto;margin-top:8px;"></div>
       </div>
     </div>
-
     <!-- Panel Metas -->
     <div class="panel" id="panelMetas">
       <div class="card">
@@ -238,7 +233,7 @@
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_qJcUe3t_K5Yl0m7lkV3C_A_5bcdtOFs';
   const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-  const db = new Dexie('EstudioDBv25');
+  const db = new Dexie('EstudioDBv26');
   db.version(2).stores({
     sessions: 'id, updated_at, sesion_id, tipo, fecha, timestamp',
     conjeturas: 'id, updated_at, sesion_id, timestamp',
@@ -271,7 +266,6 @@
   let currentTemario = [...temarioEmbebido];
   let chartTiempo, chartRadar, chartEvolucion, chartSueno;
 
-  // --- Autenticación ---
   function actualizarUI(s) {
     sessionActual = s;
     if (s?.user) {
@@ -291,17 +285,12 @@
   actualizarUI(s);
   supabase.auth.onAuthStateChange((event, s) => actualizarUI(s));
   document.getElementById('btn-login').addEventListener('click', async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.href.split('#')[0] }
-    });
+    await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href.split('#')[0] } });
   });
   document.getElementById('btn-logout').addEventListener('click', async () => {
-    await supabase.auth.signOut();
-    actualizarUI(null);
+    await supabase.auth.signOut(); actualizarUI(null);
   });
 
-  // --- Sincronización ---
   async function pushChanges() {
     const ops = await db.outbox.toArray();
     for (const op of ops) {
@@ -324,8 +313,7 @@
   }
   async function syncAll() {
     if (!sessionActual?.user) return;
-    await pushChanges();
-    await pullChanges();
+    await pushChanges(); await pullChanges();
   }
 
   async function guardarLocalYOutbox(tablaSupabase, coleccionDexie, datos, onConflict = 'id') {
@@ -333,19 +321,11 @@
     const id = datos.id || crypto.randomUUID();
     const registro = { ...datos, id, user_id: sessionActual.user.id, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
     await db[coleccionDexie].put(registro);
-    await db.outbox.put({
-      table: tablaSupabase,
-      record_id: id,
-      operation: 'insert',
-      data: registro,
-      onConflict,
-      created_at: new Date().toISOString()
-    });
+    await db.outbox.put({ table: tablaSupabase, record_id: id, operation: 'insert', data: registro, onConflict, created_at: new Date().toISOString() });
     await syncAll();
     return id;
   }
 
-  // --- Funciones UI (v23) ---
   function formatTime(sec) {
     if (isNaN(sec) || sec < 0) sec = 0;
     const m = Math.floor(sec / 60), s = Math.floor(sec % 60), d = Math.floor((sec % 1) * 10);
@@ -414,11 +394,9 @@
       updatePomoDisplay();
       document.getElementById('pomoCircle').classList.remove('break');
       setConfigEnabled(true);
-      document.getElementById('pomoWork').disabled = false;
-      document.getElementById('pomoBreak').disabled = false;
+      document.getElementById('pomoWork').disabled = false; document.getElementById('pomoBreak').disabled = false;
       document.getElementById('btnDistraje').disabled = true;
-      document.getElementById('btnLecturaStart').disabled = true;
-      document.getElementById('btnLecturaStop').disabled = true;
+      document.getElementById('btnLecturaStart').disabled = true; document.getElementById('btnLecturaStop').disabled = true;
       document.getElementById('lecturaAcumulado').textContent = '0:00';
       session.state = State.IDLE;
       updatePomoStatusText(); updatePomoButtons();
@@ -426,18 +404,15 @@
     }
     if (newState === State.FOCUS_RUNNING || newState === State.BREAK_RUNNING) {
       if (prev === State.IDLE) {
-        const materia = document.getElementById('selMateria').value;
-        const subtema = document.getElementById('selSubtema').value;
+        const materia = document.getElementById('selMateria').value, subtema = document.getElementById('selSubtema').value;
         if (materia === '__agregar__' || subtema === '__agregar__') { showToast('Selecciona materia y subtema válidos.'); return; }
         session.tempId = 'temp_' + Date.now();
         session.distracciones = 0; session.lecturaSeconds = 0;
         document.getElementById('lecturaAcumulado').textContent = '0:00';
         setConfigEnabled(false);
-        document.getElementById('pomoWork').disabled = true;
-        document.getElementById('pomoBreak').disabled = true;
+        document.getElementById('pomoWork').disabled = true; document.getElementById('pomoBreak').disabled = true;
         document.getElementById('btnDistraje').disabled = false;
-        document.getElementById('btnLecturaStart').disabled = false;
-        document.getElementById('btnLecturaStop').disabled = false;
+        document.getElementById('btnLecturaStart').disabled = false; document.getElementById('btnLecturaStop').disabled = false;
       }
       session.state = newState;
       stopPomoInterval();
@@ -447,10 +422,8 @@
           stopPomoInterval();
           if (session.state === State.FOCUS_RUNNING) {
             const breakMinutes = parseInt(document.getElementById('pomoBreak').value) || 20;
-            if (breakMinutes > 0) {
-              session.remainingSeconds = breakMinutes * 60;
-              transition(State.BREAK_RUNNING);
-            } else { transition(State.SESSION_ENDING); }
+            if (breakMinutes > 0) { session.remainingSeconds = breakMinutes * 60; transition(State.BREAK_RUNNING); }
+            else { transition(State.SESSION_ENDING); }
           } else if (session.state === State.BREAK_RUNNING) {
             session.remainingSeconds = parseInt(document.getElementById('pomoWork').value)*60;
             transition(State.FOCUS_RUNNING);
@@ -469,10 +442,8 @@
     if (newState === State.SESSION_ENDING) {
       stopPomoInterval(); stopLecturaInterval(); detenerTemporizadorCiego();
       document.getElementById('btnDistraje').disabled = true;
-      document.getElementById('btnLecturaStart').disabled = true;
-      document.getElementById('btnLecturaStop').disabled = true;
-      document.getElementById('pomoWork').disabled = false;
-      document.getElementById('pomoBreak').disabled = false;
+      document.getElementById('btnLecturaStart').disabled = true; document.getElementById('btnLecturaStop').disabled = true;
+      document.getElementById('pomoWork').disabled = false; document.getElementById('pomoBreak').disabled = false;
       setConfigEnabled(false);
       session.state = State.SESSION_ENDING;
       updatePomoStatusText(); updatePomoButtons();
@@ -482,10 +453,8 @@
   }
   async function mostrarResumen() {
     const problemas = await db.sessions.where('tipo').equals('problema').and(s => s.sesion_id === session.tempId).toArray();
-    const total = problemas.length;
-    const correctos = problemas.filter(p => p.resultado === 'bien').length;
-    const incorrectos = problemas.filter(p => p.resultado === 'mal').length;
-    const noResueltos = problemas.filter(p => p.resultado === 'no_resuelto').length;
+    const total = problemas.length, correctos = problemas.filter(p => p.resultado === 'bien').length;
+    const incorrectos = problemas.filter(p => p.resultado === 'mal').length, noResueltos = problemas.filter(p => p.resultado === 'no_resuelto').length;
     const tiempoTotal = problemas.reduce((a, p) => a + (p.tiempo_s || 0), 0);
     const conjs = (await db.conjeturas.where('sesion_id').equals(session.tempId).toArray()).length;
     document.getElementById('resumenContenido').innerHTML = `
@@ -498,12 +467,10 @@
     document.getElementById('modalResumen').style.display = 'flex';
   }
 
-  // Pomodoro eventos
   document.getElementById('btnPomoStart').addEventListener('click', () => {
     if (session.state !== State.IDLE) return;
     session.remainingSeconds = parseInt(document.getElementById('pomoWork').value) * 60;
-    updatePomoDisplay();
-    transition(State.FOCUS_RUNNING);
+    updatePomoDisplay(); transition(State.FOCUS_RUNNING);
   });
   document.getElementById('btnPomoPause').addEventListener('click', () => {
     if (session.state === State.FOCUS_RUNNING) transition(State.FOCUS_PAUSED);
@@ -516,10 +483,7 @@
   document.getElementById('btnPomoStop').addEventListener('click', () => transition(State.SESSION_ENDING));
   document.getElementById('btnPomoReset').addEventListener('click', async () => {
     if (session.state !== State.IDLE && session.elapsedTotal > 0 && !confirm('¿Reiniciar? Se perderá la sesión actual.')) return;
-    if (session.tempId) {
-      await db.sessions.where('sesion_id').equals(session.tempId).delete();
-      await db.conjeturas.where('sesion_id').equals(session.tempId).delete();
-    }
+    if (session.tempId) { await db.sessions.where('sesion_id').equals(session.tempId).delete(); await db.conjeturas.where('sesion_id').equals(session.tempId).delete(); }
     transition(State.IDLE);
     actualizarTodo();
   });
@@ -527,30 +491,18 @@
     const frustracion = parseInt(document.getElementById('resumenFrustracion').value) || 0;
     const energia = parseInt(document.getElementById('resumenEnergia').value) || 3;
     const problemas = await db.sessions.where('tipo').equals('problema').and(s => s.sesion_id === session.tempId).toArray();
-    const total = problemas.length;
-    const tiempoTotal = problemas.reduce((a, p) => a + (p.tiempo_s || 0), 0);
+    const total = problemas.length, tiempoTotal = problemas.reduce((a, p) => a + (p.tiempo_s || 0), 0);
     const conjs = (await db.conjeturas.where('sesion_id').equals(session.tempId).toArray()).length;
     const idSesion = await guardarLocalYOutbox('study_sessions', 'sessions', {
-      tipo: 'pomodoro',
-      fecha: new Date().toISOString().split('T')[0],
-      timestamp: Date.now(),
-      modo: document.getElementById('selModo').value,
-      fase: document.getElementById('selFase').value,
-      materia: document.getElementById('selMateria').value,
-      subtema_id: document.getElementById('selSubtema').value,
+      tipo: 'pomodoro', fecha: new Date().toISOString().split('T')[0], timestamp: Date.now(),
+      modo: document.getElementById('selModo').value, fase: document.getElementById('selFase').value,
+      materia: document.getElementById('selMateria').value, subtema_id: document.getElementById('selSubtema').value,
       subtema_nombre: document.getElementById('selSubtema').selectedOptions[0]?.textContent || '',
-      tiempo_pomodoro: session.elapsedTotal,
-      tiempo_lectura: session.lecturaSeconds,
-      frustracion,
-      energia,
-      resumen_ejercicios: total,
-      resumen_correctos: problemas.filter(p=>p.resultado==='bien').length,
-      resumen_incorrectos: problemas.filter(p=>p.resultado==='mal').length,
-      resumen_no_resueltos: problemas.filter(p=>p.resultado==='no_resuelto').length,
-      resumen_lectura: session.lecturaSeconds,
-      resumen_tiempo_promedio: total ? tiempoTotal/total : 0,
-      resumen_conjeturas: conjs,
-      resumen_distracciones: session.distracciones,
+      tiempo_pomodoro: session.elapsedTotal, tiempo_lectura: session.lecturaSeconds, frustracion, energia,
+      resumen_ejercicios: total, resumen_correctos: problemas.filter(p=>p.resultado==='bien').length,
+      resumen_incorrectos: problemas.filter(p=>p.resultado==='mal').length, resumen_no_resueltos: problemas.filter(p=>p.resultado==='no_resuelto').length,
+      resumen_lectura: session.lecturaSeconds, resumen_tiempo_promedio: total ? tiempoTotal/total : 0,
+      resumen_conjeturas: conjs, resumen_distracciones: session.distracciones,
       pomodoro_label: 'pomodoro_' + Date.now()
     });
     if (idSesion) {
@@ -562,36 +514,24 @@
     actualizarTodo();
   });
   document.getElementById('btnCancelarResumen').addEventListener('click', async () => {
-    if (session.tempId) {
-      await db.sessions.where('sesion_id').equals(session.tempId).delete();
-      await db.conjeturas.where('sesion_id').equals(session.tempId).delete();
-    }
+    if (session.tempId) { await db.sessions.where('sesion_id').equals(session.tempId).delete(); await db.conjeturas.where('sesion_id').equals(session.tempId).delete(); }
     document.getElementById('modalResumen').style.display = 'none';
     transition(State.IDLE);
     actualizarTodo();
   });
-
-  // Distracción y lectura
   document.getElementById('btnDistraje').addEventListener('click', () => {
     if (session.state !== State.FOCUS_RUNNING && session.state !== State.BREAK_RUNNING) return;
-    session.distracciones++;
-    showToast('registrado ✅', 1500);
+    session.distracciones++; showToast('registrado ✅', 1500);
   });
   document.getElementById('btnLecturaStart').addEventListener('click', () => {
     if (session.lecturaRunning || (session.state !== State.FOCUS_RUNNING && session.state !== State.BREAK_RUNNING)) return;
     session.lecturaRunning = true;
     document.getElementById('lecturaAcumulado').textContent = 'Leyendo...';
     const start = Date.now() - session.lecturaSeconds * 1000;
-    session.lecturaInterval = setInterval(() => {
-      session.lecturaSeconds = Math.round((Date.now() - start) / 1000);
-    }, 1000);
+    session.lecturaInterval = setInterval(() => { session.lecturaSeconds = Math.round((Date.now() - start) / 1000); }, 1000);
   });
-  document.getElementById('btnLecturaStop').addEventListener('click', () => {
-    if (!session.lecturaRunning) return;
-    stopLecturaInterval();
-  });
+  document.getElementById('btnLecturaStop').addEventListener('click', () => { if (!session.lecturaRunning) return; stopLecturaInterval(); });
 
-  // Temporizador ciego
   function updateBlindDisplay() {
     document.getElementById('timerDisplay').textContent = formatTime(blindTimer.seconds);
     document.getElementById('timerDisplay').classList.toggle('blind', blindTimer.running);
@@ -603,12 +543,8 @@
     document.getElementById('timerLabel').textContent = 'Estudiando...';
     blindTimer.startTime = Date.now() - blindTimer.seconds * 1000;
     document.getElementById('numProblema').disabled = true;
-    document.getElementById('btnStartTimer').disabled = true;
-    document.getElementById('btnStopTimer').disabled = false;
-    blindTimer.interval = setInterval(() => {
-      blindTimer.seconds = (Date.now() - blindTimer.startTime) / 1000;
-      updateBlindDisplay();
-    }, 100);
+    document.getElementById('btnStartTimer').disabled = true; document.getElementById('btnStopTimer').disabled = false;
+    blindTimer.interval = setInterval(() => { blindTimer.seconds = (Date.now() - blindTimer.startTime) / 1000; updateBlindDisplay(); }, 100);
   }
   function stopBlindTimerAndShowResult() {
     if (!blindTimer.running) return;
@@ -626,8 +562,7 @@
   document.getElementById('btnStopTimer').addEventListener('click', stopBlindTimerAndShowResult);
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter' && document.activeElement === document.body && document.getElementById('modalResumen').style.display !== 'flex') {
-      if (blindTimer.running) stopBlindTimerAndShowResult();
-      else startBlindTimer();
+      if (blindTimer.running) stopBlindTimerAndShowResult(); else startBlindTimer();
     }
   });
   document.getElementById('toggleResultado').addEventListener('click', e => {
@@ -650,73 +585,49 @@
     const codError = (resultado === 'mal' || resultado === 'no_resuelto') ? document.getElementById('selCodigoError').value : null;
     const confianza = (resultado === 'no_resuelto') ? null : parseInt(document.getElementById('selConfianza').value);
     await guardarLocalYOutbox('study_sessions', 'sessions', {
-      tipo: 'problema',
-      fecha: new Date().toISOString().split('T')[0],
-      timestamp: Date.now(),
-      modo, fase, materia, subtema_id: subtema,
-      subtema_nombre: document.getElementById('selSubtema').selectedOptions[0]?.textContent || '',
-      problema_num: blindTimer.previousProblemaNum,
-      tiempo_s: Math.round(blindTimer.seconds * 10) / 10,
-      resultado,
-      codigo_error: codError,
-      dificultad_experimentada: parseInt(document.getElementById('selDifExp').value),
-      confianza,
-      intentos: parseInt(document.getElementById('numIntentos').value) || 1,
-      nivel_bloom: parseInt(document.getElementById('selBloom').value),
-      sesion_id: session.tempId
+      tipo: 'problema', fecha: new Date().toISOString().split('T')[0], timestamp: Date.now(),
+      modo, fase, materia, subtema_id: subtema, subtema_nombre: document.getElementById('selSubtema').selectedOptions[0]?.textContent || '',
+      problema_num: blindTimer.previousProblemaNum, tiempo_s: Math.round(blindTimer.seconds * 10) / 10,
+      resultado, codigo_error: codError, dificultad_experimentada: parseInt(document.getElementById('selDifExp').value),
+      confianza, intentos: parseInt(document.getElementById('numIntentos').value) || 1,
+      nivel_bloom: parseInt(document.getElementById('selBloom').value), sesion_id: session.tempId
     });
     document.getElementById('numProblema').value = blindTimer.previousProblemaNum + 1;
     currentProblemaNum = blindTimer.previousProblemaNum + 1;
     document.getElementById('cardResultado').style.display = 'none';
     document.getElementById('timerControls').style.display = 'flex';
-    document.getElementById('btnStartTimer').disabled = false;
-    document.getElementById('btnStopTimer').disabled = true;
+    document.getElementById('btnStartTimer').disabled = false; document.getElementById('btnStopTimer').disabled = true;
     blindTimer.seconds = 0; updateBlindDisplay(); blindTimer.pendingResult = false;
     document.getElementById('numProblema').disabled = false;
-    actualizarMetricas();
-    actualizarTodo();
+    actualizarMetricas(); actualizarTodo();
   });
   document.getElementById('btnDescartarProblema').addEventListener('click', () => {
     document.getElementById('numProblema').value = blindTimer.previousProblemaNum;
     currentProblemaNum = blindTimer.previousProblemaNum;
     document.getElementById('cardResultado').style.display = 'none';
     document.getElementById('timerControls').style.display = 'flex';
-    document.getElementById('btnStartTimer').disabled = false;
-    document.getElementById('btnStopTimer').disabled = true;
+    document.getElementById('btnStartTimer').disabled = false; document.getElementById('btnStopTimer').disabled = true;
     blindTimer.seconds = 0; updateBlindDisplay(); blindTimer.pendingResult = false;
     document.getElementById('numProblema').disabled = false;
   });
-
-  // Conjeturas
   document.getElementById('btnGuardarConjetura').addEventListener('click', async () => {
     const texto = document.getElementById('textoConjetura').value.trim(); if (!texto) return;
     const materia = document.getElementById('selMateria').value, subtema = document.getElementById('selSubtema').value;
     const problemaNum = (blindTimer.running || blindTimer.pendingResult) ? blindTimer.previousProblemaNum : null;
     await guardarLocalYOutbox('conjeturas', 'conjeturas', {
-      fecha: new Date().toISOString().split('T')[0],
-      texto,
-      materia: materia !== '__agregar__' ? materia : null,
-      subtema_id: subtema !== '__agregar__' ? subtema : null,
-      problema_num: problemaNum,
-      sesion_id: session.tempId,
-      timestamp: Date.now()
+      fecha: new Date().toISOString().split('T')[0], texto, materia: materia !== '__agregar__' ? materia : null,
+      subtema_id: subtema !== '__agregar__' ? subtema : null, problema_num: problemaNum, sesion_id: session.tempId, timestamp: Date.now()
     });
     document.getElementById('textoConjetura').value = '';
     showToast('Conjetura guardada');
-    actualizarConjeturasSesion();
-    actualizarConjeturasFull();
+    actualizarConjeturasSesion(); actualizarConjeturasFull();
   });
 
-  // Actualizar vistas
   async function actualizarHistorial() {
     const container = document.getElementById('historialContainer');
     const allSessions = await db.sessions.orderBy('timestamp').reverse().toArray();
     const grouped = {};
-    allSessions.forEach(s => {
-      const fecha = s.fecha || new Date(s.timestamp).toISOString().split('T')[0];
-      if (!grouped[fecha]) grouped[fecha] = [];
-      grouped[fecha].push(s);
-    });
+    allSessions.forEach(s => { const fecha = s.fecha || new Date(s.timestamp).toISOString().split('T')[0]; if (!grouped[fecha]) grouped[fecha] = []; grouped[fecha].push(s); });
     let html = '';
     const sortedDates = Object.keys(grouped).sort((a,b)=>b.localeCompare(a));
     for (const fecha of sortedDates) {
@@ -777,61 +688,7 @@
       problemas.forEach(s => { if (!mats[s.materia]) mats[s.materia] = { total:0, count:0 }; mats[s.materia].total += (s.tiempo_s||0); mats[s.materia].count++; });
       const labels = Object.keys(mats);
       const data = labels.map(m => mats[m].count ? Math.round(mats[m].total/mats[m].count) : 0);
-      chartTiempo = new Chart(ctxBar, { type: 'bar', data: { labels, datasets: [{ label: 'Tiempo prom (s)', data, backgroundColor: 'rgba(92,124,250,0.6)' }] }, options: {
-  responsive: true,
-  scales: {
-    y: {
-      type: 'linear',
-      display: true,
-      position: 'left',
-      min: 0,                    // ← cambiado de 1 a 0
-      max: 10,
-      title: { display: true, text: 'Calidad (1-10)' }
-    },
-    y1: {
-      type: 'linear',
-      display: true,
-      position: 'right',
-      min: 0,
-      max: 1440,
-      title: { display: true, text: 'Minutos desde medianoche' },
-      ticks: {
-        stepSize: 60,  // opcional, para tener marcas cada hora
-        callback: function(value) {
-          const totalMin = value;
-          const h24 = Math.floor(totalMin / 60);
-          const m = totalMin % 60;
-          const ampm = h24 >= 12 ? 'PM' : 'AM';
-          let h12 = h24 % 12;
-          if (h12 === 0) h12 = 12;
-          return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
-        }
-      }
-    }
-  },
-  plugins: {
-    tooltip: {
-      callbacks: {
-        label: function(context) {
-          let label = context.dataset.label || '';
-          if (label) label += ': ';
-          if (context.dataset.yAxisID === 'y1') {
-            const mins = context.parsed.y;
-            const h24 = Math.floor(mins / 60);
-            const m = mins % 60;
-            const ampm = h24 >= 12 ? 'PM' : 'AM';
-            let h12 = h24 % 12;
-            if (h12 === 0) h12 = 12;
-            label += `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
-          } else {
-            label += context.parsed.y;
-          }
-          return label;
-        }
-      }
-    }
-  }
-} });
+      chartTiempo = new Chart(ctxBar, { type: 'bar', data: { labels, datasets: [{ label: 'Tiempo prom (s)', data, backgroundColor: 'rgba(92,124,250,0.6)' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
     }
     if (chartRadar) chartRadar.destroy();
     const ctxRadar = document.getElementById('chartRadar')?.getContext('2d');
@@ -863,7 +720,7 @@
     Object.values(agg).forEach(r => html+=`<tr><td>${r.materia}</td><td>${r.subtema}</td><td>${r.intentos}</td><td>${r.intentos?Math.round(r.bien/r.intentos*100):0}%</td></tr>`);
     html+='</table>'; wrap.innerHTML=html;
   }
-    // Calcular horas automáticamente al seleccionar horarios
+
   function calcularHoras(acostar, despertar) {
     if (!acostar || !despertar) return 0;
     const [hA, mA] = acostar.split(':').map(Number);
@@ -872,29 +729,26 @@
     if (minutos <= 0) minutos += 24 * 60;
     return Math.round(minutos / 60 * 10) / 10;
   }
+
   async function actualizarSleepHistorial() {
     const wrap = document.getElementById('sleepHistorialTable');
     const registros = await db.sueno.orderBy('fecha').reverse().toArray();
-    if (!registros.length) {
-      wrap.innerHTML = '<p style="color:var(--text2);">Sin registros de sueño.</p>';
-      return;
+    if (!registros.length) { wrap.innerHTML = '<p style="color:var(--text2);">Sin registros de sueño.</p>'; return; }
+    function formato12h(hora24) {
+      if (!hora24) return '-';
+      const [h, m] = hora24.split(':').map(Number);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 || 12;
+      return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
     }
     let html = `<table><thead><tr><th>Fecha</th><th>Horas</th><th>Calidad</th><th>Acostarse</th><th>Despertar</th><th></th></tr></thead><tbody>`;
     registros.forEach(r => {
-      function formato12h(hora24) {
-  if (!hora24) return '-';
-  const [h, m] = hora24.split(':').map(Number);
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const h12 = h % 12 || 12;
-  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
-}
-
-html += `<tr>
-  <td>${r.fecha}</td><td>${r.horas}h</td>
-  <td>${'★'.repeat(Math.floor(r.calidad))}${'☆'.repeat(10 - Math.floor(r.calidad))} ${r.calidad}/10</td>
-  <td>${formato12h(r.acostar)}</td><td>${formato12h(r.despertar)}</td>
-  <td><button class="small danger" data-del-sueno="${r.id}">X</button></td>
-</tr>`;
+      html += `<tr>
+        <td>${r.fecha}</td><td>${r.horas}h</td>
+        <td>${'★'.repeat(Math.floor(r.calidad))}${'☆'.repeat(10 - Math.floor(r.calidad))} ${r.calidad}/10</td>
+        <td>${formato12h(r.acostar)}</td><td>${formato12h(r.despertar)}</td>
+        <td><button class="small danger" data-del-sueno="${r.id}">X</button></td>
+      </tr>`;
     });
     html += '</tbody></table>';
     wrap.innerHTML = html;
@@ -904,11 +758,11 @@ html += `<tr>
         await db.sueno.delete(id);
         await db.outbox.put({ table:'sueno', record_id: id, operation: 'delete', data: { id }, onConflict: 'id', created_at: new Date().toISOString() });
         await syncAll();
-        actualizarSleepHistorial();
-        actualizarGraficoSueno();
+        actualizarSleepHistorial(); actualizarGraficoSueno();
       });
     });
   }
+
   let chartSuenoInst = null;
   async function actualizarGraficoSueno() {
     const ctx = document.getElementById('chartSueno')?.getContext('2d');
@@ -929,54 +783,61 @@ html += `<tr>
       return h * 60 + m;
     });
     chartSuenoInst = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels,
-    datasets: [
-      { label: 'Calidad (1-10)', data: calidadData, borderColor: '#5c7cfa', backgroundColor: 'transparent', yAxisID: 'y', tension: 0.3, pointRadius: 4 },
-      { label: 'Hora acostarse', data: acostarMin, borderColor: '#ffb347', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 },
-      { label: 'Hora despertar', data: despertarMin, borderColor: '#3dd6c8', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 }
-    ]
-  },
-  options: {
-    responsive: true,
-    scales: {
-      y: { type: 'linear', display: true, position: 'left', min: 1, max: 10, title: { display: true, text: 'Calidad (1-10)' } },
-      y1: {
-        type: 'linear', display: true, position: 'right', min: 0, max: 1440, title: { display: true, text: 'Minutos desde medianoche' },
-        ticks: {
-          callback: function(value) {
-            const h = Math.floor(value / 60);
-            const m = value % 60;
-            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Calidad (0-10)', data: calidadData, borderColor: '#5c7cfa', backgroundColor: 'transparent', yAxisID: 'y', tension: 0.3, pointRadius: 4 },
+          { label: 'Hora acostarse', data: acostarMin, borderColor: '#ffb347', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 },
+          { label: 'Hora despertar', data: despertarMin, borderColor: '#3dd6c8', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { type: 'linear', display: true, position: 'left', min: 0, max: 10, title: { display: true, text: 'Calidad (0-10)' } },
+          y1: {
+            type: 'linear', display: true, position: 'right', min: 0, max: 1440, title: { display: true, text: 'Minutos desde medianoche' },
+            ticks: {
+              stepSize: 60,
+              callback: function(value) {
+                const totalMin = value;
+                const h24 = Math.floor(totalMin / 60);
+                const m = totalMin % 60;
+                const ampm = h24 >= 12 ? 'PM' : 'AM';
+                let h12 = h24 % 12;
+                if (h12 === 0) h12 = 12;
+                return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+              }
+            }
+          }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) label += ': ';
+                if (context.dataset.yAxisID === 'y1') {
+                  const mins = context.parsed.y;
+                  const h24 = Math.floor(mins / 60);
+                  const m = mins % 60;
+                  const ampm = h24 >= 12 ? 'PM' : 'AM';
+                  let h12 = h24 % 12;
+                  if (h12 === 0) h12 = 12;
+                  label += `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+                } else {
+                  label += context.parsed.y;
+                }
+                return label;
+              }
+            }
           }
         }
       }
-    },
-    plugins: {
-  tooltip: {
-    callbacks: {
-      label: function(context) {
-        let label = context.dataset.label || '';
-        if (label) label += ': ';
-        if (context.dataset.yAxisID === 'y1') {
-          const mins = context.parsed.y;
-          const h = Math.floor(mins / 60);
-          const m = mins % 60;
-          const ampm = h >= 12 ? 'PM' : 'AM';
-          const h12 = h % 12 || 12;
-          label += `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
-        } else {
-          label += context.parsed.y;
-        }
-        return label;
-      }
-    }
+    });
   }
-}
-  }
-});
-  }
+
   async function actualizarMetas() {
     const hoy = new Date().toISOString().split('T')[0];
     const sessionsHoy = await db.sessions.where('fecha').equals(hoy).and(s=>s.tipo==='pomodoro').toArray();
@@ -1024,61 +885,45 @@ html += `<tr>
       actualizarChecklist();
     }));
   }
+
   function actualizarTodo() {
-    actualizarHistorial();
-    actualizarProgreso();
-    actualizarMetricas();
-    actualizarSleepHistorial();
-    actualizarGraficoSueno();
-    actualizarConjeturasSesion();
-    actualizarConjeturasFull();
-    actualizarChecklist();
-    actualizarMetas();
+    actualizarHistorial(); actualizarProgreso(); actualizarMetricas();
+    actualizarSleepHistorial(); actualizarGraficoSueno();
+    actualizarConjeturasSesion(); actualizarConjeturasFull();
+    actualizarChecklist(); actualizarMetas();
   }
 
-  // Sueño
   document.getElementById('btnGuardarSueno').addEventListener('click', async () => {
-  const fecha = document.getElementById('fechaSueno').value;
-  const acostar = document.getElementById('acostarSueno').value;
-  const despertar = document.getElementById('despertarSueno').value;
-  const horas = calcularHoras(acostar, despertar);
-  const calidad = parseFloat(document.getElementById('calidadSueno').value);
-  if(!fecha || isNaN(calidad)) return;
-  await guardarLocalYOutbox('sueno','sueno',{
-    fecha, horas, calidad,
-    acostar: acostar.substring(0, 5),      // ← recorta a HH:MM
-    despertar: despertar.substring(0, 5),  // ← recorta a HH:MM
-    timestamp: Date.now()
-  }, 'user_id,fecha');  // ← onConflict corregido
+    const fecha = document.getElementById('fechaSueno').value;
+    const acostar = document.getElementById('acostarSueno').value;
+    const despertar = document.getElementById('despertarSueno').value;
+    const horas = calcularHoras(acostar, despertar);
+    const calidad = parseFloat(document.getElementById('calidadSueno').value);
+    if(!fecha || isNaN(calidad)) return;
+    await guardarLocalYOutbox('sueno','sueno',{
+      fecha, horas, calidad,
+      acostar: acostar.substring(0, 5),
+      despertar: despertar.substring(0, 5),
+      timestamp: Date.now()
+    }, 'user_id,fecha');
     document.getElementById('calidadSueno').value = '';
     document.getElementById('acostarSueno').value = '';
     document.getElementById('despertarSueno').value = '';
     document.getElementById('horasCalculadas').textContent = '--';
     showToast('Sueño registrado ✅');
-    actualizarSleepHistorial();
-    actualizarGraficoSueno();
+    actualizarSleepHistorial(); actualizarGraficoSueno();
   });
 
-  // Metas
   document.getElementById('btnGuardarMetas').addEventListener('click', async () => {
     await guardarLocalYOutbox('metas','metas',{key:'metaDiaria', value:parseFloat(document.getElementById('metaDiaria').value)||3}, 'key,user_id');
     await guardarLocalYOutbox('metas','metas',{key:'metaSemanal', value:parseFloat(document.getElementById('metaSemanal').value)||15}, 'key,user_id');
     actualizarMetas();
   });
 
-  // Export/Import
   document.getElementById('btnExport').addEventListener('click', async () => {
-    const data = {
-      sessions: await db.sessions.toArray(),
-      conjeturas: await db.conjeturas.toArray(),
-      sueno: await db.sueno.toArray(),
-      materias: await db.materias.toArray(),
-      subtemas_extra: await db.subtemas_extra.toArray(),
-      checklist: await db.checklist.toArray(),
-      metas: await db.metas.toArray()
-    };
+    const data = { sessions: await db.sessions.toArray(), conjeturas: await db.conjeturas.toArray(), sueno: await db.sueno.toArray(), materias: await db.materias.toArray(), subtemas_extra: await db.subtemas_extra.toArray(), checklist: await db.checklist.toArray(), metas: await db.metas.toArray() };
     const blob = new Blob([JSON.stringify(data)],{type:'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'estudio_v25_backup.json'; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'estudio_v26_backup.json'; a.click();
   });
   document.getElementById('btnImport').addEventListener('click', ()=>document.getElementById('importFile').click());
   document.getElementById('importFile').addEventListener('change', async function(){
@@ -1092,14 +937,12 @@ html += `<tr>
       if(data.subtemas_extra) { await db.subtemas_extra.clear(); await db.subtemas_extra.bulkPut(data.subtemas_extra); }
       if(data.checklist) { await db.checklist.clear(); await db.checklist.bulkPut(data.checklist); }
       if(data.metas) { await db.metas.clear(); await db.metas.bulkPut(data.metas); }
-      await syncAll();
-      actualizarTodo();
+      await syncAll(); actualizarTodo();
       showToast('Datos importados.');
     } catch(e) { showToast('Error al importar.'); }
     this.value='';
   });
 
-  // Pestañas
   document.getElementById('tabNav').addEventListener('click', e => {
     if(!e.target.classList.contains('tab-btn')) return;
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -1117,7 +960,6 @@ html += `<tr>
 
   function showToast(msg, d=2600) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),d); }
 
-  // Poblar selectores
   async function poblarMaterias() {
     const sel = document.getElementById('selMateria');
     const matsDB = await db.materias.toArray();
@@ -1162,9 +1004,6 @@ html += `<tr>
     verificarAgregarSubtema();
     if(this.value!=='__agregar__'){ currentProblemaNum=1; document.getElementById('numProblema').value=1; }
   });
-    // Actualizar horas dormidas automáticamente al cambiar horarios
-  document.getElementById('acostarSueno').addEventListener('change', actualizarHorasCalculadas);
-  document.getElementById('despertarSueno').addEventListener('change', actualizarHorasCalculadas);
 
   function actualizarHorasCalculadas() {
     const acostar = document.getElementById('acostarSueno').value;
@@ -1172,13 +1011,15 @@ html += `<tr>
     const horas = calcularHoras(acostar, despertar);
     document.getElementById('horasCalculadas').textContent = horas ? horas + ' h' : '--';
   }
+  document.getElementById('acostarSueno').addEventListener('change', actualizarHorasCalculadas);
+  document.getElementById('despertarSueno').addEventListener('change', actualizarHorasCalculadas);
+
   document.getElementById('btnAgregarMateria').addEventListener('click', async ()=>{
     const nombre = document.getElementById('nuevaMateria').value.trim(); if(!nombre) return;
     await guardarLocalYOutbox('materias','materias',{nombre}, 'user_id,nombre');
     await poblarMaterias();
     document.getElementById('selMateria').value=nombre;
-    document.getElementById('nuevaMateria').value='';
-    document.getElementById('agregarMateriaRow').style.display='none';
+    document.getElementById('nuevaMateria').value=''; document.getElementById('agregarMateriaRow').style.display='none';
     document.getElementById('selMateria').dispatchEvent(new Event('change'));
   });
   document.getElementById('btnAgregarSubtema').addEventListener('click', async ()=>{
@@ -1188,21 +1029,18 @@ html += `<tr>
     const id = await guardarLocalYOutbox('subtemas_extra','subtemas_extra',{materia, nombre, etapa:'Personalizado'});
     await poblarSubtemas(materia);
     document.getElementById('selSubtema').value = 'extra_'+id;
-    document.getElementById('nuevoSubtema').value='';
-    document.getElementById('agregarSubtemaRow').style.display='none';
+    document.getElementById('nuevoSubtema').value=''; document.getElementById('agregarSubtemaRow').style.display='none';
     currentProblemaNum=1; document.getElementById('numProblema').value=1;
   });
 
-  // PWA
   function registerSW() {
     if('serviceWorker' in navigator) {
-      const blob = new Blob(["const CACHE='estudio-v25';self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['/'])));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==CACHE).map(n=>caches.delete(n)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});"], {type:'application/javascript'});
+      const blob = new Blob(["const CACHE='estudio-v26';self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['/'])));self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==CACHE).map(n=>caches.delete(n)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});"], {type:'application/javascript'});
       navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
     }
   }
   registerSW();
 
-  // Inicialización
   async function initApp() {
     await syncAll();
     await poblarMaterias();
