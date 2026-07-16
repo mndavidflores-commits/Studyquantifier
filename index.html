@@ -827,12 +827,20 @@
     }
     let html = `<table><thead><tr><th>Fecha</th><th>Horas</th><th>Calidad</th><th>Acostarse</th><th>Despertar</th><th></th></tr></thead><tbody>`;
     registros.forEach(r => {
-      html += `<tr>
-        <td>${r.fecha}</td><td>${r.horas}h</td>
-        <td>${'★'.repeat(Math.floor(r.calidad))}${'☆'.repeat(10 - Math.floor(r.calidad))} ${r.calidad}/10</td>
-        <td>${r.acostar||'-'}</td><td>${r.despertar||'-'}</td>
-        <td><button class="small danger" data-del-sueno="${r.id}">X</button></td>
-      </tr>`;
+      function formato12h(hora24) {
+  if (!hora24) return '-';
+  const [h, m] = hora24.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+
+html += `<tr>
+  <td>${r.fecha}</td><td>${r.horas}h</td>
+  <td>${'★'.repeat(Math.floor(r.calidad))}${'☆'.repeat(10 - Math.floor(r.calidad))} ${r.calidad}/10</td>
+  <td>${formato12h(r.acostar)}</td><td>${formato12h(r.despertar)}</td>
+  <td><button class="small danger" data-del-sueno="${r.id}">X</button></td>
+</tr>`;
     });
     html += '</tbody></table>';
     wrap.innerHTML = html;
@@ -892,25 +900,26 @@
       }
     },
     plugins: {
-      tooltip: {
-        callbacks: {
-          label: function(context) {
-            let label = context.dataset.label || '';
-            if (label) label += ': ';
-            if (context.dataset.yAxisID === 'y1') {
-              // Es una hora en minutos
-              const mins = context.parsed.y;
-              const h = Math.floor(mins / 60);
-              const m = mins % 60;
-              label += `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-            } else {
-              label += context.parsed.y;
-            }
-            return label;
-          }
+  tooltip: {
+    callbacks: {
+      label: function(context) {
+        let label = context.dataset.label || '';
+        if (label) label += ': ';
+        if (context.dataset.yAxisID === 'y1') {
+          const mins = context.parsed.y;
+          const h = Math.floor(mins / 60);
+          const m = mins % 60;
+          const ampm = h >= 12 ? 'PM' : 'AM';
+          const h12 = h % 12 || 12;
+          label += `${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+        } else {
+          label += context.parsed.y;
         }
+        return label;
       }
     }
+  }
+}
   }
 });
   }
