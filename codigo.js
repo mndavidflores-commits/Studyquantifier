@@ -3,8 +3,10 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
   const SUPABASE_URL = 'https://wrtmlucrxzewynnnikzh.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_qJcUe3t_K5Yl0m7lkV3C_A_5bcdtOFs';
   const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  window.supabase = supabase;
 
   const db = new Dexie('EstudioDBv26');
+  window.db = db;  
   db.version(2).stores({
     sessions: 'id, updated_at, sesion_id, tipo, fecha, timestamp',
     conjeturas: 'id, updated_at, sesion_id, timestamp',
