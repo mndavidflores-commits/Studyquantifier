@@ -267,7 +267,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
     const total = problemas.length, tiempoTotal = problemas.reduce((a, p) => a + (p.tiempo_s || 0), 0);
     const conjs = (await db.conjeturas.where('sesion_id').equals(session.tempId).toArray()).length;
     const idSesion = await guardarLocalYOutbox('study_sessions', 'sessions', {
-      tipo: 'pomodoro', fecha: new Date().toISOString().split('T')[0], timestamp: Date.now(),
+      tipo: 'pomodoro', fecha: new Date().toISOString().split('T')[0], timestamp: new Date().toISOString(),
       modo: document.getElementById('selModo').value, fase: document.getElementById('selFase').value,
       materia: document.getElementById('selMateria').value, subtema_id: document.getElementById('selSubtema').value,
       subtema_nombre: document.getElementById('selSubtema').selectedOptions[0]?.textContent || '',
