@@ -105,6 +105,37 @@
       <div class="card"><h3>Tiempo promedio por materia</h3><div class="chart-container"><canvas id="chartTiempoMateria"></canvas></div></div>
       <div class="card"><h3>Perfil de aprendizaje</h3><div class="chart-container"><canvas id="chartRadar"></canvas></div></div>
       <div class="card"><h3>Evolución de la tasa de aciertos (por día)</h3><div class="chart-container"><canvas id="chartEvolucion"></canvas></div></div>
+          <div class="card" style="grid-column:span 2;">
+      <label for="filtroMateriaMetricas">Filtrar por materia:</label>
+      <select id="filtroMateriaMetricas" style="max-width:250px;">
+        <option value="todas">Todas</option>
+      </select>
+    </div>
+
+    <!-- Nivel 1: Evolución por fase dentro de cada materia -->
+    <div class="card">
+      <h3>Evolución tasa de aciertos por materia y fase</h3>
+      <div class="chart-container"><canvas id="chartFaseLinea"></canvas></div>
+    </div>
+
+    <!-- Nivel 2: Mejora relativa entre fases -->
+    <div class="card">
+      <h3>Mejora relativa por materia</h3>
+      <div class="chart-container"><canvas id="chartMejoraBarras"></canvas></div>
+    </div>
+
+    <!-- Nivel 3: Perfil de aprendizaje por materia -->
+    <div class="card">
+      <h3>Perfil de aprendizaje por materia</h3>
+      <select id="selMateriaRadar" style="max-width:250px; margin-bottom:10px;"></select>
+      <div class="chart-container"><canvas id="chartRadarMateria"></canvas></div>
+    </div>
+
+    <!-- Nivel 4: Tabla de métricas agregadas -->
+    <div class="card">
+      <h3>Tabla de métricas agregadas por materia y fase</h3>
+      <div id="tablaMetricasAgregadas" style="overflow-x:auto;"></div>
+    </div>
     </div>
 
     <!-- Panel Sueño -->
