@@ -752,13 +752,22 @@
     });
     html += '</tbody></table>';
     wrap.innerHTML = html;
-    wrap.querySelectorAll('[data-del-sueno]').forEach(btn => {
+        wrap.querySelectorAll('[data-del-sueno]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.delSueno;
+        // 1. Eliminar localmente
         await db.sueno.delete(id);
-        await db.outbox.put({ table:'sueno', record_id: id, operation: 'delete', data: { id }, onConflict: 'id', created_at: new Date().toISOString() });
-        await syncAll();
-        actualizarSleepHistorial(); actualizarGraficoSueno();
+        // 2. Eliminar directamente en Supabase
+        const { error } = await supabase.from('sueno').delete().eq('id', id);
+        if (error) {
+          console.error('Error al eliminar en Supabase:', error);
+          showToast('Error al eliminar el registro remoto');
+        } else {
+          showToast('Sueño eliminado ✅');
+        }
+        // 3. Refrescar vistas
+        actualizarSleepHistorial();
+        actualizarGraficoSueno();
       });
     });
   }
