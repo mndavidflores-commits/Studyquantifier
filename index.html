@@ -880,8 +880,8 @@ html += `<tr>
     labels,
     datasets: [
       { label: 'Calidad (1-10)', data: calidadData, borderColor: '#5c7cfa', backgroundColor: 'transparent', yAxisID: 'y', tension: 0.3, pointRadius: 4 },
-      { label: 'Hora acostarse (min)', data: acostarMin, borderColor: '#ffb347', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 },
-      { label: 'Hora despertar (min)', data: despertarMin, borderColor: '#3dd6c8', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 }
+      { label: 'Hora acostarse', data: acostarMin, borderColor: '#ffb347', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 },
+      { label: 'Hora despertar', data: despertarMin, borderColor: '#3dd6c8', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 }
     ]
   },
   options: {
@@ -991,11 +991,11 @@ html += `<tr>
     const calidad = parseFloat(document.getElementById('calidadSueno').value);
     if(!fecha||isNaN(calidad)) return;
     await guardarLocalYOutbox('sueno','sueno',{
-      fecha, horas, calidad,
-      acostar: acostar,
-      despertar: despertar,
-      timestamp: Date.now()
-    }, 'user_id,fecha');  // ← onConflict corregido
+  fecha, horas, calidad,
+  acostar: acostar.substring(0, 5),   // ← recortar a "HH:MM"
+  despertar: despertar.substring(0, 5),
+  timestamp: Date.now()
+}, 'user_id,fecha');  // ← onConflict corregido
     document.getElementById('calidadSueno').value = '';
     document.getElementById('acostarSueno').value = '';
     document.getElementById('despertarSueno').value = '';
