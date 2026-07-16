@@ -168,7 +168,10 @@
         <h3>Registrar sueño</h3>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
           <div><label>Fecha</label><input type="date" id="fechaSueno"></div>
-          <div><label>Horas dormidas</label><input type="number" id="horasSueno" step="0.5" placeholder="Ej: 7.5"></div>
+          <div>
+            <label>Horas dormidas (calculadas)</label>
+            <span id="horasCalculadas" style="font-size:1.2rem; font-weight:bold; color:var(--accent3);">--</span>
+          </div>
           <div><label>Calidad (1-10)</label><input type="number" id="calidadSueno" min="1" max="10" placeholder="1=mala, 10=excelente"></div>
           <div><label>😴 Hora de acostarse</label><input type="time" id="acostarSueno"></div>
           <div><label>⏰ Hora de despertar</label><input type="time" id="despertarSueno"></div>
@@ -806,6 +809,15 @@
     Object.values(agg).forEach(r => html+=`<tr><td>${r.materia}</td><td>${r.subtema}</td><td>${r.intentos}</td><td>${r.intentos?Math.round(r.bien/r.intentos*100):0}%</td></tr>`);
     html+='</table>'; wrap.innerHTML=html;
   }
+    // Calcular horas automáticamente al seleccionar horarios
+  function calcularHoras(acostar, despertar) {
+    if (!acostar || !despertar) return 0;
+    const [hA, mA] = acostar.split(':').map(Number);
+    const [hD, mD] = despertar.split(':').map(Number);
+    let minutos = (hD * 60 + mD) - (hA * 60 + mA);
+    if (minutos <= 0) minutos += 24 * 60;
+    return Math.round(minutos / 60 * 10) / 10;
+  }
   async function actualizarSleepHistorial() {
     const wrap = document.getElementById('sleepHistorialTable');
     const registros = await db.sueno.orderBy('fecha').reverse().toArray();
@@ -937,19 +949,21 @@
   // Sueño
   document.getElementById('btnGuardarSueno').addEventListener('click', async () => {
     const fecha = document.getElementById('fechaSueno').value;
-    const horas = parseFloat(document.getElementById('horasSueno').value);
+    const acostar = document.getElementById('acostarSueno').value;
+    const despertar = document.getElementById('despertarSueno').value;
+    const horas = calcularHoras(acostar, despertar);
     const calidad = parseInt(document.getElementById('calidadSueno').value);
-    if(!fecha||isNaN(horas)||isNaN(calidad)) return;
+    if(!fecha||isNaN(calidad)) return;
     await guardarLocalYOutbox('sueno','sueno',{
       fecha, horas, calidad,
-      acostar: document.getElementById('acostarSueno').value,
-      despertar: document.getElementById('despertarSueno').value,
+      acostar: acostar,
+      despertar: despertar,
       timestamp: Date.now()
-    });
-    document.getElementById('horasSueno').value = '';
+    }, 'user_id,fecha');  // ← onConflict corregido
     document.getElementById('calidadSueno').value = '';
     document.getElementById('acostarSueno').value = '';
     document.getElementById('despertarSueno').value = '';
+    document.getElementById('horasCalculadas').textContent = '--';
     showToast('Sueño registrado ✅');
     actualizarSleepHistorial();
     actualizarGraficoSueno();
@@ -1058,6 +1072,16 @@
     verificarAgregarSubtema();
     if(this.value!=='__agregar__'){ currentProblemaNum=1; document.getElementById('numProblema').value=1; }
   });
+    // Actualizar horas dormidas automáticamente al cambiar horarios
+  document.getElementById('acostarSueno').addEventListener('change', actualizarHorasCalculadas);
+  document.getElementById('despertarSueno').addEventListener('change', actualizarHorasCalculadas);
+
+  function actualizarHorasCalculadas() {
+    const acostar = document.getElementById('acostarSueno').value;
+    const despertar = document.getElementById('despertarSueno').value;
+    const horas = calcularHoras(acostar, despertar);
+    document.getElementById('horasCalculadas').textContent = horas ? horas + ' h' : '--';
+  }
   document.getElementById('btnAgregarMateria').addEventListener('click', async ()=>{
     const nombre = document.getElementById('nuevaMateria').value.trim(); if(!nombre) return;
     await guardarLocalYOutbox('materias','materias',{nombre}, 'user_id,nombre');
