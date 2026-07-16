@@ -964,7 +964,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
     if(!fecha || isNaN(calidad)) return;
     await guardarLocalYOutbox('sueno','sueno',{
       fecha, horas, calidad,
-marca_tiempo: new Date().toISOString(),acostar: acostar + ':00',
+timestamp: new Date().toISOString(),acostar: acostar + ':00',
 despertar: despertar + ':00'
     }, 'user_id,fecha');
     document.getElementById('calidadSueno').value = '';
