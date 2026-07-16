@@ -777,7 +777,61 @@
       problemas.forEach(s => { if (!mats[s.materia]) mats[s.materia] = { total:0, count:0 }; mats[s.materia].total += (s.tiempo_s||0); mats[s.materia].count++; });
       const labels = Object.keys(mats);
       const data = labels.map(m => mats[m].count ? Math.round(mats[m].total/mats[m].count) : 0);
-      chartTiempo = new Chart(ctxBar, { type: 'bar', data: { labels, datasets: [{ label: 'Tiempo prom (s)', data, backgroundColor: 'rgba(92,124,250,0.6)' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
+      chartTiempo = new Chart(ctxBar, { type: 'bar', data: { labels, datasets: [{ label: 'Tiempo prom (s)', data, backgroundColor: 'rgba(92,124,250,0.6)' }] }, options: {
+  responsive: true,
+  scales: {
+    y: {
+      type: 'linear',
+      display: true,
+      position: 'left',
+      min: 0,                    // ← cambiado de 1 a 0
+      max: 10,
+      title: { display: true, text: 'Calidad (1-10)' }
+    },
+    y1: {
+      type: 'linear',
+      display: true,
+      position: 'right',
+      min: 0,
+      max: 1440,
+      title: { display: true, text: 'Minutos desde medianoche' },
+      ticks: {
+        stepSize: 60,  // opcional, para tener marcas cada hora
+        callback: function(value) {
+          const totalMin = value;
+          const h24 = Math.floor(totalMin / 60);
+          const m = totalMin % 60;
+          const ampm = h24 >= 12 ? 'PM' : 'AM';
+          let h12 = h24 % 12;
+          if (h12 === 0) h12 = 12;
+          return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+        }
+      }
+    }
+  },
+  plugins: {
+    tooltip: {
+      callbacks: {
+        label: function(context) {
+          let label = context.dataset.label || '';
+          if (label) label += ': ';
+          if (context.dataset.yAxisID === 'y1') {
+            const mins = context.parsed.y;
+            const h24 = Math.floor(mins / 60);
+            const m = mins % 60;
+            const ampm = h24 >= 12 ? 'PM' : 'AM';
+            let h12 = h24 % 12;
+            if (h12 === 0) h12 = 12;
+            label += `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+          } else {
+            label += context.parsed.y;
+          }
+          return label;
+        }
+      }
+    }
+  }
+} });
     }
     if (chartRadar) chartRadar.destroy();
     const ctxRadar = document.getElementById('chartRadar')?.getContext('2d');
@@ -984,18 +1038,18 @@ html += `<tr>
 
   // Sueño
   document.getElementById('btnGuardarSueno').addEventListener('click', async () => {
-    const fecha = document.getElementById('fechaSueno').value;
-    const acostar = document.getElementById('acostarSueno').value;
-    const despertar = document.getElementById('despertarSueno').value;
-    const horas = calcularHoras(acostar, despertar);
-    const calidad = parseFloat(document.getElementById('calidadSueno').value);
-    if(!fecha||isNaN(calidad)) return;
-    await guardarLocalYOutbox('sueno','sueno',{
-  fecha, horas, calidad,
-  acostar: acostar.substring(0, 5),   // ← recortar a "HH:MM"
-  despertar: despertar.substring(0, 5),
-  timestamp: Date.now()
-}, 'user_id,fecha');  // ← onConflict corregido
+  const fecha = document.getElementById('fechaSueno').value;
+  const acostar = document.getElementById('acostarSueno').value;
+  const despertar = document.getElementById('despertarSueno').value;
+  const horas = calcularHoras(acostar, despertar);
+  const calidad = parseFloat(document.getElementById('calidadSueno').value);
+  if(!fecha || isNaN(calidad)) return;
+  await guardarLocalYOutbox('sueno','sueno',{
+    fecha, horas, calidad,
+    acostar: acostar.substring(0, 5),      // ← recorta a HH:MM
+    despertar: despertar.substring(0, 5),  // ← recorta a HH:MM
+    timestamp: Date.now()
+  }, 'user_id,fecha');  // ← onConflict corregido
     document.getElementById('calidadSueno').value = '';
     document.getElementById('acostarSueno').value = '';
     document.getElementById('despertarSueno').value = '';
