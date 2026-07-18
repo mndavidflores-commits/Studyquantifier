@@ -68,11 +68,26 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
   async function pushChanges() {
     const ops = await db.outbox.toArray();
+    if (ops.length === 0) {
+      showToast('Nada pendiente por sincronizar', 2000);
+      return;
+    }
+    let enviados = 0, fallidos = 0;
     for (const op of ops) {
       const { error } = await supabase.from(op.table).upsert(op.data, { onConflict: op.onConflict || 'id' });
-      if (!error) await db.outbox.delete(op.localId);
+      if (!error) {
+        await db.outbox.delete(op.localId);
+        enviados++;
+      } else {
+        console.error('Error al sincronizar registro:', error);
+        fallidos++;
+      }
     }
-  }
+    showToast(`Sincronizado: ${enviados} registros. ${fallidos ? 'Fallidos: ' + fallidos : ''}`, 3000);
+    if (fallidos > 0) {
+      console.warn('Algunos registros no se pudieron enviar. Mira los errores en la consola (F12).');
+    }
+}
   async function pullChanges() {
     const tablas = ['study_sessions','conjeturas','sueno','materias','subtemas_extra','checklist','metas'];
     for (const tabla of tablas) {
@@ -1003,7 +1018,16 @@ despertar: despertar + ':00'
     } catch(e) { showToast('Error al importar.'); }
     this.value='';
   });
-
+document.getElementById('btnSyncNow').addEventListener('click', async () => {
+    if (!sessionActual?.user) {
+      showToast('Inicia sesión primero', 2000);
+      return;
+    }
+    showToast('Sincronizando…', 1500);
+    await pushChanges();
+    await pullChanges();
+    actualizarTodo();
+});
   document.getElementById('tabNav').addEventListener('click', e => {
     if(!e.target.classList.contains('tab-btn')) return;
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
