@@ -1024,9 +1024,31 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
       return;
     }
     showToast('Sincronizando…', 1500);
-        // Línea temporal para ver el outbox
-    alert(JSON.stringify(await db.outbox.toArray()));
-    await pushChanges();
+
+    const ops = await db.outbox.toArray();
+    if (ops.length === 0) {
+      alert('Outbox vacío. Nada que sincronizar.');
+      return;
+    }
+
+    let enviados = 0, errores = [];
+    for (const op of ops) {
+      const { error } = await supabase.from(op.table).upsert(op.data, { onConflict: op.onConflict || 'id' });
+      if (!error) {
+        await db.outbox.delete(op.localId);
+        enviados++;
+      } else {
+        errores.push({ table: op.table, id: op.record_id, mensaje: error.message, detalles: error });
+        console.error('Error al sincronizar:', error);
+      }
+    }
+
+    if (errores.length > 0) {
+      alert('Errores:\n' + JSON.stringify(errores, null, 2));
+    } else {
+      alert('Enviados: ' + enviados);
+    }
+
     await pullChanges();
     actualizarTodo();
 });
