@@ -1024,6 +1024,8 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
       return;
     }
     showToast('Sincronizando…', 1500);
+        // Línea temporal para ver el outbox
+    alert(JSON.stringify(await db.outbox.toArray()));
     await pushChanges();
     await pullChanges();
     actualizarTodo();
