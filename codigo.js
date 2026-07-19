@@ -18,17 +18,6 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
     outbox: '++localId, table, record_id, operation, data, created_at',
     sync_metadata: 'key'
 });
-db.version(3).stores({
-    sessions: 'id, updated_at, sesion_id, tipo, fecha, timestamp',
-    conjeturas: 'id, updated_at, sesion_id, timestamp, materia',
-    sueno: 'id, updated_at, fecha',
-    materias: 'id, nombre, updated_at',
-    subtemas_extra: 'id, materia, nombre, updated_at',
-    checklist: 'subtema_id, updated_at',
-    metas: 'key, updated_at',
-    outbox: '++localId, table, record_id, operation, data, created_at',
-    sync_metadata: 'key'
-});
   const State = {
     IDLE: 'IDLE', FOCUS_RUNNING: 'FOCUS_RUNNING', FOCUS_PAUSED: 'FOCUS_PAUSED',
     BREAK_RUNNING: 'BREAK_RUNNING', BREAK_PAUSED: 'BREAK_PAUSED', SESSION_ENDING: 'SESSION_ENDING'
