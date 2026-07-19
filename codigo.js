@@ -121,7 +121,8 @@ async function pullChanges() {
   async function guardarLocalYOutbox(tablaSupabase, coleccionDexie, datos, onConflict = 'id') {
     if (!sessionActual?.user) return null;
     const id = datos.id || crypto.randomUUID();
-    const registro = { ...datos, id, user_id: sessionActual.user.id, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+    const existente = datos.id ? await db[coleccionDexie].get(id) : null;
+    const registro = { ...datos, id, user_id: sessionActual.user.id, created_at: existente?.created_at || datos.created_at || new Date().toISOString(), updated_at: new Date().toISOString() };
     await db[coleccionDexie].put(registro);
     await db.outbox.put({ table: tablaSupabase, record_id: id, operation: 'insert', data: registro, onConflict, created_at: new Date().toISOString() });
     await syncAll();
@@ -699,7 +700,7 @@ async function corregirSesionId(tempId, idSesionReal) {
     document.getElementById('checklistPercent').textContent = pct+'% completado ('+completado+'/'+totalSubtemas+')';
     container.querySelectorAll('.checklist-cb').forEach(cb=>cb.addEventListener('change', async function(){
       const stid = this.dataset.stid;
-      if(this.checked) await guardarLocalYOutbox('checklist','checklist',{subtema_id:stid, fecha_completado:new Date().toISOString().split('T')[0]}, 'subtema_id,user_id');
+      if(this.checked) await guardarLocalYOutbox('checklist','checklist',{id:stid, subtema_id:stid, fecha_completado:new Date().toISOString().split('T')[0]}, 'subtema_id,user_id');
       else {
         await db.checklist.where('subtema_id').equals(stid).delete();
         await db.outbox.put({table:'checklist', record_id:stid, operation:'delete', data:{subtema_id:stid, user_id:sessionActual.user.id}, onConflict:'subtema_id,user_id', created_at:new Date().toISOString()});
@@ -1181,11 +1182,11 @@ let enviados = 0, errores = [];
 function registerSW() {
   if ('serviceWorker' in navigator) {
     const swCode = `
-      const CACHE = 'estudio-v27';
+      const CACHE = 'estudio-v28';
 
       self.addEventListener('install', event => {
         event.waitUntil(
-          caches.open(CACHE).then(cache => cache.addAll(['/']))
+          caches.open(CACHE).then(cache => cache.addAll(['./', './index.html', './codigo.js', './estilo.css']))
         );
         self.skipWaiting();
       });
