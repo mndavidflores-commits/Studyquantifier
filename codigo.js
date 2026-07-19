@@ -975,21 +975,7 @@ async function corregirSesionId(tempId, idSesionReal) {
     await actualizarTablaAgregada();
   }
 
-  // Llamada inicial cuando se muestra el panel Métricas
-  // Modificar el listener de pestañas para que también actualice estos gráficos
-  const originalTabNavHandler = document.getElementById('tabNav').onclick;
-  document.getElementById('tabNav').addEventListener('click', async function(e) {
-    if (!e.target.classList.contains('tab-btn')) return;
-    // El código original ya maneja el cambio de paneles, pero añadimos llamada extra para Métricas
-    if (e.target.dataset.panel === 'panelMetricas') {
-      // Esperamos un poco a que el panel esté visible y luego poblamos selectores
-      await poblarSelectoresMateria();
-      await actualizarMetricasAvanzadas();
-    }
-  });
-
   // También actualizar al cambiar el filtro general (ya está enlazado)
-  // Y al iniciar la app, después del primer sync
   const originalInitApp = initApp;
   initApp = async function() {
     await originalInitApp();
@@ -1098,8 +1084,7 @@ let enviados = 0, errores = [];
     document.getElementById(e.target.dataset.panel).classList.add('active');
     if(e.target.dataset.panel==='panelHistorial') actualizarHistorial();
     if(e.target.dataset.panel==='panelProgreso') actualizarProgreso();
-    if(e.target.dataset.panel==='panelMetricas') { actualizarMetricas(); /* La llamada a avanzadas se hace en el listener adicional */ }
-    if(e.target.dataset.panel==='panelSueno') { actualizarSleepHistorial(); actualizarGraficoSueno(); }
+    if(e.target.dataset.panel==='panelMetricas') { actualizarMetricas(); poblarSelectoresMateria().then(actualizarMetricasAvanzadas); }    if(e.target.dataset.panel==='panelSueno') { actualizarSleepHistorial(); actualizarGraficoSueno(); }
     if(e.target.dataset.panel==='panelConjeturas') actualizarConjeturasFull();
     if(e.target.dataset.panel==='panelChecklist') actualizarChecklist();
     if(e.target.dataset.panel==='panelMetas') actualizarMetas();
