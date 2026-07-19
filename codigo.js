@@ -1035,6 +1035,23 @@ despertar: despertar + ':00'
     } catch(e) { showToast('Error al importar.'); }
     this.value='';
   });
+  document.getElementById('btnLoadTemario').addEventListener('click', ()=>document.getElementById('temarioFile').click());
+  document.getElementById('temarioFile').addEventListener('change', async function(){
+    const file = this.files[0]; if(!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if(!Array.isArray(data) || !data.every(t => t.materia && t.nombre)) {
+        showToast('Formato de temario inválido (se esperaba una lista con materia y nombre).');
+        this.value=''; return;
+      }
+      currentTemario = data;
+      await poblarMaterias();
+      document.getElementById('selMateria').dispatchEvent(new Event('change'));
+      await actualizarChecklist();
+      showToast('Temario cargado ✅');
+    } catch(e) { showToast('Error al cargar el temario.'); }
+    this.value='';
+  });
 document.getElementById('btnSyncNow').addEventListener('click', async () => {
     if (!sessionActual?.user) {
       showToast('Inicia sesión primero', 2000);
