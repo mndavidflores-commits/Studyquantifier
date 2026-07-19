@@ -577,13 +577,9 @@ async function corregirSesionId(tempId, idSesionReal) {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.delSueno;
         await db.sueno.delete(id);
-        const { error } = await supabase.from('sueno').delete().eq('id', id);
-        if (error) {
-          console.error('Error al eliminar en Supabase:', error);
-          showToast('Error al eliminar el registro remoto');
-        } else {
-          showToast('Sueño eliminado ✅');
-        }
+        await db.outbox.put({ table: 'sueno', record_id: id, operation: 'delete', data: { id, user_id: sessionActual.user.id }, onConflict: 'id', created_at: new Date().toISOString() });
+        showToast('Sueño eliminado ✅');
+        await syncAll();
         actualizarSleepHistorial();
         actualizarGraficoSueno();
       });
