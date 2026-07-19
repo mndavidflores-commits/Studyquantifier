@@ -18,6 +18,9 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
     outbox: '++localId, table, record_id, operation, data, created_at',
     sync_metadata: 'key'
 });
+  db.version(3).stores({
+    conjeturas: 'id, updated_at, sesion_id, timestamp, materia'
+});
   const State = {
     IDLE: 'IDLE', FOCUS_RUNNING: 'FOCUS_RUNNING', FOCUS_PAUSED: 'FOCUS_PAUSED',
     BREAK_RUNNING: 'BREAK_RUNNING', BREAK_PAUSED: 'BREAK_PAUSED', SESSION_ENDING: 'SESSION_ENDING'
@@ -40,6 +43,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
   // NUEVO: Variables para los gráficos de análisis por materia
   let chartFaseLinea, chartMejoraBarras, chartRadarMateria;
 
+let appInitialized = false;
   function actualizarUI(s) {
     sessionActual = s;
     if (s?.user) {
@@ -47,15 +51,16 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
       document.getElementById('btn-login').style.display = 'none';
       document.getElementById('btn-logout').style.display = 'inline-block';
       document.getElementById('app-content').style.display = 'block';
-      initApp();
+      if (!appInitialized) { appInitialized = true; initApp(); }
     } else {
+      appInitialized = false;
       document.getElementById('auth-status').textContent = 'No has iniciado sesión.';
       document.getElementById('btn-login').style.display = 'inline-block';
       document.getElementById('btn-logout').style.display = 'none';
       document.getElementById('app-content').style.display = 'none';
     }
   }
-  const { data: { session: s } } = await supabase.auth.getSession();
+const { data: { session: s } } = await supabase.auth.getSession();
   actualizarUI(s);
   supabase.auth.onAuthStateChange((event, s) => actualizarUI(s));
   document.getElementById('btn-login').addEventListener('click', async () => {
@@ -65,7 +70,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
     await supabase.auth.signOut(); actualizarUI(null);
   });
 
-  async function pushChanges() {
+async function pushChanges() {
     const ops = await db.outbox.toArray();
     if (ops.length === 0) {
       showToast('Nada pendiente por sincronizar', 2000);
@@ -73,7 +78,15 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
     }
     let enviados = 0, fallidos = 0;
     for (const op of ops) {
-      const { error } = await supabase.from(op.table).upsert(op.data, { onConflict: op.onConflict || 'id' });
+      let error;
+      if (op.operation === 'delete') {
+        const keys = (op.onConflict || 'id').split(',').map(k => k.trim());
+        let query = supabase.from(op.table).delete();
+        keys.forEach(k => { query = query.eq(k, op.data[k]); });
+        ({ error } = await query);
+      } else {
+        ({ error } = await supabase.from(op.table).upsert(op.data, { onConflict: op.onConflict || 'id' }));
+      }
       if (!error) {
         await db.outbox.delete(op.localId);
         enviados++;
@@ -87,7 +100,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
       console.warn('Algunos registros no se pudieron enviar. Mira los errores en la consola (F12).');
     }
 }
-  async function pullChanges() {
+async function pullChanges() {
     const tablas = ['study_sessions','conjeturas','sueno','materias','subtemas_extra','checklist','metas'];
     for (const tabla of tablas) {
       const lastSync = await db.sync_metadata.get(`last_pull_${tabla}`);
@@ -114,7 +127,27 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
     await syncAll();
     return id;
   }
-
+async function corregirSesionId(tempId, idSesionReal) {
+    const problemas = await db.sessions.where('sesion_id').equals(tempId).toArray();
+    await db.sessions.where('sesion_id').equals(tempId).modify({ sesion_id: idSesionReal });
+    for (const p of problemas) {
+      await db.outbox.put({
+        table: 'study_sessions', record_id: p.id, operation: 'insert',
+        data: { id: p.id, sesion_id: idSesionReal, user_id: sessionActual.user.id, updated_at: new Date().toISOString() },
+        onConflict: 'id', created_at: new Date().toISOString()
+      });
+    }
+    const conjs = await db.conjeturas.where('sesion_id').equals(tempId).toArray();
+    await db.conjeturas.where('sesion_id').equals(tempId).modify({ sesion_id: idSesionReal });
+    for (const c of conjs) {
+      await db.outbox.put({
+        table: 'conjeturas', record_id: c.id, operation: 'insert',
+        data: { id: c.id, sesion_id: idSesionReal, user_id: sessionActual.user.id, updated_at: new Date().toISOString() },
+        onConflict: 'id', created_at: new Date().toISOString()
+      });
+    }
+    await syncAll();
+  }
   function formatTime(sec) {
     if (isNaN(sec) || sec < 0) sec = 0;
     const m = Math.floor(sec / 60), s = Math.floor(sec % 60), d = Math.floor((sec % 1) * 10);
@@ -295,8 +328,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
       pomodoro_label: 'pomodoro_' + Date.now()
     });
     if (idSesion) {
-      await db.sessions.where('sesion_id').equals(session.tempId).modify({ sesion_id: idSesion });
-      await db.conjeturas.where('sesion_id').equals(session.tempId).modify({ sesion_id: idSesion });
+      await corregirSesionId(session.tempId, idSesion);
     }
     document.getElementById('modalResumen').style.display = 'none';
     transition(State.IDLE);
@@ -1030,18 +1062,25 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
       return;
     }
 
-    let enviados = 0, errores = [];
+let enviados = 0, errores = [];
     for (const op of ops) {
-      const { error } = await supabase.from(op.table).upsert(op.data, { onConflict: op.onConflict || 'id' });
+      let error;
+      if (op.operation === 'delete') {
+        const keys = (op.onConflict || 'id').split(',').map(k => k.trim());
+        let query = supabase.from(op.table).delete();
+        keys.forEach(k => { query = query.eq(k, op.data[k]); });
+        ({ error } = await query);
+      } else {
+        ({ error } = await supabase.from(op.table).upsert(op.data, { onConflict: op.onConflict || 'id' }));
+      }
       if (!error) {
         await db.outbox.delete(op.localId);
         enviados++;
       } else {
-        errores.push({ table: op.table, id: op.record_id, mensaje: error.message, detalles: error });
+        errores.push({ table: op.table, id: op.record_id, mensaje: error?.message, detalles: error });
         console.error('Error al sincronizar:', error);
       }
     }
-
     if (errores.length > 0) {
       alert('Errores:\n' + JSON.stringify(errores, null, 2));
     } else {
