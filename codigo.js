@@ -39,7 +39,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
     {id:2,materia:'Álgebra',etapa:'B1',nombre:'Polinomios'}
   ];
   let currentTemario = [...temarioEmbebido];
-  let chartTiempo, chartRadar, chartEvolucion, chartSueno;
+    let chartTiempo, chartRadar, chartEvolucion;
   // NUEVO: Variables para los gráficos de análisis por materia
   let chartFaseLinea, chartMejoraBarras, chartRadarMateria;
 
@@ -81,7 +81,7 @@ async function pushChanges() {
       let error;
       if (op.operation === 'delete') {
         const keys = (op.onConflict || 'id').split(',').map(k => k.trim());
-        let query = supabase.from(op.table).delete();
+        let query = supabase.from(op.table).update({ deleted_at: op.data.deleted_at || new Date().toISOString() });
         keys.forEach(k => { query = query.eq(k, op.data[k]); });
         ({ error } = await query);
       } else {
@@ -100,7 +100,12 @@ async function pushChanges() {
       console.warn('Algunos registros no se pudieron enviar. Mira los errores en la consola (F12).');
     }
 }
-async function pullChanges() {
+function pkFieldFor(coleccion) {
+    if (coleccion === 'checklist') return 'subtema_id';
+    if (coleccion === 'metas') return 'key';
+    return 'id';
+  }
+  async function pullChanges() {
     const tablas = ['study_sessions','conjeturas','sueno','materias','subtemas_extra','checklist','metas'];
     for (const tabla of tablas) {
       const lastSync = await db.sync_metadata.get(`last_pull_${tabla}`);
@@ -108,7 +113,13 @@ async function pullChanges() {
       const { data: nuevos } = await supabase.from(tabla).select('*').gt('updated_at', lastPullTime);
       if (nuevos?.length > 0) {
         const coleccion = tabla === 'study_sessions' ? 'sessions' : tabla;
-        await db[coleccion].bulkPut(nuevos);
+        const activos = nuevos.filter(r => !r.deleted_at);
+        const borrados = nuevos.filter(r => r.deleted_at);
+        if (activos.length > 0) await db[coleccion].bulkPut(activos);
+        if (borrados.length > 0) {
+          const pk = pkFieldFor(coleccion);
+          await db[coleccion].bulkDelete(borrados.map(r => r[pk]));
+        }
       }
       await db.sync_metadata.put({ key: `last_pull_${tabla}`, value: new Date().toISOString() });
     }
@@ -122,7 +133,7 @@ async function pullChanges() {
     if (!sessionActual?.user) return null;
     const id = datos.id || crypto.randomUUID();
     const existente = datos.id ? await db[coleccionDexie].get(id) : null;
-    const registro = { ...datos, id, user_id: sessionActual.user.id, created_at: existente?.created_at || datos.created_at || new Date().toISOString(), updated_at: new Date().toISOString() };
+    const registro = { ...datos, id, user_id: sessionActual.user.id, created_at: existente?.created_at || datos.created_at || new Date().toISOString(), updated_at: new Date().toISOString(), deleted_at: null };
     await db[coleccionDexie].put(registro);
     await db.outbox.put({ table: tablaSupabase, record_id: id, operation: 'insert', data: registro, onConflict, created_at: new Date().toISOString() });
     await syncAll();
@@ -578,7 +589,7 @@ async function corregirSesionId(tempId, idSesionReal) {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.delSueno;
         await db.sueno.delete(id);
-        await db.outbox.put({ table: 'sueno', record_id: id, operation: 'delete', data: { id, user_id: sessionActual.user.id }, onConflict: 'id', created_at: new Date().toISOString() });
+        await db.outbox.put({ table: 'sueno', record_id: id, operation: 'delete', data: { id, user_id: sessionActual.user.id, deleted_at: new Date().toISOString() }, onConflict: 'id', created_at: new Date().toISOString() });
         showToast('Sueño eliminado ✅');
         await syncAll();
         actualizarSleepHistorial();
@@ -703,7 +714,7 @@ async function corregirSesionId(tempId, idSesionReal) {
       if(this.checked) await guardarLocalYOutbox('checklist','checklist',{id:stid, subtema_id:stid, fecha_completado:new Date().toISOString().split('T')[0]}, 'subtema_id,user_id');
       else {
         await db.checklist.where('subtema_id').equals(stid).delete();
-        await db.outbox.put({table:'checklist', record_id:stid, operation:'delete', data:{subtema_id:stid, user_id:sessionActual.user.id}, onConflict:'subtema_id,user_id', created_at:new Date().toISOString()});
+        await db.outbox.put({table:'checklist', record_id:stid, operation:'delete', data:{subtema_id:stid, user_id:sessionActual.user.id, deleted_at:new Date().toISOString()}, onConflict:'subtema_id,user_id', created_at:new Date().toISOString()});
         await syncAll();
       }
       actualizarChecklist();
@@ -1067,7 +1078,7 @@ let enviados = 0, errores = [];
       let error;
       if (op.operation === 'delete') {
         const keys = (op.onConflict || 'id').split(',').map(k => k.trim());
-        let query = supabase.from(op.table).delete();
+        let query = supabase.from(op.table).update({ deleted_at: op.data.deleted_at || new Date().toISOString() });
         keys.forEach(k => { query = query.eq(k, op.data[k]); });
         ({ error } = await query);
       } else {
