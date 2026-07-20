@@ -75,7 +75,6 @@ button:disabled { opacity:0.5; pointer-events:none; filter:none; transform:none;
   justify-content:center; transition: box-shadow 0.3s;
 }
 .pomo-circle.break { border-color:var(--accent3); }
-.pomo-circle.running { box-shadow: 0 0 20px var(--accent); }
 
 .toggle-group { display:flex; gap:4px; }
 .toggle-btn { flex:1; padding:8px; border:1px solid var(--border); background:var(--surface2); border-radius:var(--radius-sm); cursor:pointer; text-align:center; }
