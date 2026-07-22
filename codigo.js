@@ -1192,43 +1192,8 @@ let enviados = 0, errores = [];
 
 function registerSW() {
   if ('serviceWorker' in navigator) {
-    const swCode = `
-      const CACHE = 'estudio-v28';
-
-      self.addEventListener('install', event => {
-        event.waitUntil(
-          caches.open(CACHE).then(cache => cache.addAll(['./', './index.html', './codigo.js', './estilo.css']))
-        );
-        self.skipWaiting();
-      });
-
-      self.addEventListener('activate', event => {
-        event.waitUntil(
-          caches.keys().then(keys => Promise.all(
-            keys.filter(key => key !== CACHE).map(key => caches.delete(key))
-          ))
-        );
-        self.clients.claim();
-      });
-
-      self.addEventListener('fetch', event => {
-        event.respondWith(
-          fetch(event.request)
-            .then(response => {
-              if (response && response.status === 200) {
-                const clone = response.clone();
-                caches.open(CACHE).then(cache => cache.put(event.request, clone));
-              }
-              return response;
-            })
-            .catch(() => caches.match(event.request))
-        );
-      });
-    `;
-
-    const blob = new Blob([swCode], { type: 'application/javascript' });
-    navigator.serviceWorker.register(URL.createObjectURL(blob))
-      .catch(() => console.warn('SW no pudo registrarse'));
+    navigator.serviceWorker.register('./sw.js')
+      .catch(err => console.warn('SW no pudo registrarse', err));
   }
 }
 registerSW();
