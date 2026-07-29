@@ -1526,12 +1526,8 @@ async function initApp() {
     }
     
     await poblarMaterias();
-  const sel = document.getElementById('selMateria');
-if (sel.options.length > 1) {
-    sel.selectedIndex = 1; // seleccionar primera materia
-}
-sel.dispatchEvent(new Event('change'));
-    document.getElementById('fechaSueno').value = new Date().toISOString().split('T')[0];
+    document.getElementById('selMateria').dispatchEvent(new Event('change'));
+  document.getElementById('fechaSueno').value = new Date().toISOString().split('T')[0];
     updatePomoDisplay(); updatePomoStatusText(); updatePomoButtons();
     setConfigEnabled(true);
     document.getElementById('btnDistraje').disabled = true;
