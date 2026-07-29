@@ -28,6 +28,10 @@ import { fsrs, generatorParameters, createEmptyCard, Rating, State as EstadoFSRS
     fsrs_pesos_congelados: 'id, updated_at, materia',
     dominio_temas: 'id, updated_at, materia, subtema_id'
 });
+  // Versión 5: tabla para almacenar el temario cargado
+  db.version(5).stores({
+    temario: 'key'
+  });
   const State = {
     IDLE: 'IDLE', FOCUS_RUNNING: 'FOCUS_RUNNING', FOCUS_PAUSED: 'FOCUS_PAUSED',
     BREAK_RUNNING: 'BREAK_RUNNING', BREAK_PAUSED: 'BREAK_PAUSED', SESSION_ENDING: 'SESSION_ENDING'
@@ -1356,6 +1360,8 @@ despertar: despertar + ':00'
         this.value=''; return;
       }
       currentTemario = data;
+// Guardar en Dexie para no perderlo al recargar
+await db.temario.put({ key: 'activo', contenido: data, updated_at: new Date().toISOString() });
       await poblarMaterias();
       document.getElementById('selMateria').dispatchEvent(new Event('change'));
       await actualizarChecklist();
@@ -1429,8 +1435,13 @@ let enviados = 0, errores = [];
     const todas = [...new Set([...matsTem, ...matsDB.map(m=>m.nombre)])];
     sel.innerHTML = '<option value="__agregar__">+ Agregar nueva materia...</option>';
     todas.forEach(m=>sel.innerHTML += `<option value="${m}">${m}</option>`);
+
+    // ✅ Seleccionar automáticamente la primera materia real (salta la opción "Agregar...")
+    if (todas.length > 0 && sel.options.length > 1) {
+      sel.selectedIndex = 1;
+    }
   }
-  async function poblarSubtemas(mat) {
+async function poblarSubtemas(mat) {
     const sel = document.getElementById('selSubtema');
     const tem = currentTemario.filter(t=>t.materia===mat);
     const extras = await db.subtemas_extra.where('materia').equals(mat).toArray();
@@ -1505,10 +1516,21 @@ function registerSW() {
 }
 registerSW();
 
-  async function initApp() {
+async function initApp() {
     await syncAll();
+    
+    // Recuperar temario guardado en Dexie si existe
+    const storedTemario = await db.temario.get('activo');
+    if (storedTemario?.contenido) {
+        currentTemario = storedTemario.contenido;
+    }
+    
     await poblarMaterias();
-    document.getElementById('selMateria').dispatchEvent(new Event('change'));
+  const sel = document.getElementById('selMateria');
+if (sel.options.length > 1) {
+    sel.selectedIndex = 1; // seleccionar primera materia
+}
+sel.dispatchEvent(new Event('change'));
     document.getElementById('fechaSueno').value = new Date().toISOString().split('T')[0];
     updatePomoDisplay(); updatePomoStatusText(); updatePomoButtons();
     setConfigEnabled(true);
