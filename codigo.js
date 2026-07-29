@@ -1446,7 +1446,7 @@ async function poblarSubtemas(mat) {
     const tem = currentTemario.filter(t=>t.materia===mat);
     const extras = await db.subtemas_extra.where('materia').equals(mat).toArray();
     sel.innerHTML = '<option value="__agregar__">+ Agregar nuevo subtema...</option>';
-    const grupos = { A1:[], B1:[], A2:[], B2:[], Personalizado:[] };
+    const grupos = { A0:[], B1:[], B2:[], Personalizado:[] };
     tem.forEach(t=>{ if(grupos[t.etapa]) grupos[t.etapa].push({...t, isExtra:false}); });
     extras.forEach(e=>{ const etapa = e.etapa||'Personalizado'; if(grupos[etapa]) grupos[etapa].push({...e, id:e.id, isExtra:true}); });
     for(const [etapa, subs] of Object.entries(grupos)) {
