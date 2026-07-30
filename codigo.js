@@ -157,7 +157,7 @@ async function corregirSesionId(tempId, idSesionReal) {
     for (const p of problemas) {
       await db.outbox.put({
         table: 'study_sessions', record_id: p.id, operation: 'insert',
-        data: { id: p.id, sesion_id: idSesionReal, user_id: sessionActual.user.id, updated_at: new Date().toISOString() },
+data: { ...p, sesion_id: idSesionReal, user_id: sessionActual.user.id, updated_at: new Date().toISOString() },
         onConflict: 'id', created_at: new Date().toISOString()
       });
     }
@@ -166,7 +166,7 @@ async function corregirSesionId(tempId, idSesionReal) {
     for (const c of conjs) {
       await db.outbox.put({
         table: 'conjeturas', record_id: c.id, operation: 'insert',
-        data: { id: c.id, sesion_id: idSesionReal, user_id: sessionActual.user.id, updated_at: new Date().toISOString() },
+data: { ...c, sesion_id: idSesionReal, user_id: sessionActual.user.id, updated_at: new Date().toISOString() },
         onConflict: 'id', created_at: new Date().toISOString()
       });
     }
@@ -444,8 +444,7 @@ async function corregirSesionId(tempId, idSesionReal) {
       problema_num: blindTimer.previousProblemaNum, tiempo_s: Math.round(blindTimer.seconds * 10) / 10,
       resultado, codigo_error: codError, dificultad_experimentada: parseInt(document.getElementById('selDifExp').value),
       confianza, intentos: parseInt(document.getElementById('numIntentos').value) || 1,
-      nivel_bloom: parseInt(document.getElementById('selBloom').value), sesion_id: session.tempId,
-      tipo_problema: document.getElementById('selTipoProblema')?.value || 'practica'
+nivel_bloom: parseInt(document.getElementById('selBloom').value), sesion_id: session.tempId
     });
     if (modo === 'A' && (resultado === 'mal' || resultado === 'no_resuelto')) {
       await crearErrorDesdeProblema({ materia, subtemaId: subtema, subtemaNombre: subtemaNombreProblema, etiqueta: codError, fase, idProblema });
@@ -909,9 +908,8 @@ async function corregirSesionId(tempId, idSesionReal) {
       tipo: 'problema', fecha: new Date().toISOString().split('T')[0], timestamp: Date.now(),
       modo: 'B', fase: document.getElementById('selFase').value, materia, subtema_id: subtema, subtema_nombre: subtemaNombre,
       tiempo_s: Math.round(blindTimer.seconds * 10) / 10,
-      resultado: calificacion >= 3 ? 'bien' : 'mal',
-      sesion_id: session.tempId,
-      tipo_problema: document.getElementById('selTipoProblema')?.value || 'practica'
+resultado: calificacion >= 3 ? 'bien' : 'mal',
+      sesion_id: session.tempId
     });
 
     document.getElementById('cardResultado').style.display = 'none';
