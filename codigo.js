@@ -839,10 +839,14 @@ nivel_bloom: parseInt(document.getElementById('selBloom').value), sesion_id: ses
       .sort((a, b) => new Date(a.proxima_revision) - new Date(b.proxima_revision));
     const cont = document.getElementById('colaErroresContainer');
     errorSeleccionado = null;
-    if (!errores.length) { cont.innerHTML = '<p style="color:var(--text2);">Sin errores pendientes para este subtema.</p>'; return; }
-    cont.innerHTML = errores.map(e => `
+if (!errores.length) { cont.innerHTML = '<p style="color:var(--text2);">Sin errores pendientes para este subtema.</p>'; return; }
+    const numerosProblema = await Promise.all(errores.map(async e => {
+      const filaOrigen = e.sesion_id_origen ? await db.sessions.get(e.sesion_id_origen) : null;
+      return filaOrigen?.problema_num ?? '?';
+    }));
+    cont.innerHTML = errores.map((e, i) => `
       <div class="error-queue-item" data-error-id="${e.id}">
-        <strong>${e.etiqueta || '—'}</strong> · vence ${new Date(e.proxima_revision).toLocaleDateString()} · repasos previos: ${e.fsrs_reps}
+        <strong>Problema #${numerosProblema[i]}</strong> · ${e.etiqueta || '—'} · vence ${new Date(e.proxima_revision).toLocaleDateString()} · repasos previos: ${e.fsrs_reps}
       </div>`).join('');
     cont.querySelectorAll('.error-queue-item').forEach(el => {
       el.addEventListener('click', () => {
