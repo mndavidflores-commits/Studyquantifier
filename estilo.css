@@ -10,12 +10,12 @@ body {
   background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; 
   line-height:1.5; letter-spacing:0.01em;
 }
-.app-container { max-width:960px; margin:0 auto; padding:10px 14px 30px; display:flex; flex-direction:column; gap:12px; }
+.app-container { max-width:1400px; margin:0 auto; padding:10px 16px 30px; display:flex; flex-direction:column; gap:10px; }
 
 /* Tarjetas */
 .card { 
   background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); 
-  padding:20px; 
+  padding:16px; 
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .card:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(0,0,0,0.6); }
@@ -35,8 +35,8 @@ body {
 .tab-btn.active { background:var(--accent); color:#fff; }
 .tab-btn:hover { background: rgba(92,124,250,0.15); color: #fff; }
 
-.panel { display:none; flex-direction:column; gap:18px; animation: fadeIn 0.22s ease; }
-.panel.active { display:flex; }
+.panel { display:none; gap:14px; animation: fadeIn 0.22s ease; }
+.panel.active { display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); align-items:start; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
 
 /* Formularios */
@@ -64,15 +64,17 @@ button:disabled { opacity:0.5; pointer-events:none; filter:none; transform:none;
 .btn-row { display:flex; gap:8px; flex-wrap:wrap; }
 
 /* Temporizador */
-.timer-display { font-size:4rem; font-family:var(--mono); text-align:center; background:var(--surface2); border-radius:var(--radius); padding:20px; margin:6px 0; }
+.timer-display { font-size:5.5rem; font-weight:700; font-family:var(--mono); text-align:center; background:var(--surface2); border:2px solid var(--border); border-radius:var(--radius); padding:26px; margin:6px 0; letter-spacing:2px; box-shadow: inset 0 0 30px rgba(0,0,0,0.3); }
 .timer-display.blind { color:transparent; text-shadow:0 0 40px rgba(255,255,255,0.12); letter-spacing:10px; }
+#timerLabel { text-align:center; font-size:0.85rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text2); margin-top:4px; }
 
 /* Pomodoro */
 .pomo-circle { 
-  width:140px; height:140px; border-radius:50%; background:var(--surface2); 
-  border:6px solid var(--accent); margin:0 auto; font-size:2rem; 
+  width:170px; height:170px; border-radius:50%; background:var(--surface2); 
+  border:6px solid var(--accent); margin:0 auto; font-size:2.4rem; font-weight:700;
   font-family:var(--mono); color:#fff; display:flex; align-items:center; 
   justify-content:center; transition: box-shadow 0.3s;
+  box-shadow: 0 0 0 4px rgba(92,124,250,0.12);
 }
 .pomo-circle.break { border-color:var(--accent3); }
 
