@@ -10,7 +10,7 @@ body {
   background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; 
   line-height:1.5; letter-spacing:0.01em;
 }
-.app-container { max-width:1400px; margin:0 auto; padding:10px 16px 30px; display:flex; flex-direction:column; gap:10px; }
+.app-container { max-width:none; width:97%; margin:0 auto; padding:10px 0 30px; display:flex; flex-direction:column; gap:10px; }
 
 /* Tarjetas */
 .card { 
@@ -36,7 +36,16 @@ body {
 .tab-btn:hover { background: rgba(92,124,250,0.15); color: #fff; }
 
 .panel { display:none; gap:14px; animation: fadeIn 0.22s ease; }
-.panel.active { display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); align-items:start; }
+.panel.active { display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); align-items:start; grid-auto-flow:dense; }
+
+/* Panel Sesión: columna fija de configuración + zona principal ancha para el timer */
+#panelSesion.active { grid-template-columns: 300px minmax(0, 1fr); }
+#panelSesion.active > .card:nth-of-type(1),
+#panelSesion.active > .card:nth-of-type(2) { grid-column: 1; }
+#panelSesion.active > .card:nth-of-type(3),
+#panelSesion.active > .card:nth-of-type(4),
+#panelSesion.active > .card:nth-of-type(5) { grid-column: 2; }
+#panelSesion.active > .card:nth-of-type(3) { border-color: var(--accent); }
 @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
 
 /* Formularios */
@@ -114,3 +123,9 @@ tr:hover { background: rgba(92,124,250,0.08); }
 .error-queue-item { padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:6px; cursor:pointer; background:var(--surface2); transition: background 0.2s, border-color 0.2s; }
 .error-queue-item:hover { background: rgba(92,124,250,0.15); }
 .error-queue-item.selected { border-color:var(--accent); background: rgba(92,124,250,0.25); }
+
+#checklistContainer { column-width:260px; column-gap:24px; }
+#checklistContainer h4 { column-span:all; margin-top:14px; margin-bottom:4px; color:#fff; border-bottom:1px solid var(--border); padding-bottom:4px; }
+#checklistContainer label { display:block; padding:3px 0; break-inside:avoid; }
+
+label { display:block; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text2); margin-bottom:4px; }
