@@ -4,14 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Estudio v28</title>
-  <link rel="manifest" href="data:application/json;base64,...">
+  <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkVzdHVkaW8gdjI4IiwKICAic2hvcnRfbmFtZSI6ICJFc3R1ZGlvIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwZDBkMWEiLAogICJ0aGVtZV9jb2xvciI6ICIjMGQwZDFhIiwKICAiZGVzY3JpcHRpb24iOiAiSGVycmFtaWVudGEgZGUgcmVnaXN0cm8gZGUgZXN0dWRpbyBjb24gdGF4b25vbcOtYSBBL0IvQyB5IGZhc2VzIEEtQjEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDE5MiAxOTInJTNFJTNDcmVjdCB3aWR0aD0nMTkyJyBoZWlnaHQ9JzE5MicgZmlsbD0nIzBkMGQxYScvJTNFJTNDdGV4dCB4PSc5NicgeT0nMTEwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmb250LXNpemU9JzcyJyBmaWxsPScjNWM3Y2ZhJyBmb250LWZhbWlseT0nc2Fucy1zZXJpZicgZm9udC13ZWlnaHQ9J2JvbGQnJTNFRSM8L3RleHQ+PC9zdmc+IgogICAgfQogIF0KfQ==">
   <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
 <div class="app-container">
-  <!-- Auth section (opcional, se puede mantener oculta durante la sesión) -->
   <div id="auth-section">
     <span id="auth-status">Cargando...</span>
     <button id="btn-login" style="display:none;">Iniciar sesión con Google</button>
@@ -171,13 +170,92 @@
       </div>
     </div>
 
-    <!-- Otros paneles (Historial, Progreso, etc.) -->
+    <!-- Panel Historial -->
     <div class="panel" id="panelHistorial"><div class="card" id="historialContainer"></div></div>
+    <!-- Panel Progreso -->
     <div class="panel" id="panelProgreso"><div class="card" id="progresoTemaTableWrap"></div></div>
+    <!-- Panel Métricas -->
     <div class="panel" id="panelMetricas">
-      <!-- ... contenido de métricas ... -->
+      <div class="card"><h3>Resumen</h3><div id="metricasGenerales" style="display:flex;flex-wrap:wrap;gap:14px;"></div></div>
+      <div class="card"><h3>Tiempo promedio por materia</h3><div class="chart-container"><canvas id="chartTiempoMateria"></canvas></div></div>
+      <div class="card"><h3>Perfil de aprendizaje</h3><div class="chart-container"><canvas id="chartRadar"></canvas></div></div>
+      <div class="card"><h3>Evolución de la tasa de aciertos (por día)</h3><div class="chart-container"><canvas id="chartEvolucion"></canvas></div></div>
+      <div class="card" style="grid-column:span 2;">
+        <label for="filtroMateriaMetricas">Filtrar por materia:</label>
+        <select id="filtroMateriaMetricas" style="max-width:250px;"><option value="todas">Todas</option></select>
+      </div>
+      <div class="card"><h3>Evolución tasa de aciertos por materia y fase</h3><div class="chart-container"><canvas id="chartFaseLinea"></canvas></div></div>
+      <div class="card"><h3>Mejora relativa por materia</h3><div class="chart-container"><canvas id="chartMejoraBarras"></canvas></div></div>
+      <div class="card"><h3>Perfil de aprendizaje por materia</h3><select id="selMateriaRadar" style="max-width:250px; margin-bottom:10px;"></select><div class="chart-container"><canvas id="chartRadarMateria"></canvas></div></div>
+      <div class="card"><h3>Tabla de métricas agregadas por materia y fase</h3><div id="tablaMetricasAgregadas" style="overflow-x:auto;"></div></div>
     </div>
-    <!-- ... resto de paneles ... -->
+    <!-- Panel Sueño -->
+    <div class="panel" id="panelSueno">
+      <div class="card"><h3>Registrar sueño</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div><label>Fecha</label><input type="date" id="fechaSueno"></div>
+          <div><label>Horas dormidas (calculadas)</label><span id="horasCalculadas" style="font-size:1.2rem; font-weight:bold; color:var(--accent3);">--</span></div>
+          <div><label>Calidad (0-10)</label><input type="number" id="calidadSueno" min="0" max="10" step="0.5"></div>
+          <div><label>Hora de acostarse</label><input type="time" id="acostarSueno"></div>
+          <div><label>Hora de despertar</label><input type="time" id="despertarSueno"></div>
+        </div>
+        <button class="primary" id="btnGuardarSueno" style="margin-top:10px;">Guardar sueño</button>
+      </div>
+      <div class="card"><h3>Historial completo de sueño</h3><div class="table-wrap" id="sleepHistorialTable"></div></div>
+      <div class="card"><h3>Evolución del sueño</h3><div class="chart-container"><canvas id="chartSueno"></canvas></div></div>
+    </div>
+    <!-- Panel Conjeturas -->
+    <div class="panel" id="panelConjeturas"><div class="card" id="listaConjeturasFull"></div></div>
+    <!-- Panel Checklist -->
+    <div class="panel" id="panelChecklist">
+      <div class="card"><h3>Checklist de temas completados</h3>
+        <div class="progress-bar"><div class="progress-fill" id="progressChecklist" style="width:0%;"></div></div>
+        <p id="checklistPercent" style="font-size:0.8rem;color:var(--text2);">0% completado</p>
+        <div id="checklistContainer" style="max-height:50vh;overflow-y:auto;margin-top:8px;"></div>
+      </div>
+    </div>
+    <!-- Panel Metas -->
+    <div class="panel" id="panelMetas">
+      <div class="card"><label>Meta diaria (h)</label><input type="number" id="metaDiaria" value="3" step="0.5"><label>Meta semanal (h)</label><input type="number" id="metaSemanal" value="15" step="0.5"><button id="btnGuardarMetas">Guardar</button></div>
+      <div class="card"><div><strong>Hoy:</strong> <span id="progresoDiario">0h</span></div><div class="progress-bar"><div class="progress-fill" id="progressDiario" style="width:0%;background:var(--accent);"></div></div><div><strong>Semana:</strong> <span id="progresoSemanal">0h</span></div><div class="progress-bar"><div class="progress-fill" id="progressSemanal" style="width:0%;"></div></div></div>
+    </div>
+    <!-- Panel Dominio -->
+    <div class="panel" id="panelDominio">
+      <div class="card"><h3>Registrar resultado de evaluación</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div><label>Materia</label><select id="domMateria"></select></div>
+          <div><label>Subtema</label><select id="domSubtema"></select></div>
+          <div><label>Condición</label><select id="domCondicion"><option value="A">A</option><option value="B0">B0</option><option value="B1">B1</option></select></div>
+          <div><label>Tipo de evaluación</label><select id="domTipoEval"><option value="inmediata">Inmediata</option><option value="diferida">Diferida</option></select></div>
+          <div><label>Aciertos (0-10)</label><input type="number" id="domAciertos" min="0" max="10" value="0"></div>
+        </div>
+        <button class="primary" id="btnGuardarDominio" style="margin-top:10px;">Guardar resultado</button>
+      </div>
+      <div class="card"><h3>Estado actual por tema</h3><div class="table-wrap" id="dominioHistorialTable"></div></div>
+    </div>
+
+    <!-- Modal resumen -->
+    <div class="modal-overlay" id="modalResumen" style="display:none;">
+      <div class="modal">
+        <h3>Resumen de la sesión</h3>
+        <div id="resumenContenido"></div>
+        <label>Frustración (0-10)</label><input type="number" id="resumenFrustracion" min="0" max="10" value="0">
+        <label>Energía (1-5)</label><select id="resumenEnergia"><option value="3">3</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="5">5</option></select>
+        <button class="primary" id="btnGuardarResumen">Guardar sesión</button>
+        <button id="btnCancelarResumen">Cancelar</button>
+      </div>
+    </div>
+    <!-- Modal detalle problema -->
+    <div class="modal-overlay" id="modalDetalleProblema" style="display:none;">
+      <div class="modal">
+        <h3>Detalle del problema</h3>
+        <div id="detalleContenido"></div>
+        <div class="btn-row">
+          <button id="btnCerrarDetalle">Cerrar</button>
+          <button id="btnEliminarProblema" class="danger">Eliminar registro</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
