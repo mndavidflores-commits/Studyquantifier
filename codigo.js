@@ -65,6 +65,7 @@ function actualizarUI(s) {
     document.getElementById('btn-logout').style.display = 'inline-block';
     document.getElementById('app-content').style.display = 'block';
     document.getElementById('user-email').textContent = s.user.email;
+    document.getElementById('auth-section').classList.add('hidden');
     if (!appInitialized) { appInitialized = true; initApp(); }
   } else {
     appInitialized = false;
@@ -72,6 +73,7 @@ function actualizarUI(s) {
     document.getElementById('btn-login').style.display = 'inline-block';
     document.getElementById('btn-logout').style.display = 'none';
     document.getElementById('app-content').style.display = 'none';
+    document.getElementById('auth-section').classList.remove('hidden');
   }
 }
 
@@ -270,6 +272,7 @@ async function transition(newState) {
     document.getElementById('lecturaAcumulado').textContent = '0:00';
     session.modo = null; errorSeleccionado = null;
     document.getElementById('topbar').classList.remove('hidden');
+    document.getElementById('auth-section').classList.remove('hidden');
     document.getElementById('idle-view').classList.remove('hidden');
     document.getElementById('active-view').classList.remove('active');
     document.getElementById('active-view').classList.remove('cronometro-corriendo');
@@ -290,6 +293,7 @@ async function transition(newState) {
       session.modo = document.getElementById('selModo').value;
       await actualizarUIPorModo();
       document.getElementById('topbar').classList.add('hidden');
+      document.getElementById('auth-section').classList.add('hidden');
       document.getElementById('idle-view').classList.add('hidden');
       document.getElementById('active-view').classList.add('active');
       document.getElementById('pomo-float').classList.remove('hidden');
@@ -439,12 +443,20 @@ function toggleLectura() {
   if (!session.lecturaRunning) {
     if (session.state !== State.FOCUS_RUNNING && session.state !== State.BREAK_RUNNING) return;
     session.lecturaRunning = true;
-    document.getElementById('lecturaAcumulado').textContent = 'Leyendo...';
     const start = Date.now() - session.lecturaSeconds * 1000;
-    session.lecturaInterval = setInterval(() => { session.lecturaSeconds = Math.round((Date.now() - start) / 1000); }, 1000);
+    session.lecturaInterval = setInterval(() => {
+      session.lecturaSeconds = Math.round((Date.now() - start) / 1000);
+      const m = Math.floor(session.lecturaSeconds / 60);
+      const s = session.lecturaSeconds % 60;
+      const display = `${m}:${String(s).padStart(2, '0')}`;
+      document.getElementById('lecturaAcumulado').textContent = display;
+      document.getElementById('lecturaAcumuladoFloat').textContent = display;
+      document.getElementById('btnLecturaToggleFloat').innerHTML = '⏹ <span id="lecturaAcumuladoFloat">' + display + '</span>';
+    }, 1000);
     document.getElementById('btnLecturaToggleFloat').innerHTML = '⏹ <span id="lecturaAcumuladoFloat">0:00</span>';
   } else {
     stopLecturaInterval();
+    document.getElementById('btnLecturaToggleFloat').innerHTML = '▶ <span id="lecturaAcumuladoFloat">0:00</span>';
   }
 }
 document.getElementById('btnLecturaStart').addEventListener('click', () => { if (!session.lecturaRunning) toggleLectura(); });
