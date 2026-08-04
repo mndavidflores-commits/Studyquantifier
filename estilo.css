@@ -71,12 +71,17 @@ body {
   padding:20px; position:relative; height:100%;
 }
 
-/* ---------- VISTA IDLE (centrada con flex) ---------- */
+/* ---------- VISTA IDLE (centrada) ---------- */
 #idle-view {
-  display:flex; gap:20px; width:100%; max-width:900px;
-  margin:0 auto;                     /* Centrado extra */
-  justify-content:center; align-items:center;
-  opacity:1; transform:scale(1);
+  display:flex;
+  gap:20px;
+  width: auto;                 /* se ajusta al contenido */
+  max-width: 900px;
+  margin: 0 auto;              /* centrado horizontal */
+  justify-content:center;
+  align-items:center;
+  opacity:1;
+  transform:scale(1);
   transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
 }
 #idle-view.hidden { opacity:0; transform:scale(0.95); pointer-events:none; }
@@ -90,7 +95,7 @@ body {
 
 /* Tarjetas de configuración y pomodoro con el mismo ancho */
 .config-card, .pomo-card {
-  flex: 1 1 0;                      /* Ambas parten del mismo tamaño */
+  flex: 1 1 0;                 /* ambas ocupan el mismo espacio */
   min-width: 0;
 }
 
@@ -129,6 +134,11 @@ button.small { padding:4px 10px; font-size:0.75rem; }
   justify-content: center;
 }
 
+/* Texto "Foco" centrado sobre los botones */
+#pomoStatus {
+  text-align: center;
+}
+
 /* Círculo del pomodoro (IDLE) */
 .pomo-circle {
   width:180px; height:180px; border-radius:50%; background:var(--surface2);
@@ -139,21 +149,21 @@ button.small { padding:4px 10px; font-size:0.75rem; }
 }
 .pomo-circle.break { border-color:var(--accent3); }
 
-/* ---------- VISTA ACTIVA (layout flex) ---------- */
+/* ---------- VISTA ACTIVA ---------- */
 #active-view {
   display: none;
-  width: 100%;
-  height: 100%;
-  position: relative;
   opacity: 0;
   transition: opacity 0.4s ease-in-out;
 }
 #active-view.active {
   display: flex;
   flex-direction: row;
+  align-items: flex-start;      /* alineación superior */
+  width: auto;                  /* se ajusta al contenido */
+  max-width: 100%;
+  margin: 0 auto;               /* centrado horizontal */
+  height: 100%;                 /* ← IMPORTANTE: ocupa toda la altura */
   opacity: 1;
-  height: 100%;
-  position: relative;            /* necesario para el panel absoluto */
 }
 
 /* Rectángulo flotante del pomodoro (fijo) */
@@ -182,41 +192,33 @@ button.small { padding:4px 10px; font-size:0.75rem; }
   font-size: 0.8rem;
 }
 
-/* Panel izquierdo (historial) ahora superpuesto, no empuja el contenido */
+/* Panel izquierdo (historial) – columna normal */
 #left-panel {
-  position: absolute;
-  left: 0;
-  top: 60px;                     /* deja espacio al pomo-float */
-  bottom: 0;
   width: 250px;
+  flex-shrink: 0;
   overflow-y: auto;
   background: var(--surface);
   border-right: 1px solid var(--border);
   padding: 15px;
   box-sizing: border-box;
-  z-index: 10;
-  transition: transform 0.3s ease;
+  height: 100%;                 /* se estira a la altura de la vista activa */
 }
-#left-panel.hidden {
-  display: none;                 /* se oculta completamente cuando no es necesario */
-}
+#left-panel.hidden { display: none; }
 #left-panel h4 { color: #fff; margin-bottom: 10px; font-size: 0.9rem; }
 #left-panel table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
 #left-panel th, #left-panel td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
 #left-panel tr { cursor: pointer; transition: background 0.15s; }
 #left-panel tr:hover { background: rgba(92, 124, 250, 0.1); }
 
-/* Zona central ocupa todo el ancho, el cronómetro queda perfectamente centrado */
+/* Zona central – ocupa el resto y centra el cronómetro */
 #central-zone {
-  width: 100%;
-  flex: none;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  margin-top: 60px;
   padding: 20px;
+  margin-top: 60px;            /* deja espacio para el pomo-float */
 }
 
 /* Configuración del problema */
@@ -327,7 +329,7 @@ tr:hover { background: rgba(92,124,250,0.08); }
 }
 .toast.show { opacity: 1; }
 
-/* Estado: cronómetro corriendo (se oculta el panel izquierdo automáticamente) */
+/* Estado: cronómetro corriendo (se ocultan elementos) */
 #active-view.cronometro-corriendo #pomo-float,
 #active-view.cronometro-corriendo #left-panel,
 #active-view.cronometro-corriendo #problema-config,
@@ -348,17 +350,16 @@ tr:hover { background: rgba(92,124,250,0.08); }
 
   #idle-view { flex-direction: column; align-items: center; }
 
-  #active-view.active { flex-direction: column; }
-  #left-panel {
-    position: relative;          /* en móvil vuelve al flujo normal */
+  #active-view.active {
+    flex-direction: column;
     width: 100%;
-    top: auto;
-    bottom: auto;
+  }
+  #left-panel {
+    width: 100%;
     height: auto;
     max-height: 200px;
     border-right: none;
     border-bottom: 1px solid var(--border);
-    margin-top: 0;
   }
   #central-zone {
     margin-top: 10px;
