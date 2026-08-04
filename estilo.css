@@ -6,11 +6,11 @@
   --radius: 12px; --radius-sm: 8px; --shadow: 0 4px 24px rgba(0,0,0,0.5);
   --font: 'Segoe UI', system-ui, sans-serif; --mono: 'SF Mono', 'Cascadia Code', monospace;
 }
- 
+
 * { margin:0; padding:0; box-sizing:border-box; }
 
-body { 
-  background:var(--bg); color:var(--text); font-family:var(--font); 
+body {
+  background:var(--bg); color:var(--text); font-family:var(--font);
   min-height:100vh; line-height:1.5; letter-spacing:0.01em;
 }
 
@@ -74,6 +74,7 @@ body {
 /* ---------- VISTA IDLE (centrada con flex) ---------- */
 #idle-view {
   display:flex; gap:20px; width:100%; max-width:900px;
+  margin:0 auto;                     /* Centrado extra */
   justify-content:center; align-items:center;
   opacity:1; transform:scale(1);
   transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
@@ -87,7 +88,11 @@ body {
 .card h3 { color:#fff; margin-bottom:12px; font-size:1rem; }
 .card h3::before { content:"▸ "; color:var(--accent); }
 
-.config-card, .pomo-card { flex:1; }
+/* Tarjetas de configuración y pomodoro con el mismo ancho */
+.config-card, .pomo-card {
+  flex: 1 1 0;                      /* Ambas parten del mismo tamaño */
+  min-width: 0;
+}
 
 .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 
@@ -119,6 +124,11 @@ button.danger  { background:var(--accent2); color:#fff; border-color:var(--accen
 button:disabled { opacity:0.5; pointer-events:none; filter:none; transform:none; box-shadow:none; }
 button.small { padding:4px 10px; font-size:0.75rem; }
 
+/* Botón Iniciar centrado bajo el círculo */
+#pomoControls {
+  justify-content: center;
+}
+
 /* Círculo del pomodoro (IDLE) */
 .pomo-circle {
   width:180px; height:180px; border-radius:50%; background:var(--surface2);
@@ -143,9 +153,10 @@ button.small { padding:4px 10px; font-size:0.75rem; }
   flex-direction: row;
   opacity: 1;
   height: 100%;
+  position: relative;            /* necesario para el panel absoluto */
 }
 
-/* Rectángulo flotante del pomodoro (fijo, no afecta el flex) */
+/* Rectángulo flotante del pomodoro (fijo) */
 #pomo-float {
   position: fixed;
   top: 12px;
@@ -171,34 +182,40 @@ button.small { padding:4px 10px; font-size:0.75rem; }
   font-size: 0.8rem;
 }
 
-/* Panel izquierdo (historial) - ahora es un elemento flex */
+/* Panel izquierdo (historial) ahora superpuesto, no empuja el contenido */
 #left-panel {
+  position: absolute;
+  left: 0;
+  top: 60px;                     /* deja espacio al pomo-float */
+  bottom: 0;
   width: 250px;
-  height: 100%;
   overflow-y: auto;
   background: var(--surface);
   border-right: 1px solid var(--border);
   padding: 15px;
   box-sizing: border-box;
-  flex-shrink: 0;
-  margin-top: 60px; /* para dejar espacio al rectángulo flotante */
+  z-index: 10;
+  transition: transform 0.3s ease;
 }
-#left-panel.hidden { display: none; }
+#left-panel.hidden {
+  display: none;                 /* se oculta completamente cuando no es necesario */
+}
 #left-panel h4 { color: #fff; margin-bottom: 10px; font-size: 0.9rem; }
 #left-panel table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
 #left-panel th, #left-panel td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
 #left-panel tr { cursor: pointer; transition: background 0.15s; }
 #left-panel tr:hover { background: rgba(92, 124, 250, 0.1); }
 
-/* Zona central - ocupa el resto del espacio y centra su contenido */
+/* Zona central ocupa todo el ancho, el cronómetro queda perfectamente centrado */
 #central-zone {
-  flex: 1;
+  width: 100%;
+  flex: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
-  margin-top: 60px; /* mismo margen que el panel izquierdo */
+  margin-top: 60px;
   padding: 20px;
 }
 
@@ -310,7 +327,7 @@ tr:hover { background: rgba(92,124,250,0.08); }
 }
 .toast.show { opacity: 1; }
 
-/* Estado: cronómetro corriendo */
+/* Estado: cronómetro corriendo (se oculta el panel izquierdo automáticamente) */
 #active-view.cronometro-corriendo #pomo-float,
 #active-view.cronometro-corriendo #left-panel,
 #active-view.cronometro-corriendo #problema-config,
@@ -333,7 +350,10 @@ tr:hover { background: rgba(92,124,250,0.08); }
 
   #active-view.active { flex-direction: column; }
   #left-panel {
+    position: relative;          /* en móvil vuelve al flujo normal */
     width: 100%;
+    top: auto;
+    bottom: auto;
     height: auto;
     max-height: 200px;
     border-right: none;
