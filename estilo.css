@@ -73,13 +73,13 @@ body {
 
 /* ---------- VISTA IDLE (centrada) ---------- */
 #idle-view {
-  display:flex;
-  gap:20px;
-  width: auto;                 /* se ajusta al contenido */
+  display: flex;
+  gap: 20px;
+  width: 100%;
   max-width: 900px;
-  margin: 0 auto;              /* centrado horizontal */
-  justify-content:center;
-  align-items:center;
+  margin: 0 auto;
+  justify-content: center;
+  align-items: center;
   opacity:1;
   transform:scale(1);
   transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
@@ -158,14 +158,13 @@ button.small { padding:4px 10px; font-size:0.75rem; }
 #active-view.active {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;      /* alineación superior */
-  width: auto;                  /* se ajusta al contenido */
+  align-items: flex-start;
+  width: 100%;
   max-width: 100%;
-  margin: 0 auto;               /* centrado horizontal */
-  height: 100%;                 /* ← IMPORTANTE: ocupa toda la altura */
+  margin: 0;
+  height: 100%;
   opacity: 1;
 }
-
 /* Rectángulo flotante del pomodoro (fijo) */
 #pomo-float {
   position: fixed;
