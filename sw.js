@@ -1,5 +1,4 @@
-const CACHE = 'estudio-v29';
-
+const CACHE = 'estudio-v30';
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE).then(cache => cache.addAll(['./', './index.html', './codigo.js', './estilo.css']))
