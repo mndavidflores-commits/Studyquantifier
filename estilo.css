@@ -9,13 +9,22 @@
 
 * { margin:0; padding:0; box-sizing:border-box; }
 
+html, body {
+  height: 100%;
+  overflow: hidden; /* evita scroll en la página principal */
+}
+
 body {
   background:var(--bg); color:var(--text); font-family:var(--font);
   min-height:100vh; line-height:1.5; letter-spacing:0.01em;
 }
 
-.app-container { height:100vh; display:flex; flex-direction:column; }
-
+.app-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* evita scroll fuera del contenedor */
+}
 /* ========== AUTENTICACIÓN ========== */
 #auth-section.hidden {
     display: none !important;
@@ -30,7 +39,7 @@ body {
   background:var(--surface); border-bottom:1px solid var(--border);
   padding:8px 20px; height:56px; flex-shrink:0;
 }
-#topbar.hidden { display:none; }
+#topbar.hidden { display:none !important; }
 
 .brand { display:flex; flex-direction:column; min-width:140px; }
 .brand .app-name { font-size:1.1rem; font-weight:600; color:#fff; }
@@ -60,15 +69,15 @@ body {
   gap:14px; align-items:start; animation: fadeIn 0.22s ease;
   overflow-y:auto; padding:14px;
 }
-
 #panelSesion.active {
-  display:flex;
-  flex-direction:column;
-  padding:0;
-  overflow-y:auto;   /* ← para que no corte nada */
-  height:100%;
-  width:100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;  /* ← evita scroll en este panel */
 }
+
 @keyframes fadeIn {
   from { opacity:0; transform:translateY(8px); }
   to   { opacity:1; transform:translateY(0); }
@@ -82,6 +91,7 @@ body {
   position: relative;
   height: 100%;
   width: 100%;
+  overflow:hidden;
 }
 /* ---------- VISTA IDLE (centrada) ---------- */
 #idle-view {
@@ -254,9 +264,8 @@ button.small {
   margin: 0;
   height: 100%;
   opacity: 1;
-  overflow: auto;   /* ← cambia de 'hidden' a 'auto' */
+  overflow: hidden;  /* ← evita scroll en esta vista */
 }
-
 /* Rectángulo flotante del pomodoro (fijo) */
 #pomo-float {
   position: fixed;
@@ -337,9 +346,9 @@ button.small {
   align-items: center;
   justify-content: center;
   padding: 0;
-  margin: 0;           /* ← asegura que no haya margen */
+  margin: 0;
   height: 100%;
-  overflow-y: auto;
+  overflow-y: auto;   /* ← scroll interno si el contenido es muy alto */
 }
 /* Configuración del problema */
 #problema-config {
