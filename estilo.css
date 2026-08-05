@@ -354,7 +354,7 @@ button.small {
 }
 
 /* Cronómetro */
-..timer-display {
+.timer-display {
   font-size: 5rem;
   font-family: var(--mono);
   font-weight: 700;
