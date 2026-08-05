@@ -101,12 +101,14 @@ body {
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
+  margin-top: 40px;               /* ← NUEVO: espacio superior */
   justify-content: center;
-  align-items: center;
+  align-items: stretch;           /* ← MODIFICADO: para igualar altura */
   opacity: 1;
   transform: scale(1);
   transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
 }
+
 #idle-view.hidden {
   display: none !important;
   opacity: 0;
@@ -311,6 +313,7 @@ button.small {
   padding: 15px;
   box-sizing: border-box;
   height: 100%;
+  margin-left: 20px;   /* ← NUEVO: separación del borde izquierdo */
 }
 #left-panel.hidden {
   display: none;
@@ -350,7 +353,8 @@ button.small {
   padding: 0;
   margin: 0;
   height: 100%;
-  overflow-y: auto;   /* ← scroll interno si el contenido es muy alto */
+  overflow-y: auto;
+  padding-top: 20px;   /* ← NUEVO: margen superior */
 }
 /* Configuración del problema */
 #problema-config {
