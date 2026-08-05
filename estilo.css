@@ -113,12 +113,11 @@ body {
 }
 
 /* Tarjetas de configuración y pomodoro con el mismo ancho */
-.config-card,
-.pomo-card {
-  flex: 1 1 0;
+.config-card, .pomo-card {
+  flex: 1;
   min-width: 0;
+  width: 0; /* esto fuerza a que el flex las iguale */
 }
-
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -330,7 +329,7 @@ button.small {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  margin-top: 60px;
+  margin-top: 0px;
 }
 
 /* Configuración del problema */
