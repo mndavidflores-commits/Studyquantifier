@@ -656,7 +656,7 @@ async function actualizarHistorialSubtema() {
   const subtemaId = document.getElementById('selSubtema').value;
   if (!subtemaId || subtemaId === '__agregar__') return;
   const problemas = await db.sessions.where('tipo').equals('problema').and(p => p.subtema_id === subtemaId).toArray();
-  problemas.sort((a,b) => (a.problema_num||0) - (b.problema_num||0) || new Date(a.timestamp) - new Date(b.timestamp));
+problemas.sort((a,b) => (b.problema_num||0) - (a.problema_num||0) || new Date(b.timestamp) - new Date(a.timestamp));
   const wrap = document.getElementById('historialSubtemaTableWrap');
   let html = '<table><tr><th>#</th><th>Tiempo</th><th>Resultado</th></tr>';
   problemas.forEach(p => {
