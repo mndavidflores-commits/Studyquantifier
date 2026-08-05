@@ -108,9 +108,11 @@ body {
   transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
 }
 #idle-view.hidden {
+  display: none !important;
   opacity: 0;
   transform: scale(0.95);
   pointer-events: none;
+
 }
 
 .card {
