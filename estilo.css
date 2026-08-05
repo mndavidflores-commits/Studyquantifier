@@ -57,7 +57,7 @@ body {
 }
 
 #panelSesion.active {
-  display:flex; flex-direction:column; padding:0; overflow-y:visible; height:100%;
+  display:flex; flex-direction:column; padding:0; overflow-y:visible; height:100%; width: 100%;   
 }
 
 @keyframes fadeIn {
@@ -66,68 +66,141 @@ body {
 }
 
 /* ========== ÁREA PRINCIPAL ========== */
+/* ========== ÁREA PRINCIPAL ========== */
 #main-area {
-  flex:1; display:flex; align-items:center; justify-content:center;
-  padding:20px; position:relative; height:100%;
+  flex: 1;
+  padding: 20px;
+  position: relative;
+  height: 100%;
+  width: 100%;
 }
 
 /* ---------- VISTA IDLE (centrada) ---------- */
 #idle-view {
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
   justify-content: center;
   align-items: center;
-  opacity:1;
-  transform:scale(1);
+  opacity: 1;
+  transform: scale(1);
   transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
 }
-#idle-view.hidden { opacity:0; transform:scale(0.95); pointer-events:none; }
+#idle-view.hidden {
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
+}
 
 .card {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:var(--radius); padding:20px; box-shadow:var(--shadow);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
 }
-.card h3 { color:#fff; margin-bottom:12px; font-size:1rem; }
-.card h3::before { content:"▸ "; color:var(--accent); }
+.card h3 {
+  color: #fff;
+  margin-bottom: 12px;
+  font-size: 1rem;
+}
+.card h3::before {
+  content: "▸ ";
+  color: var(--accent);
+}
 
 /* Tarjetas de configuración y pomodoro con el mismo ancho */
-.config-card, .pomo-card {
-  flex: 1 1 0;                 /* ambas ocupan el mismo espacio */
+.config-card,
+.pomo-card {
+  flex: 1 1 0;
   min-width: 0;
 }
 
-.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-
-select, input, textarea {
-  width:100%; padding:9px 12px; background:var(--surface2);
-  border:1px solid var(--border); border-radius:var(--radius-sm);
-  color:var(--text); font-size:0.88rem; outline:none;
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
-select:focus, input:focus, textarea:focus {
-  border-color:var(--accent); box-shadow:0 0 0 2px rgba(92,124,250,0.3);
+
+select,
+input,
+textarea {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.88rem;
+  outline: none;
+}
+select:focus,
+input:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(92, 124, 250, 0.3);
 }
 
 label {
-  display:block; font-size:0.7rem; text-transform:uppercase;
-  letter-spacing:0.06em; color:var(--text2); margin-bottom:4px;
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text2);
+  margin-bottom: 4px;
 }
 
-.btn-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.btn-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
 
 button {
-  padding:10px 18px; border:1px solid var(--border); border-radius:var(--radius-sm);
-  cursor:pointer; font-weight:600; background:var(--surface2); color:var(--text);
-  transition: all 0.2s; font-size:0.85rem;
+  padding: 10px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  background: var(--surface2);
+  color: var(--text);
+  transition: all 0.2s;
+  font-size: 0.85rem;
 }
-button:hover { filter:brightness(1.2); transform:translateY(-1px); box-shadow:0 4px 8px rgba(0,0,0,0.3); }
-button:active { transform:scale(0.96); box-shadow:none; }
-button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
-button.danger  { background:var(--accent2); color:#fff; border-color:var(--accent2); }
-button:disabled { opacity:0.5; pointer-events:none; filter:none; transform:none; box-shadow:none; }
-button.small { padding:4px 10px; font-size:0.75rem; }
+button:hover {
+  filter: brightness(1.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+button:active {
+  transform: scale(0.96);
+  box-shadow: none;
+}
+button.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+button.danger {
+  background: var(--accent2);
+  color: #fff;
+  border-color: var(--accent2);
+}
+button:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  filter: none;
+  transform: none;
+  box-shadow: none;
+}
+button.small {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+}
 
 /* Botón Iniciar centrado bajo el círculo */
 #pomoControls {
@@ -141,13 +214,24 @@ button.small { padding:4px 10px; font-size:0.75rem; }
 
 /* Círculo del pomodoro (IDLE) */
 .pomo-circle {
-  width:180px; height:180px; border-radius:50%; background:var(--surface2);
-  border:6px solid var(--accent); margin:0 auto 10px; display:flex;
-  align-items:center; justify-content:center; font-size:2.4rem;
-  font-family:var(--mono); font-weight:700; color:#fff;
-  box-shadow:0 0 0 4px rgba(92,124,250,0.12);
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 6px solid var(--accent);
+  margin: 0 auto 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(92, 124, 250, 0.12);
 }
-.pomo-circle.break { border-color:var(--accent3); }
+.pomo-circle.break {
+  border-color: var(--accent3);
+}
 
 /* ---------- VISTA ACTIVA ---------- */
 #active-view {
@@ -158,14 +242,14 @@ button.small { padding:4px 10px; font-size:0.75rem; }
 #active-view.active {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: stretch;
   width: 100%;
-  max-width: 100%;
   margin: 0;
   height: 100%;
   opacity: 1;
-  overflow: hidden;   
+  overflow: hidden;
 }
+
 /* Rectángulo flotante del pomodoro (fijo) */
 #pomo-float {
   position: fixed;
@@ -182,8 +266,15 @@ button.small { padding:4px 10px; font-size:0.75rem; }
   z-index: 20;
   box-shadow: var(--shadow);
 }
-#pomo-float.hidden { display: none; }
-#pomo-float .timer { font-family: var(--mono); font-size: 1.2rem; font-weight: 700; color: #fff; }
+#pomo-float.hidden {
+  display: none;
+}
+#pomo-float .timer {
+  font-family: var(--mono);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+}
 #pomo-float button {
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -201,25 +292,45 @@ button.small { padding:4px 10px; font-size:0.75rem; }
   border-right: 1px solid var(--border);
   padding: 15px;
   box-sizing: border-box;
-  height: 100%;                 /* se estira a la altura de la vista activa */
+  height: 100%;
 }
-#left-panel.hidden { display: none; }
-#left-panel h4 { color: #fff; margin-bottom: 10px; font-size: 0.9rem; }
-#left-panel table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-#left-panel th, #left-panel td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
-#left-panel tr { cursor: pointer; transition: background 0.15s; }
-#left-panel tr:hover { background: rgba(92, 124, 250, 0.1); }
+#left-panel.hidden {
+  display: none;
+}
+#left-panel h4 {
+  color: #fff;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+#left-panel table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+#left-panel th,
+#left-panel td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+#left-panel tr {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#left-panel tr:hover {
+  background: rgba(92, 124, 250, 0.1);
+}
 
 /* Zona central – ocupa el resto y centra el cronómetro */
 #central-zone {
   flex: 1;
-  min-width: 0; 
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  margin-top: 60px;            /* deja espacio para el pomo-float */
+  margin-top: 60px;
 }
 
 /* Configuración del problema */
@@ -231,10 +342,18 @@ button.small { padding:4px 10px; font-size:0.75rem; }
   flex-wrap: wrap;
   justify-content: center;
 }
-#problema-config.hidden { display: none; }
-#problema-config > div { display: flex; flex-direction: column; }
+#problema-config.hidden {
+  display: none;
+}
+#problema-config > div {
+  display: flex;
+  flex-direction: column;
+}
 #problema-config input,
-#problema-config select { width: auto; min-width: 100px; }
+#problema-config select {
+  width: auto;
+  min-width: 100px;
+}
 
 /* Cronómetro */
 .timer-display {
@@ -261,8 +380,12 @@ button.small { padding:4px 10px; font-size:0.75rem; }
   gap: 8px;
   margin-top: 10px;
 }
-#conjetura-inline.hidden { display: none; }
-#conjetura-inline input { width: 300px; }
+#conjetura-inline.hidden {
+  display: none;
+}
+#conjetura-inline input {
+  width: 300px;
+}
 
 /* Formulario de resultado */
 #cardResultado {
@@ -272,7 +395,10 @@ button.small { padding:4px 10px; font-size:0.75rem; }
   animation: fadeIn 0.3s ease;
 }
 
-.toggle-group { display: flex; gap: 4px; }
+.toggle-group {
+  display: flex;
+  gap: 4px;
+}
 .toggle-btn {
   flex: 1;
   padding: 8px;
@@ -283,7 +409,11 @@ button.small { padding:4px 10px; font-size:0.75rem; }
   text-align: center;
   font-size: 0.8rem;
 }
-.toggle-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.toggle-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
 
 #conjeturas-sesion-wrap {
   margin-top: 20px;
@@ -291,44 +421,118 @@ button.small { padding:4px 10px; font-size:0.75rem; }
   width: 100%;
   animation: fadeIn 0.3s ease;
 }
-#listaConjeturasSesion { max-height: 200px; overflow-y: auto; }
+#listaConjeturasSesion {
+  max-height: 200px;
+  overflow-y: auto;
+}
 
 /* Badges */
-.result-b { background: var(--good); color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
-.result-m { background: var(--bad); color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
-.result-nr { background: var(--blue); color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+.result-b {
+  background: var(--good);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.result-m {
+  background: var(--bad);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.result-nr {
+  background: var(--blue);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
 
 /* Modales */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-  z-index: 100; display: flex; align-items: center; justify-content: center;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   animation: fadeIn 0.2s ease;
 }
 .modal {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 20px; width: 90%; max-width: 500px;
-  max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
 }
 
 /* Otros paneles */
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-th, td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
-tr:nth-child(even) { background: rgba(255,255,255,0.03); }
-tr:hover { background: rgba(92,124,250,0.08); }
+.table-wrap {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+th,
+td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+tr:hover {
+  background: rgba(92, 124, 250, 0.08);
+}
 
-.chart-container { position: relative; width: 100%; max-width: 500px; margin: 0 auto; }
+.chart-container {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
 
-.progress-bar { width: 100%; height: 10px; background: var(--surface2); border-radius: 10px; margin: 4px 0; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--accent3); border-radius: 10px; transition: width 0.4s; }
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: var(--surface2);
+  border-radius: 10px;
+  margin: 4px 0;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent3);
+  border-radius: 10px;
+  transition: width 0.4s;
+}
 
 .toast {
-  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-  background: var(--surface2); color: #fff; padding: 10px 24px;
-  border-radius: 22px; z-index: 999; opacity: 0; transition: opacity 0.3s;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface2);
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 22px;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s;
   pointer-events: none;
 }
-.toast.show { opacity: 1; }
+.toast.show {
+  opacity: 1;
+}
 
 /* Estado: cronómetro corriendo (se ocultan elementos) */
 #active-view.cronometro-corriendo #pomo-float,
