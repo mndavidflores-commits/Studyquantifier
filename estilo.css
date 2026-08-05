@@ -73,6 +73,7 @@ body {
   position: relative;
   height: 100%;
   width: 100%;
+  overflow: hidden;
 }
 
 /* ---------- VISTA IDLE (centrada) ---------- */
@@ -114,9 +115,9 @@ body {
 
 /* Tarjetas de configuración y pomodoro con el mismo ancho */
 .config-card, .pomo-card {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
-  width: 0; /* esto fuerza a que el flex las iguale */
+  max-width: calc(50% - 10px);
 }
 .grid-2 {
   display: grid;
@@ -328,7 +329,7 @@ button.small {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 10px;
   margin-top: 0px;
 }
 
@@ -356,7 +357,7 @@ button.small {
 
 /* Cronómetro */
 .timer-display {
-  font-size: 12rem;
+  font-size: 8rem;
   font-family: var(--mono);
   font-weight: 700;
   color: #fff;
