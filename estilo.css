@@ -330,20 +330,21 @@ button.small {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: 0;
-  margin-top: 0;
+  margin: 0;           /* ← asegura que no haya margen */
   height: 100%;
-  overflow-y: auto;   /* scroll solo si es necesario */
+  overflow-y: auto;
 }
 /* Configuración del problema */
 #problema-config {
   display: flex;
   gap: 15px;
   align-items: flex-end;
-  margin-bottom: 5px;
+  margin: 0;           /* ← elimina todos los márgenes */
   flex-wrap: wrap;
   justify-content: center;
-  flex-shrink: 0;   /* ← evita que se encoja */
+  flex-shrink: 0;
 }
 #problema-config.hidden {
   display: none;
@@ -373,9 +374,8 @@ button.small {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text2);
-  margin: 0;   /* ← quita márgenes */
+  margin: 0;           /* ← ya está, pero verifica */
 }
-
 /* Línea de conjetura */
 #conjetura-inline {
   display: flex;
@@ -418,13 +418,13 @@ button.small {
   border-color: var(--accent);
 }
 
-##conjeturas-sesion-wrap {
-  margin-top: auto;    /* ← la empuja hacia abajo */
-  margin-bottom: 10px;
+#conjeturas-sesion-wrap {
+  margin: 0;           /* ← elimina cualquier margen */
   max-width: 600px;
   width: 100%;
   animation: fadeIn 0.3s ease;
   flex-shrink: 0;
+  display: none;       /* ← inicialmente oculto, se muestra con JS */
 }
 
 #listaConjeturasSesion {
