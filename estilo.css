@@ -57,9 +57,13 @@ body {
 }
 
 #panelSesion.active {
-  display:flex; flex-direction:column; padding:0; height:100%; width: 100%;   
+  display:flex;
+  flex-direction:column;
+  padding:0;
+  overflow-y:auto;   /* ← para que no corte nada */
+  height:100%;
+  width:100%;
 }
-
 @keyframes fadeIn {
   from { opacity:0; transform:translateY(8px); }
   to   { opacity:1; transform:translateY(0); }
@@ -245,7 +249,7 @@ button.small {
   margin: 0;
   height: 100%;
   opacity: 1;
-  overflow: hidden;
+  overflow: auto;   /* ← cambia de 'hidden' a 'auto' */
 }
 
 /* Rectángulo flotante del pomodoro (fijo) */
@@ -326,11 +330,10 @@ button.small {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;  /* ← centra verticalmente el contenido */
   padding: 0;
   margin-top: 0;
-  height: 100%;            /* ← fuerza a ocupar toda la altura */
-  overflow-y: auto;        /* ← permite scroll interno si el contenido es muy largo */
+  height: 100%;
+  overflow-y: auto;   /* scroll solo si es necesario */
 }
 /* Configuración del problema */
 #problema-config {
@@ -362,7 +365,7 @@ button.small {
   font-weight: 700;
   color: #fff;
   text-align: center;
-  margin: 0;   /* ← quita márgenes para que no desplace */
+  margin: auto 0;   /* ← centra verticalmente en el espacio disponible */
 }
 #timerLabel {
   text-align: center;
@@ -415,13 +418,15 @@ button.small {
   border-color: var(--accent);
 }
 
-#conjeturas-sesion-wrap {
-  margin-top: 10px;
+##conjeturas-sesion-wrap {
+  margin-top: auto;    /* ← la empuja hacia abajo */
+  margin-bottom: 10px;
   max-width: 600px;
   width: 100%;
   animation: fadeIn 0.3s ease;
-  flex-shrink: 0;   /* ← evita que se encoja */
+  flex-shrink: 0;
 }
+
 #listaConjeturasSesion {
   max-height: 200px;
   overflow-y: auto;
