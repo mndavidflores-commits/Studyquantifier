@@ -17,8 +17,13 @@ body {
 .app-container { height:100vh; display:flex; flex-direction:column; }
 
 /* ========== AUTENTICACIÓN ========== */
-#auth-section.hidden { display:none; }
-
+#auth-section.hidden {
+    display: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
 /* ========== BARRA SUPERIOR ========== */
 #topbar {
   display:flex; align-items:center; justify-content:space-between;
