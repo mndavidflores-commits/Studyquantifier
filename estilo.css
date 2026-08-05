@@ -311,12 +311,12 @@ button.small {
   background: var(--surface);
   border-right: 1px solid var(--border);
   padding: 15px;
-  padding-top: 90px;     /* ← NUEVO: espacio superior */
   box-sizing: border-box;
-  height: 100%;
-  margin-left: 20px;
+  /* height: 100%;  ← ELIMINAR o comentar esta línea */
+  align-self: stretch;   /* ← NUEVO: para que ocupe la altura del contenedor */
+  margin-left: 20px;     /* separación izquierda */
+  margin-top: 20px;      /* ← NUEVO: separación superior (fuera de la caja) */
 }
-
 #left-panel.hidden {
   display: none;
 }
