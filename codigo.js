@@ -301,6 +301,15 @@ async function transition(newState) {
       document.getElementById('nombreSubtemaHistorial').textContent = document.getElementById('selSubtema').selectedOptions[0]?.textContent || '';
       await actualizarHistorialSubtema();
       setConfigEnabled(false);
+      // Ajustar el número de problema al siguiente disponible
+const problemasPrevios = await db.sessions
+    .where('tipo').equals('problema')
+    .and(p => p.subtema_id === subtema)
+    .toArray();
+const maxNum = problemasPrevios.reduce((max, p) => Math.max(max, p.problema_num || 0), 0);
+document.getElementById('numProblema').value = maxNum + 1;
+currentProblemaNum = maxNum + 1;
+      
       document.getElementById('pomoWork').disabled = true; document.getElementById('pomoBreak').disabled = true;
       document.getElementById('btnDistraje').disabled = false;
       document.getElementById('btnLecturaStart').disabled = false; document.getElementById('btnLecturaStop').disabled = false;
@@ -310,12 +319,24 @@ async function transition(newState) {
     session.pomoInterval = setInterval(() => {
       session.remainingSeconds--; session.elapsedTotal++; updatePomoDisplay();
       if (session.remainingSeconds <= 0) {
-        stopPomoInterval();
-        if (session.state === State.FOCUS_RUNNING) {
-          const breakMinutes = parseInt(document.getElementById('pomoBreak').value) || 20;
-          if (breakMinutes > 0) { session.remainingSeconds = breakMinutes * 60; transition(State.BREAK_RUNNING); }
-          else { transition(State.SESSION_ENDING); }
-        } else if (session.state === State.BREAK_RUNNING) {
+        if (session.remainingSeconds <= 0) {
+  stopPomoInterval();
+  // Si el cronómetro del problema está corriendo, posponemos la transición
+  if (session.state === State.FOCUS_RUNNING && blindTimer.running) {
+    window.pomodoroPendiente = true;
+    updatePomoDisplay();
+    return;
+  }
+  if (session.state === State.FOCUS_RUNNING) {
+    const breakMinutes = parseInt(document.getElementById('pomoBreak').value) || 20;
+    if (breakMinutes > 0) { session.remainingSeconds = breakMinutes * 60; transition(State.BREAK_RUNNING); }
+    else { transition(State.SESSION_ENDING); }
+  } else if (session.state === State.BREAK_RUNNING) {
+    session.remainingSeconds = parseInt(document.getElementById('pomoWork').value)*60;
+    transition(State.FOCUS_RUNNING);
+  }
+}
+      } else if (session.state === State.BREAK_RUNNING) {
           session.remainingSeconds = parseInt(document.getElementById('pomoWork').value)*60;
           transition(State.FOCUS_RUNNING);
         }
@@ -464,7 +485,8 @@ document.getElementById('btnLecturaStop').addEventListener('click', () => { if (
 document.getElementById('btnLecturaToggleFloat').addEventListener('click', toggleLectura);
 
 // ===================== CRONÓMETRO DE PROBLEMAS =====================
-function startBlindTimer() {
+function startBlindTimer() {}
+window.pomodoroPendiente = false;  
   if (blindTimer.running || blindTimer.pendingResult) return;
   if (session.state !== State.FOCUS_RUNNING && session.state !== State.BREAK_RUNNING) return;
   if (session.modo === 'B' && !errorSeleccionado) { showToast('Selecciona un error de la cola primero.'); return; }
@@ -489,6 +511,16 @@ function stopBlindTimerAndShowResult() {
   document.getElementById('timerDisplay').style.display = 'none';
   document.getElementById('conjetura-inline').classList.add('hidden');
   document.getElementById('left-panel').classList.add('hidden');
+  if (window.pomodoroPendiente) {
+  window.pomodoroPendiente = false;
+  const breakMinutes = parseInt(document.getElementById('pomoBreak').value) || 20;
+  if (breakMinutes > 0) {
+    session.remainingSeconds = breakMinutes * 60;
+    transition(State.BREAK_RUNNING);
+  } else {
+    transition(State.SESSION_ENDING);
+  }
+}
   blindTimer.pendingResult = true;
 }
 
@@ -956,8 +988,14 @@ async function actualizarMetricas() {
   const total = problemas.length, tiempoTotal = problemas.reduce((a, s) => a + (s.tiempo_s || 0), 0);
   const conjeturasTotal = await db.conjeturas.count();
   const conjPorMin = tiempoTotal ? (conjeturasTotal / (tiempoTotal / 60)).toFixed(2) : '0';
-  document.getElementById('metricasGenerales').innerHTML = `
+const mg = document.getElementById('metricasGenerales');
+if (mg) mg.innerHTML = `
     <span>Tasa aciertos: ${bien+mal>0?Math.round(bien/(bien+mal)*100):0}%</span>
+    <span>Tiempo prom: ${total?formatTime(tiempoTotal/total):'-'}</span>
+    <span>Conjeturas/min: ${conjPorMin}</span>
+    <span>Total: ${total}</span>
+  `;
+  <span>Tasa aciertos: ${bien+mal>0?Math.round(bien/(bien+mal)*100):0}%</span>
     <span>Tiempo prom: ${total?formatTime(tiempoTotal/total):'-'}</span>
     <span>Conjeturas/min: ${conjPorMin}</span>
     <span>Total: ${total}</span>
@@ -1227,6 +1265,15 @@ document.getElementById('selSubtema').addEventListener('change', function(){
   if(this.value!=='__agregar__'){ currentProblemaNum=1; document.getElementById('numProblema').value=1; }
   if (document.getElementById('active-view').classList.contains('active')) {
     actualizarHistorialSubtema();
+    // Ajustar número de problema al cambiar de subtema
+const problemasPrevios = await db.sessions
+    .where('tipo').equals('problema')
+    .and(p => p.subtema_id === this.value)
+    .toArray();
+const maxNum = problemasPrevios.reduce((max, p) => Math.max(max, p.problema_num || 0), 0);
+document.getElementById('numProblema').value = maxNum + 1;
+currentProblemaNum = maxNum + 1;
+    
     document.getElementById('nombreSubtemaHistorial').textContent = this.selectedOptions[0]?.textContent || '';
     if (session.modo === 'B') mostrarColaErrores();
   }
@@ -1362,7 +1409,12 @@ document.getElementById('tabNav').addEventListener('click', e => {
   document.getElementById(e.target.dataset.panel).classList.add('active');
   if(e.target.dataset.panel==='panelHistorial') actualizarHistorial();
   if(e.target.dataset.panel==='panelProgreso') actualizarProgreso();
-  if(e.target.dataset.panel==='panelMetricas') { actualizarMetricas(); poblarSelectoresMateria().then(actualizarMetricasAvanzadas); }
+if(e.target.dataset.panel==='panelMetricas') {
+  actualizarHorasEstudiadas();
+  actualizarProblemasIntentados();
+  actualizarAvanceTemas();
+  actualizarMetricas();
+}
   if(e.target.dataset.panel==='panelSueno') { actualizarSleepHistorial(); actualizarGraficoSueno(); }
   if(e.target.dataset.panel==='panelConjeturas') actualizarConjeturasFull();
   if(e.target.dataset.panel==='panelChecklist') actualizarChecklist();
@@ -1372,10 +1424,6 @@ document.getElementById('tabNav').addEventListener('click', e => {
 
 // ===================== ANÁLISIS POR MATERIA (sin cambios) =====================
 let materiaFiltro = 'todas';
-document.getElementById('filtroMateriaMetricas').addEventListener('change', async function() {
-  materiaFiltro = this.value;
-  await actualizarMetricasAvanzadas();
-});
 async function poblarSelectoresMateria() {
   const selFiltro = document.getElementById('filtroMateriaMetricas');
   const mats = await obtenerMateriasUnicas();
@@ -1561,6 +1609,83 @@ async function actualizarMetricasAvanzadas() {
   if (document.getElementById('selMateriaRadar').value) await actualizarRadarMateria();
   await actualizarTablaAgregada();
 }
+// ===================== NUEVAS MÉTRICAS =====================
+
+async function actualizarHorasEstudiadas() {
+  const materia = document.getElementById('filtroHorasMateria').value;
+  const sessions = await db.sessions.where('tipo').equals('pomodoro').toArray();
+  const dias = {};
+  sessions.forEach(s => {
+    const fecha = s.fecha || new Date(s.timestamp).toISOString().split('T')[0];
+    const mat = s.materia || 'sin materia';
+    if (materia !== 'todas' && mat !== materia) return;
+    if (!dias[fecha]) dias[fecha] = {};
+    if (!dias[fecha][mat]) dias[fecha][mat] = 0;
+    dias[fecha][mat] += (s.tiempo_pomodoro || 0) / 3600;
+  });
+  let totalDia = 0, totalGlobal = 0;
+  const hoy = new Date().toISOString().split('T')[0];
+  let html = '<table><tr><th>Fecha</th><th>Materia</th><th>Horas</th></tr>';
+  const fechas = Object.keys(dias).sort().reverse();
+  fechas.forEach(fecha => {
+    Object.entries(dias[fecha]).forEach(([mat, horas]) => {
+      const h = horas.toFixed(1);
+      if (fecha === hoy) totalDia += horas;
+      totalGlobal += horas;
+      html += `<tr><td>${fecha}</td><td>${mat}</td><td>${h}</td></tr>`;
+    });
+  });
+  html += '</table>';
+  document.getElementById('tablaHorasDiarias').innerHTML = html;
+  document.getElementById('horasTotalDia').textContent = `Hoy: ${totalDia.toFixed(1)} h`;
+  document.getElementById('horasTotalGlobal').textContent = `Total: ${totalGlobal.toFixed(1)} h`;
+}
+
+async function actualizarProblemasIntentados() {
+  const materia = document.getElementById('filtroProblemasMateria').value;
+  let problemas = await db.sessions.where('tipo').equals('problema').toArray();
+  if (materia !== 'todas') problemas = problemas.filter(p => p.materia === materia);
+  const total = problemas.length;
+  const bien = problemas.filter(p => p.resultado === 'bien').length;
+  const mal = problemas.filter(p => p.resultado === 'mal').length;
+  const noResuelto = problemas.filter(p => p.resultado === 'no_resuelto').length;
+  document.getElementById('resumenProblemas').textContent =
+    `Total: ${total} | ✅ Bien: ${bien} | ❌ Mal: ${mal} | ⚪ No resuelto: ${noResuelto}`;
+  const dias = {};
+  problemas.forEach(p => {
+    const fecha = p.fecha || new Date(p.timestamp).toISOString().split('T')[0];
+    if (!dias[fecha]) dias[fecha] = { bien:0, mal:0, no_resuelto:0, total:0 };
+    dias[fecha].total++;
+    if (p.resultado === 'bien') dias[fecha].bien++;
+    else if (p.resultado === 'mal') dias[fecha].mal++;
+    else if (p.resultado === 'no_resuelto') dias[fecha].no_resuelto++;
+  });
+  let html = '<table><tr><th>Fecha</th><th>Total</th><th>Bien</th><th>Mal</th><th>No resuelto</th></tr>';
+  Object.keys(dias).sort().reverse().forEach(fecha => {
+    const d = dias[fecha];
+    html += `<tr><td>${fecha}</td><td>${d.total}</td><td>${d.bien}</td><td>${d.mal}</td><td>${d.no_resuelto}</td></tr>`;
+  });
+  html += '</table>';
+  document.getElementById('tablaProblemasDia').innerHTML = html;
+}
+
+async function actualizarAvanceTemas() {
+  const container = document.getElementById('avanceTemasContainer');
+  const materias = [...new Set(currentTemario.map(t => t.materia))];
+  let html = '';
+  for (const mat of materias) {
+    const temas = currentTemario.filter(t => t.materia === mat);
+    const total = temas.length;
+    const completados = await db.checklist.toArray();
+    const idsCompletados = new Set(completados.map(c => c.subtema_id));
+    const avanzados = temas.filter(t => idsCompletados.has(t.id.toString())).length;
+    html += `<p><strong>${mat}:</strong> ${avanzados}/${total} temas completados</p>`;
+  }
+  container.innerHTML = html;
+}
+
+document.getElementById('filtroHorasMateria').addEventListener('change', actualizarHorasEstudiadas);
+document.getElementById('filtroProblemasMateria').addEventListener('change', actualizarProblemasIntentados);
 
 function registerSW() {
   if ('serviceWorker' in navigator) {
