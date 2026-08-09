@@ -988,6 +988,8 @@ if (mg) mg.innerHTML = `
     <span>Conjeturas/min: ${conjPorMin}</span>
     <span>Total: ${total}</span>
   `;
+
+  if (chartTiempo) chartTiempo.destroy();
   if (chartTiempo) chartTiempo.destroy();
   const ctxBar = document.getElementById('chartTiempoMateria')?.getContext('2d');
   if (ctxBar) {
