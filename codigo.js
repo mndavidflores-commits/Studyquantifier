@@ -52,7 +52,6 @@ const temarioEmbebido = [
 ];
 let currentTemario = [...temarioEmbebido];
 let chartTiempo, chartRadar, chartEvolucion;
-let chartFaseLinea, chartMejoraBarras, chartRadarMateria;
 
 let appInitialized = false;
 let erroresPendientes = [];
@@ -146,7 +145,7 @@ async function guardarLocalYOutbox(tablaSupabase, coleccionDexie, datos, onConfl
   const registro = { ...datos, id, user_id: sessionActual.user.id, created_at: existente?.created_at || datos.created_at || new Date().toISOString(), updated_at: new Date().toISOString(), deleted_at: null };
   await db[coleccionDexie].put(registro);
   await db.outbox.put({ table: tablaSupabase, record_id: id, operation: 'insert', data: registro, onConflict, created_at: new Date().toISOString() });
-  syncAll();
+  syncAll();  // sin await para no bloquear la UI
   return id;
 }
 async function corregirSesionId(tempId, idSesionReal) {
@@ -302,13 +301,13 @@ async function transition(newState) {
       await actualizarHistorialSubtema();
       setConfigEnabled(false);
       // Ajustar el número de problema al siguiente disponible
-const problemasPrevios = await db.sessions
-    .where('tipo').equals('problema')
-    .and(p => p.subtema_id === subtema)
-    .toArray();
-const maxNum = problemasPrevios.reduce((max, p) => Math.max(max, p.problema_num || 0), 0);
-document.getElementById('numProblema').value = maxNum + 1;
-currentProblemaNum = maxNum + 1;
+      const problemasPrevios = await db.sessions
+          .where('tipo').equals('problema')
+          .and(p => p.subtema_id === subtema)
+          .toArray();
+      const maxNum = problemasPrevios.reduce((max, p) => Math.max(max, p.problema_num || 0), 0);
+      document.getElementById('numProblema').value = maxNum + 1;
+      currentProblemaNum = maxNum + 1;
       
       document.getElementById('pomoWork').disabled = true; document.getElementById('pomoBreak').disabled = true;
       document.getElementById('btnDistraje').disabled = false;
@@ -505,15 +504,15 @@ function stopBlindTimerAndShowResult() {
   document.getElementById('conjetura-inline').classList.add('hidden');
   document.getElementById('left-panel').classList.add('hidden');
   if (window.pomodoroPendiente) {
-  window.pomodoroPendiente = false;
-  const breakMinutes = parseInt(document.getElementById('pomoBreak').value) || 20;
-  if (breakMinutes > 0) {
-    session.remainingSeconds = breakMinutes * 60;
-    transition(State.BREAK_RUNNING);
-  } else {
-    transition(State.SESSION_ENDING);
+    window.pomodoroPendiente = false;
+    const breakMinutes = parseInt(document.getElementById('pomoBreak').value) || 20;
+    if (breakMinutes > 0) {
+      session.remainingSeconds = breakMinutes * 60;
+      transition(State.BREAK_RUNNING);
+    } else {
+      transition(State.SESSION_ENDING);
+    }
   }
-}
   blindTimer.pendingResult = true;
 }
 
@@ -681,7 +680,7 @@ async function actualizarHistorialSubtema() {
   const subtemaId = document.getElementById('selSubtema').value;
   if (!subtemaId || subtemaId === '__agregar__') return;
   const problemas = await db.sessions.where('tipo').equals('problema').and(p => p.subtema_id === subtemaId).toArray();
-problemas.sort((a,b) => (b.problema_num||0) - (a.problema_num||0) || new Date(b.timestamp) - new Date(a.timestamp));
+  problemas.sort((a,b) => (b.problema_num||0) - (a.problema_num||0) || new Date(b.timestamp) - new Date(a.timestamp));
   const wrap = document.getElementById('historialSubtemaTableWrap');
   let html = '<table><tr><th>#</th><th>Tiempo</th><th>Resultado</th></tr>';
   problemas.forEach(p => {
@@ -773,7 +772,7 @@ async function actualizarUIPorModo() {
   if (esModoB) await mostrarColaErrores();
 }
 
-// ===================== FSRS Y DOMINIO (sin cambios) =====================
+// ===================== FSRS Y DOMINIO =====================
 function crearInstanciaFSRS(pesos) {
   return fsrs(generatorParameters({
     request_retention: 0.9,
@@ -891,7 +890,7 @@ document.getElementById('btnDescartarRepaso').addEventListener('click', () => {
   document.getElementById('left-panel').classList.remove('hidden');
 });
 
-// ===================== DOMINIO (sin cambios) =====================
+// ===================== DOMINIO =====================
 async function poblarSelectoresDominio() {
   const selMat = document.getElementById('domMateria');
   if (!selMat) return;
@@ -974,22 +973,21 @@ document.getElementById('btnGuardarDominio').addEventListener('click', async () 
   actualizarDominioHistorial();
 });
 
-// ===================== MÉTRICAS Y GRÁFICOS (sin cambios) =====================
+// ===================== MÉTRICAS Y GRÁFICOS =====================
 async function actualizarMetricas() {
   const problemas = await db.sessions.where('tipo').equals('problema').toArray();
   const bien = problemas.filter(s => s.resultado === 'bien').length, mal = problemas.filter(s => s.resultado === 'mal').length;
   const total = problemas.length, tiempoTotal = problemas.reduce((a, s) => a + (s.tiempo_s || 0), 0);
   const conjeturasTotal = await db.conjeturas.count();
   const conjPorMin = tiempoTotal ? (conjeturasTotal / (tiempoTotal / 60)).toFixed(2) : '0';
-const mg = document.getElementById('metricasGenerales');
-if (mg) mg.innerHTML = `
-    <span>Tasa aciertos: ${bien+mal>0?Math.round(bien/(bien+mal)*100):0}%</span>
-    <span>Tiempo prom: ${total?formatTime(tiempoTotal/total):'-'}</span>
-    <span>Conjeturas/min: ${conjPorMin}</span>
-    <span>Total: ${total}</span>
-  `;
+  const mg = document.getElementById('metricasGenerales');
+  if (mg) mg.innerHTML = `
+      <span>Tasa aciertos: ${bien+mal>0?Math.round(bien/(bien+mal)*100):0}%</span>
+      <span>Tiempo prom: ${total?formatTime(tiempoTotal/total):'-'}</span>
+      <span>Conjeturas/min: ${conjPorMin}</span>
+      <span>Total: ${total}</span>
+    `;
 
-  if (chartTiempo) chartTiempo.destroy();
   if (chartTiempo) chartTiempo.destroy();
   const ctxBar = document.getElementById('chartTiempoMateria')?.getContext('2d');
   if (ctxBar) {
@@ -1256,13 +1254,13 @@ document.getElementById('selSubtema').addEventListener('change', async function(
   if (document.getElementById('active-view').classList.contains('active')) {
     actualizarHistorialSubtema();
     // Ajustar número de problema al cambiar de subtema
-const problemasPrevios = await db.sessions
-    .where('tipo').equals('problema')
-    .and(p => p.subtema_id === this.value)
-    .toArray();
-const maxNum = problemasPrevios.reduce((max, p) => Math.max(max, p.problema_num || 0), 0);
-document.getElementById('numProblema').value = maxNum + 1;
-currentProblemaNum = maxNum + 1;
+    const problemasPrevios = await db.sessions
+        .where('tipo').equals('problema')
+        .and(p => p.subtema_id === this.value)
+        .toArray();
+    const maxNum = problemasPrevios.reduce((max, p) => Math.max(max, p.problema_num || 0), 0);
+    document.getElementById('numProblema').value = maxNum + 1;
+    currentProblemaNum = maxNum + 1;
     
     document.getElementById('nombreSubtemaHistorial').textContent = this.selectedOptions[0]?.textContent || '';
     if (session.modo === 'B') mostrarColaErrores();
@@ -1399,12 +1397,12 @@ document.getElementById('tabNav').addEventListener('click', e => {
   document.getElementById(e.target.dataset.panel).classList.add('active');
   if(e.target.dataset.panel==='panelHistorial') actualizarHistorial();
   if(e.target.dataset.panel==='panelProgreso') actualizarProgreso();
-if(e.target.dataset.panel==='panelMetricas') {
-  actualizarHorasEstudiadas();
-  actualizarProblemasIntentados();
-  actualizarAvanceTemas();
-  actualizarMetricas();
-}
+  if(e.target.dataset.panel==='panelMetricas') {
+    actualizarHorasEstudiadas();
+    actualizarProblemasIntentados();
+    actualizarAvanceTemas();
+    actualizarMetricas();
+  }
   if(e.target.dataset.panel==='panelSueno') { actualizarSleepHistorial(); actualizarGraficoSueno(); }
   if(e.target.dataset.panel==='panelConjeturas') actualizarConjeturasFull();
   if(e.target.dataset.panel==='panelChecklist') actualizarChecklist();
@@ -1412,169 +1410,7 @@ if(e.target.dataset.panel==='panelMetricas') {
   if(e.target.dataset.panel==='panelDominio') { poblarSelectoresDominio(); actualizarDominioHistorial(); }
 });
 
-// ===================== ANÁLISIS POR MATERIA (sin cambios) =====================
-let materiaFiltro = 'todas';
-
-async function obtenerMateriasUnicas() {
-  const problemas = await db.sessions.where('tipo').equals('problema').toArray();
-  return [...new Set(problemas.map(p => p.materia).filter(Boolean))].sort();
-}
-async function getProblemasFiltrados() {
-  let problemas = await db.sessions.where('tipo').equals('problema').toArray();
-  if (materiaFiltro !== 'todas') { problemas = problemas.filter(p => p.materia === materiaFiltro); }
-  return problemas;
-}
-
-  const materias = [...new Set(Object.values(sesiones).map(s => s.materia))];
-  const datasets = [];
-  const coloresFase = { A1: '#5c7cfa', B1: '#3dd6c8', A2: '#ffb347', B2: '#fa5c7c' };
-  for (const mat of materias) {
-    const sesionesMat = Object.values(sesiones).filter(s => s.materia === mat).sort((a,b) => a.fecha.localeCompare(b.fecha) || a.sesion_id?.localeCompare(b.sesion_id));
-    const data = sesionesMat.map((s, idx) => {
-      const tasa = s.bien + s.mal > 0 ? Math.round(s.bien / (s.bien + s.mal) * 100) : null;
-      return { x: idx + 1, y: tasa, fase: s.fase, fecha: s.fecha };
-    });
-    datasets.push({
-      label: mat,
-      data: data,
-      backgroundColor: data.map(d => coloresFase[d.fase] || '#ccc'),
-      borderColor: 'gray',
-      showLine: true,
-      lineTension: 0.2,
-      pointRadius: 6,
-      spanGaps: false
-    });
-  }
-  chartFaseLinea = new Chart(ctx, {
-    type: 'scatter',
-    data: { datasets },
-    options: {
-      responsive: true,
-      scales: {
-        x: { title: { display: true, text: 'Nº de sesión' } },
-        y: { beginAtZero: true, max: 100, title: { display: true, text: 'Tasa aciertos %' } }
-      },
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: (ctx) => {
-              const point = ctx.dataset.data[ctx.dataIndex];
-              return `${ctx.dataset.label}: ${point.y}% (${point.fecha}) - Fase ${point.fase}`;
-            }
-          }
-        },
-        legend: { position: 'bottom' }
-      }
-    }
-  });
-}
-async function actualizarChartMejoraBarras() {
-  const ctx = document.getElementById('chartMejoraBarras')?.getContext('2d');
-  if (!ctx) return;
-  if (chartMejoraBarras) chartMejoraBarras.destroy();
-  const problemas = await getProblemasFiltrados();
-  if (problemas.length === 0) return;
-  const resumen = {};
-  problemas.forEach(p => {
-    if (!resumen[p.materia]) resumen[p.materia] = {};
-    if (!resumen[p.materia][p.fase]) resumen[p.materia][p.fase] = { bien: 0, mal: 0 };
-    if (p.resultado === 'bien') resumen[p.materia][p.fase].bien++;
-    else if (p.resultado === 'mal') resumen[p.materia][p.fase].mal++;
-  });
-  const materias = Object.keys(resumen);
-  const fasesBase = ['A1','A2'];
-  const fasesComp = ['B1','B2'];
-  const datasets = [];
-  fasesBase.forEach((base, i) => {
-    const comp = fasesComp[i];
-    const data = materias.map(mat => {
-      const b = resumen[mat][base];
-      const c = resumen[mat][comp];
-      if (!b || !c) return null;
-      const tasaBase = b.bien + b.mal > 0 ? b.bien/(b.bien+b.mal)*100 : 0;
-      const tasaComp = c.bien + c.mal > 0 ? c.bien/(c.bien+c.mal)*100 : 0;
-      return tasaComp - tasaBase;
-    });
-    datasets.push({
-      label: `${comp} - ${base} (%)`,
-      data: data,
-      backgroundColor: comp === 'B1' ? 'rgba(61,214,200,0.7)' : 'rgba(250,92,124,0.7)'
-    });
-  });
-  chartMejoraBarras = new Chart(ctx, {
-    type: 'bar',
-    data: { labels: materias, datasets },
-    options: {
-      responsive: true,
-      scales: { y: { title: { display: true, text: 'Mejora (% puntos)' } } },
-      plugins: { legend: { position: 'bottom' } }
-    }
-  });
-}
-async function actualizarRadarMateria() {
-  const ctx = document.getElementById('chartRadarMateria')?.getContext('2d');
-  if (!ctx) return;
-  if (chartRadarMateria) chartRadarMateria.destroy();
-  const materia = document.getElementById('selMateriaRadar').value;
-  if (!materia) return;
-  const problemas = await db.sessions.where('tipo').equals('problema').and(p => p.materia === materia).toArray();
-  if (problemas.length === 0) return;
-  const total = problemas.length;
-  const bien = problemas.filter(p => p.resultado === 'bien').length;
-  const mal = problemas.filter(p => p.resultado === 'mal').length;
-  const tiempoTotal = problemas.reduce((a, p) => a + (p.tiempo_s || 0), 0);
-  const velocidad = total ? Math.min(100, Math.round((total/(tiempoTotal/60))*10)) : 0;
-  const precision = bien+mal > 0 ? Math.round(bien/(bien+mal)*100) : 0;
-  const retencion = problemas.filter(p=>p.modo==='B' && p.resultado==='bien').length / (problemas.filter(p=>p.modo==='B').length||1)*100;
-  const consolidacion = total ? problemas.filter(p=>p.modo==='B').length/total*100 : 0;
-  const generacionC = total ? problemas.filter(p=>p.modo==='C').length/total*100 : 0;
-  chartRadarMateria = new Chart(ctx, {
-    type: 'radar',
-    data: {
-      labels: ['Velocidad','Precisión','Retención','Consolidación','Generación C'],
-      datasets: [{ label: materia, data: [velocidad, precision, retencion, consolidacion, generacionC], backgroundColor: 'rgba(92,124,250,0.2)' }]
-    },
-    options: { scales: { r: { beginAtZero: true, max: 100 } } }
-  });
-}
-async function actualizarTablaAgregada() {
-  const container = document.getElementById('tablaMetricasAgregadas');
-  const problemas = await getProblemasFiltrados();
-  if (problemas.length === 0) { container.innerHTML = '<p>Sin datos.</p>'; return; }
-  const fases = ['A1','B1','A2','B2'];
-  const agg = {};
-  problemas.forEach(p => {
-    if (!agg[p.materia]) agg[p.materia] = {};
-    if (!agg[p.materia][p.fase]) agg[p.materia][p.fase] = { ejercicios: 0, correctos: 0, incorrectos: 0, tiempo: 0, bloom: 0, bloomCount: 0 };
-    const faseData = agg[p.materia][p.fase];
-    faseData.ejercicios++;
-    if (p.resultado === 'bien') faseData.correctos++;
-    else if (p.resultado === 'mal') faseData.incorrectos++;
-    faseData.tiempo += (p.tiempo_s || 0);
-    if (p.nivel_bloom) { faseData.bloom += p.nivel_bloom; faseData.bloomCount++; }
-  });
-  const conjeturasPorMateria = {};
-  const conjs = await db.conjeturas.toArray();
-  conjs.forEach(c => { if (c.materia) conjeturasPorMateria[c.materia] = (conjeturasPorMateria[c.materia] || 0) + 1; });
-  const materias = Object.keys(agg).sort();
-  let html = '<table><thead><tr><th>Materia</th><th>Fase</th><th>Ejercicios</th><th>Tasa Aciertos</th><th>Tiempo Prom (s)</th><th>Bloom Medio</th><th>Conjeturas</th></tr></thead><tbody>';
-  for (const mat of materias) {
-    const conjsMat = conjeturasPorMateria[mat] || 0;
-    for (const fase of fases) {
-      const d = agg[mat][fase];
-      if (!d || d.ejercicios === 0) continue;
-      const tasa = d.correctos + d.incorrectos > 0 ? Math.round(d.correctos/(d.correctos+d.incorrectos)*100) : 0;
-      const tiempoProm = d.ejercicios ? (d.tiempo / d.ejercicios).toFixed(1) : '-';
-      const bloomMedio = d.bloomCount ? (d.bloom / d.bloomCount).toFixed(1) : '-';
-      html += `<tr><td>${mat}</td><td>${fase}</td><td>${d.ejercicios}</td><td>${tasa}%</td><td>${tiempoProm}</td><td>${bloomMedio}</td><td>${conjsMat}</td></tr>`;
-    }
-  }
-  html += '</tbody></table>';
-  container.innerHTML = html;
-}
-
 // ===================== NUEVAS MÉTRICAS =====================
-
 async function actualizarHorasEstudiadas() {
   const materia = document.getElementById('filtroHorasMateria').value;
   const sessions = await db.sessions.where('tipo').equals('pomodoro').toArray();
