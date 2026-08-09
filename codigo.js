@@ -146,7 +146,7 @@ async function guardarLocalYOutbox(tablaSupabase, coleccionDexie, datos, onConfl
   const registro = { ...datos, id, user_id: sessionActual.user.id, created_at: existente?.created_at || datos.created_at || new Date().toISOString(), updated_at: new Date().toISOString(), deleted_at: null };
   await db[coleccionDexie].put(registro);
   await db.outbox.put({ table: tablaSupabase, record_id: id, operation: 'insert', data: registro, onConflict, created_at: new Date().toISOString() });
-  await syncAll();
+  syncAll();
   return id;
 }
 async function corregirSesionId(tempId, idSesionReal) {
@@ -168,7 +168,7 @@ async function corregirSesionId(tempId, idSesionReal) {
       onConflict: 'id', created_at: new Date().toISOString()
     });
   }
-  await syncAll();
+  syncAll();
 }
 
 function formatTime(sec) {
@@ -319,24 +319,17 @@ currentProblemaNum = maxNum + 1;
     session.pomoInterval = setInterval(() => {
       session.remainingSeconds--; session.elapsedTotal++; updatePomoDisplay();
       if (session.remainingSeconds <= 0) {
-        if (session.remainingSeconds <= 0) {
-  stopPomoInterval();
-  // Si el cronómetro del problema está corriendo, posponemos la transición
-  if (session.state === State.FOCUS_RUNNING && blindTimer.running) {
-    window.pomodoroPendiente = true;
-    updatePomoDisplay();
-    return;
-  }
-  if (session.state === State.FOCUS_RUNNING) {
-    const breakMinutes = parseInt(document.getElementById('pomoBreak').value) || 20;
-    if (breakMinutes > 0) { session.remainingSeconds = breakMinutes * 60; transition(State.BREAK_RUNNING); }
-    else { transition(State.SESSION_ENDING); }
-  } else if (session.state === State.BREAK_RUNNING) {
-    session.remainingSeconds = parseInt(document.getElementById('pomoWork').value)*60;
-    transition(State.FOCUS_RUNNING);
-  }
-}
-      } else if (session.state === State.BREAK_RUNNING) {
+        stopPomoInterval();
+        if (session.state === State.FOCUS_RUNNING && blindTimer.running) {
+          window.pomodoroPendiente = true;
+          updatePomoDisplay();
+          return;
+        }
+        if (session.state === State.FOCUS_RUNNING) {
+          const breakMinutes = parseInt(document.getElementById('pomoBreak').value) || 20;
+          if (breakMinutes > 0) { session.remainingSeconds = breakMinutes * 60; transition(State.BREAK_RUNNING); }
+          else { transition(State.SESSION_ENDING); }
+        } else if (session.state === State.BREAK_RUNNING) {
           session.remainingSeconds = parseInt(document.getElementById('pomoWork').value)*60;
           transition(State.FOCUS_RUNNING);
         }
@@ -485,8 +478,8 @@ document.getElementById('btnLecturaStop').addEventListener('click', () => { if (
 document.getElementById('btnLecturaToggleFloat').addEventListener('click', toggleLectura);
 
 // ===================== CRONÓMETRO DE PROBLEMAS =====================
-function startBlindTimer() {}
-window.pomodoroPendiente = false;  
+function startBlindTimer() {
+  window.pomodoroPendiente = false;
   if (blindTimer.running || blindTimer.pendingResult) return;
   if (session.state !== State.FOCUS_RUNNING && session.state !== State.BREAK_RUNNING) return;
   if (session.modo === 'B' && !errorSeleccionado) { showToast('Selecciona un error de la cola primero.'); return; }
@@ -995,11 +988,6 @@ if (mg) mg.innerHTML = `
     <span>Conjeturas/min: ${conjPorMin}</span>
     <span>Total: ${total}</span>
   `;
-  <span>Tasa aciertos: ${bien+mal>0?Math.round(bien/(bien+mal)*100):0}%</span>
-    <span>Tiempo prom: ${total?formatTime(tiempoTotal/total):'-'}</span>
-    <span>Conjeturas/min: ${conjPorMin}</span>
-    <span>Total: ${total}</span>
-  `;
   if (chartTiempo) chartTiempo.destroy();
   const ctxBar = document.getElementById('chartTiempoMateria')?.getContext('2d');
   if (ctxBar) {
@@ -1260,7 +1248,7 @@ document.getElementById('selMateria').addEventListener('change', async function(
     document.getElementById('nombreSubtemaHistorial').textContent = this.selectedOptions[0]?.textContent || '';
   }
 });
-document.getElementById('selSubtema').addEventListener('change', function(){
+document.getElementById('selSubtema').addEventListener('change', async function(){
   verificarAgregarSubtema();
   if(this.value!=='__agregar__'){ currentProblemaNum=1; document.getElementById('numProblema').value=1; }
   if (document.getElementById('active-view').classList.contains('active')) {
