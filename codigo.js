@@ -1414,16 +1414,7 @@ if(e.target.dataset.panel==='panelMetricas') {
 
 // ===================== ANÁLISIS POR MATERIA (sin cambios) =====================
 let materiaFiltro = 'todas';
-async function poblarSelectoresMateria() {
-  const selFiltro = document.getElementById('filtroMateriaMetricas');
-  const mats = await obtenerMateriasUnicas();
-  selFiltro.innerHTML = '<option value="todas">Todas</option>';
-  mats.forEach(m => { selFiltro.innerHTML += `<option value="${m}">${m}</option>`; });
-  const selRadar = document.getElementById('selMateriaRadar');
-  selRadar.innerHTML = '';
-  mats.forEach(m => { selRadar.innerHTML += `<option value="${m}">${m}</option>`; });
-  selRadar.addEventListener('change', () => actualizarRadarMateria());
-}
+
 async function obtenerMateriasUnicas() {
   const problemas = await db.sessions.where('tipo').equals('problema').toArray();
   return [...new Set(problemas.map(p => p.materia).filter(Boolean))].sort();
@@ -1433,19 +1424,7 @@ async function getProblemasFiltrados() {
   if (materiaFiltro !== 'todas') { problemas = problemas.filter(p => p.materia === materiaFiltro); }
   return problemas;
 }
-async function actualizarChartFaseLinea() {
-  const ctx = document.getElementById('chartFaseLinea')?.getContext('2d');
-  if (!ctx) return;
-  if (chartFaseLinea) chartFaseLinea.destroy();
-  const problemas = await getProblemasFiltrados();
-  if (problemas.length === 0) return;
-  const sesiones = {};
-  problemas.forEach(p => {
-    const key = p.materia + '|||' + p.sesion_id;
-    if (!sesiones[key]) sesiones[key] = { materia: p.materia, fase: p.fase, fecha: p.fecha, bien: 0, mal: 0 };
-    if (p.resultado === 'bien') sesiones[key].bien++;
-    else if (p.resultado === 'mal') sesiones[key].mal++;
-  });
+
   const materias = [...new Set(Object.values(sesiones).map(s => s.materia))];
   const datasets = [];
   const coloresFase = { A1: '#5c7cfa', B1: '#3dd6c8', A2: '#ffb347', B2: '#fa5c7c' };
@@ -1593,12 +1572,7 @@ async function actualizarTablaAgregada() {
   html += '</tbody></table>';
   container.innerHTML = html;
 }
-async function actualizarMetricasAvanzadas() {
-  await actualizarChartFaseLinea();
-  await actualizarChartMejoraBarras();
-  if (document.getElementById('selMateriaRadar').value) await actualizarRadarMateria();
-  await actualizarTablaAgregada();
-}
+
 // ===================== NUEVAS MÉTRICAS =====================
 
 async function actualizarHorasEstudiadas() {
