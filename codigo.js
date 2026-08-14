@@ -1243,9 +1243,6 @@ async function poblarSubtemas(mat) {
 function verificarAgregarSubtema() {
   document.getElementById('agregarSubtemaRow').style.display = (document.getElementById('selSubtema').value==='__agregar__')?'flex':'none';
 }
-function verificarAgregarSubtema() {
-  document.getElementById('agregarSubtemaRow').style.display = (document.getElementById('selSubtema').value==='__agregar__')?'flex':'none';
-}
 function poblarLibros(subtemaId) {
   
   const selLibro = document.getElementById('selLibro');
