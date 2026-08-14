@@ -188,6 +188,7 @@ function setConfigEnabled(enabled) {
   document.getElementById('selMateria').disabled = !enabled;
   document.getElementById('selSubtema').disabled = !enabled;
   document.getElementById('selLibro').disabled = !enabled;
+  document.getElementById('selCapitulo').disabled = !enabled;
 }
 
 function updatePomoDisplay() {
@@ -423,7 +424,7 @@ document.getElementById('btnGuardarResumen').addEventListener('click', async () 
   const idSesion = await guardarLocalYOutbox('study_sessions', 'sessions', {
     tipo: 'pomodoro', fecha: new Date().toISOString().split('T')[0], timestamp: Date.now(),
     modo: document.getElementById('selModo').value, fase: document.getElementById('selFase').value,
-    materia: document.getElementById('selMateria').value, subtema_id: document.getElementById('selSubtema').value, libro: document.getElementById('selLibro').value,
+    materia: document.getElementById('selMateria').value, subtema_id: document.getElementById('selSubtema').value, libro: document.getElementById('selLibro').value,capitulo: document.getElementById('selCapitulo').value,
     
     subtema_nombre: document.getElementById('selSubtema').selectedOptions[0]?.textContent || '',
     tiempo_pomodoro: session.elapsedTotal, tiempo_lectura: session.lecturaSeconds, frustracion, energia,
@@ -577,7 +578,7 @@ document.getElementById('btnSiguienteProblema').addEventListener('click', async 
   const subtemaNombreProblema = document.getElementById('selSubtema').selectedOptions[0]?.textContent || '';
   const idProblema = await guardarLocalYOutbox('study_sessions', 'sessions', {
     tipo: 'problema', fecha: new Date().toISOString().split('T')[0], timestamp: Date.now(),
-    modo, fase, materia, subtema_id: subtema, subtema_nombre: subtemaNombreProblema, libro: document.getElementById('selLibro').value,
+    modo, fase, materia, subtema_id: subtema, subtema_nombre: subtemaNombreProblema, libro: document.getElementById('selLibro').value,capitulo: document.getElementById('selCapitulo').value,
     
     problema_num: blindTimer.previousProblemaNum, tiempo_s: Math.round(blindTimer.seconds * 10) / 10,
     resultado, codigo_error: codError, dificultad_experimentada: parseInt(document.getElementById('selDifExp').value),
@@ -865,7 +866,7 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
   });
   await guardarLocalYOutbox('study_sessions', 'sessions', {
     tipo: 'problema', fecha: new Date().toISOString().split('T')[0], timestamp: Date.now(),
-    modo: 'B', fase: document.getElementById('selFase').value, materia, subtema_id: subtema, subtema_nombre: subtemaNombre, libro: document.getElementById('selLibro').value,
+    modo: 'B', fase: document.getElementById('selFase').value, materia, subtema_id: subtema, subtema_nombre: subtemaNombre, libro: document.getElementById('selLibro').value,capitulo: document.getElementById('selCapitulo').value,
     tiempo_s: Math.round(blindTimer.seconds * 10) / 10,
     resultado: calificacion >= 3 ? 'bien' : 'mal',
     sesion_id: session.tempId
@@ -1240,38 +1241,50 @@ async function poblarSubtemas(mat) {
   verificarAgregarSubtema();
 }
 function poblarLibros(subtemaId) {
-  const sel = document.getElementById('selLibro');
-  sel.innerHTML = '';
+  const selLibro = document.getElementById('selLibro');
+  const selCapitulo = document.getElementById('selCapitulo');
+  selLibro.innerHTML = '';
+  selCapitulo.innerHTML = '';
   if (!subtemaId || subtemaId === '__agregar__') {
-    sel.innerHTML = '<option value="">—</option>';
+    selLibro.innerHTML = '<option value="">—</option>';
+    selCapitulo.innerHTML = '<option value="">—</option>';
     return;
   }
-  let libros = [];
   const tema = currentTemario.find(t => t.id.toString() === subtemaId);
-  if (tema && Array.isArray(tema.libros)) libros = tema.libros;
+  const libros = (tema && Array.isArray(tema.libros)) ? tema.libros : [];
   if (!libros.length) {
-    sel.innerHTML = '<option value="">Sin libro</option>';
+    selLibro.innerHTML = '<option value="">Sin libro</option>';
+    selCapitulo.innerHTML = '<option value="">Sin capítulo</option>';
     return;
   }
-  sel.innerHTML = libros.map(l => `<option value="${l}">${l}</option>`).join('');
+  selLibro.innerHTML = libros.map(l => `<option value="${l.nombre}">${l.nombre}</option>`).join('');
+  actualizarCapitulos(libros[0].nombre, subtemaId);
 }
-function verificarAgregarSubtema() {
-  document.getElementById('agregarSubtemaRow').style.display = (document.getElementById('selSubtema').value==='__agregar__')?'flex':'none';
-}
-document.getElementById('selMateria').addEventListener('change', async function(){
-  if(this.value==='__agregar__'){ document.getElementById('agregarMateriaRow').style.display='flex'; return; }
-  document.getElementById('agregarMateriaRow').style.display='none';
-  currentProblemaNum=1; document.getElementById('numProblema').value=1;
-  await poblarSubtemas(this.value);
-  poblarLibros(document.getElementById('selSubtema').value);
-  if (document.getElementById('active-view').classList.contains('active')) {
-    await actualizarHistorialSubtema();
-    document.getElementById('nombreSubtemaHistorial').textContent = this.selectedOptions[0]?.textContent || '';
+
+function actualizarCapitulos(libroSeleccionado, subtemaId) {
+  const selCapitulo = document.getElementById('selCapitulo');
+  selCapitulo.innerHTML = '';
+  if (!subtemaId || !libroSeleccionado) {
+    selCapitulo.innerHTML = '<option value="">—</option>';
+    return;
   }
+  const tema = currentTemario.find(t => t.id.toString() === subtemaId);
+  const libro = tema?.libros?.find(l => l.nombre === libroSeleccionado);
+  if (libro && Array.isArray(libro.capitulos) && libro.capitulos.length) {
+    selCapitulo.innerHTML = libro.capitulos.map(c => `<option value="${c}">${c}</option>`).join('');
+  } else {
+    selCapitulo.innerHTML = '<option value="">Sin capítulo</option>';
+  }
+}
+
+// Evento para cambiar capítulos al cambiar de libro
+document.getElementById('selLibro').addEventListener('change', function() {
+  actualizarCapitulos(this.value, document.getElementById('selSubtema').value);
 });
 document.getElementById('selSubtema').addEventListener('change', async function(){
   verificarAgregarSubtema();
   poblarLibros(this.value);
+  actualizarCapitulos(document.getElementById('selLibro').value, this.value);
   if(this.value!=='__agregar__'){ currentProblemaNum=1; document.getElementById('numProblema').value=1; }
   if (document.getElementById('active-view').classList.contains('active')) {
     actualizarHistorialSubtema();
