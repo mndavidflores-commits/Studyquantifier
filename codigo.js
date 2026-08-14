@@ -302,9 +302,10 @@ async function transition(newState) {
       await actualizarHistorialSubtema();
       setConfigEnabled(false);
       // Ajustar el número de problema al siguiente disponible
+      const libro = document.getElementById('selLibro').value;
       const problemasPrevios = await db.sessions
           .where('tipo').equals('problema')
-          .and(p => p.subtema_id === subtema)
+          .and(p => p.subtema_id === subtema && p.libro === libro)
           .toArray();
       const maxNum = problemasPrevios.reduce((max, p) => Math.max(max, p.problema_num || 0), 0);
       document.getElementById('numProblema').value = maxNum + 1;
@@ -1274,10 +1275,11 @@ document.getElementById('selSubtema').addEventListener('change', async function(
   if(this.value!=='__agregar__'){ currentProblemaNum=1; document.getElementById('numProblema').value=1; }
   if (document.getElementById('active-view').classList.contains('active')) {
     actualizarHistorialSubtema();
-    // Ajustar número de problema al cambiar de subtema
+// Ajustar número de problema al cambiar de subtema
+    const libro = document.getElementById('selLibro').value;
     const problemasPrevios = await db.sessions
         .where('tipo').equals('problema')
-        .and(p => p.subtema_id === this.value)
+        .and(p => p.subtema_id === this.value && p.libro === libro)
         .toArray();
     const maxNum = problemasPrevios.reduce((max, p) => Math.max(max, p.problema_num || 0), 0);
     document.getElementById('numProblema').value = maxNum + 1;
