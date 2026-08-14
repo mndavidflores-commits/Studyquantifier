@@ -1281,6 +1281,25 @@ function actualizarCapitulos(libroSeleccionado, subtemaId) {
 document.getElementById('selLibro').addEventListener('change', function() {
   actualizarCapitulos(this.value, document.getElementById('selSubtema').value);
 });
+document.getElementById('selMateria').addEventListener('change', async function(){
+  if(this.value==='__agregar__'){ 
+    document.getElementById('agregarMateriaRow').style.display='flex'; 
+    return; 
+  }
+  document.getElementById('agregarMateriaRow').style.display='none';
+  currentProblemaNum=1; 
+  document.getElementById('numProblema').value=1;
+  try {
+    await poblarSubtemas(this.value);
+    poblarLibros(document.getElementById('selSubtema').value);
+    if (document.getElementById('active-view').classList.contains('active')) {
+      await actualizarHistorialSubtema();
+      document.getElementById('nombreSubtemaHistorial').textContent = this.selectedOptions[0]?.textContent || '';
+    }
+  } catch(e) {
+    console.error('Error en change materia:', e);
+  }
+});
 document.getElementById('selSubtema').addEventListener('change', async function(){
   verificarAgregarSubtema();
   poblarLibros(this.value);
