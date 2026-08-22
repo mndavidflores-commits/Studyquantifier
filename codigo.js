@@ -1704,3 +1704,175 @@ async function generarHeatmap(sesiones) {
     fecha.setDate(fecha.getDate() + 1);
   }
 }
+
+// ===================== GRÁFICO DE PROBLEMAS =====================
+let materiaGraficoSeleccionada = 'Matemáticas';
+let mostrarAvg10 = true;
+let mostrarPuntosB = true;
+let chartProblemas = null;
+
+async function generarGraficoProblemas() {
+  const ctx = document.getElementById('chartProblemas')?.getContext('2d');
+  if (!ctx) return;
+
+  if (chartProblemas) chartProblemas.destroy();
+
+  const problemas = await db.sessions.where('tipo').equals('problema').toArray();
+  const filtrados = problemas.filter(p => p.materia === materiaGraficoSeleccionada);
+  filtrados.sort((a, b) => new Date(a.timestamp || a.fecha) - new Date(b.timestamp || b.fecha));
+
+  const puntosA = filtrados.filter(p => p.modo === 'A');
+  const puntosB = filtrados.filter(p => p.modo === 'B');
+
+  function colorPorResultado(resultado) {
+    if (resultado === 'bien') return '#3dd6c8';
+    if (resultado === 'mal') return '#fa5c7c';
+    if (resultado === 'no_resuelto') return '#5c7cfa';
+    return '#ffffff';
+  }
+
+  const dataA = puntosA.map(p => ({ x: new Date(p.timestamp || p.fecha), y: p.tiempo_s || 0, problema: p }));
+  const dataB = puntosB.map(p => ({ x: new Date(p.timestamp || p.fecha), y: p.tiempo_s || 0, problema: p }));
+
+  const datasets = [];
+  datasets.push({
+    label: 'Sesión A',
+    data: dataA,
+    pointRadius: 5,
+    pointHoverRadius: 7,
+    pointBackgroundColor: dataA.map(d => colorPorResultado(d.problema.resultado)),
+    pointBorderColor: dataA.map(d => colorPorResultado(d.problema.resultado)),
+    pointBorderWidth: 1,
+    showLine: false,
+    type: 'scatter'
+  });
+
+  if (mostrarPuntosB) {
+    datasets.push({
+      label: 'Sesión B',
+      data: dataB,
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      pointBackgroundColor: 'transparent',
+      pointBorderColor: dataB.map(d => colorPorResultado(d.problema.resultado)),
+      pointBorderWidth: 2,
+      showLine: false,
+      type: 'scatter'
+    });
+  }
+
+  // Promedio móvil de 10
+  const todos = [...filtrados];
+  const promedios = [];
+  if (todos.length > 0) {
+    for (let i = 0; i < todos.length; i++) {
+      const inicio = Math.max(0, i - 9);
+      const subconjunto = todos.slice(inicio, i + 1);
+      const suma = subconjunto.reduce((acc, p) => acc + (p.tiempo_s || 0), 0);
+      promedios.push({ x: new Date(todos[i].timestamp || todos[i].fecha), y: suma / subconjunto.length });
+    }
+  }
+
+  if (mostrarAvg10 && promedios.length > 0) {
+    datasets.push({
+      label: 'Avg 10',
+      data: promedios,
+      type: 'line',
+      borderColor: '#e2b714',
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.3
+    });
+  }
+
+  chartProblemas = new Chart(ctx, {
+    type: 'scatter',
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          backgroundColor: '#1e1e38',
+          titleColor: '#fff',
+          bodyColor: '#cfcfdf',
+          borderColor: '#2a2a4a',
+          borderWidth: 1,
+          callbacks: {
+            title: (items) => {
+              if (!items.length) return '';
+              const p = items[0].raw?.problema;
+              return p ? `Problema #${p.problema_num || '?'}` : '';
+            },
+            label: (context) => {
+              const p = context.raw?.problema;
+              if (!p) return context.dataset.label === 'Avg 10' ? `Promedio: ${context.parsed.y.toFixed(1)} min` : `Tiempo: ${context.parsed.y.toFixed(1)} min`;
+              const lineas = [`Tiempo: ${p.tiempo_s?.toFixed(1)} min`, `Resultado: ${p.resultado}`];
+              if (p.confianza) lineas.push(`Confianza: ${p.confianza}`);
+              if (p.codigo_error) lineas.push(`Error: ${p.codigo_error}`);
+              return lineas;
+            }
+          }
+        },
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: { unit: 'day', displayFormats: { day: 'dd MMM' } },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#8a8aaa' }
+        },
+        y: {
+          title: { display: true, text: 'Minutos', color: '#8a8aaa' },
+          beginAtZero: true,
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#8a8aaa' }
+        }
+      }
+    }
+  });
+}
+
+// Eventos para filtros y toggles
+function configurarEventosGrafico() {
+  document.querySelectorAll('.chart-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.chart-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      materiaGraficoSeleccionada = btn.dataset.materia;
+      generarGraficoProblemas();
+    });
+  });
+
+  document.getElementById('toggleAvg10').addEventListener('click', function() {
+    mostrarAvg10 = !mostrarAvg10;
+    this.classList.toggle('active', mostrarAvg10);
+    generarGraficoProblemas();
+  });
+
+  document.getElementById('toggleMostrarB').addEventListener('click', function() {
+    mostrarPuntosB = !mostrarPuntosB;
+    this.classList.toggle('active', mostrarPuntosB);
+    generarGraficoProblemas();
+  });
+}
+
+// Inicializar cuando se abra el panel de métricas
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('tab-btn') && e.target.dataset.panel === 'panelMetricas') {
+    setTimeout(() => {
+      configurarEventosGrafico();
+      generarGraficoProblemas();
+    }, 100);
+  }
+});
+
+// Intentar configurar al cargar si el panel ya está activo
+setTimeout(() => {
+  if (document.getElementById('panelMetricas').classList.contains('active')) {
+    configurarEventosGrafico();
+    generarGraficoProblemas();
+  }
+}, 500);
