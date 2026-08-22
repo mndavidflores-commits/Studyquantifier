@@ -178,54 +178,59 @@
     <div class="panel" id="panelProgreso"><div class="card" id="progresoTemaTableWrap"></div></div>
 
     <!-- Panel Métricas (Rediseñado) -->
+<!-- Panel Métricas (Rediseñado con Grid) -->
 <div class="panel" id="panelMetricas">
-  <!-- Cabecera con avatar y racha -->
-  <div class="card metric-header">
-    <div class="avatar">DF</div>
-    <div class="user-info">
-      <div class="user-name">David Flores</div>
-      <div class="user-register">Registrado: <span id="fechaRegistro">--</span></div>
-      <div class="user-streak">🔥 Racha actual: <span id="rachaDias">0</span> días</div>
-      <div class="progress-bar"><div class="progress-fill" id="nivelProgreso" style="width:0%;"></div></div>
+  <div class="metric-dashboard">
+    <!-- Fila superior: perfil + estadísticas principales -->
+    <div class="metric-top-row">
+      <!-- Perfil -->
+      <div class="card metric-profile">
+        <div class="avatar">DF</div>
+        <div class="user-info">
+          <div class="user-name">David Flores</div>
+          <div class="user-register">Registrado: <span id="fechaRegistro">--</span></div>
+          <div class="user-streak">🔥 Racha actual: <span id="rachaDias">0</span> días</div>
+          <div class="progress-bar"><div class="progress-fill" id="nivelProgreso" style="width:0%;"></div></div>
+        </div>
+      </div>
+      <!-- Estadísticas -->
+      <div class="metric-stats">
+        <div class="stat-item">
+          <div class="stat-value" id="totalSesiones">0</div>
+          <div class="stat-label">Sesiones estudiadas</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="totalProblemasA">0</div>
+          <div class="stat-label">Problemas (Tipo A)</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="tiempoTotalEstudio">0:00:00</div>
+          <div class="stat-label">Tiempo estudiado</div>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- Estadísticas principales (3 columnas) -->
-  <div class="card metric-stats">
-    <div class="stat-item">
-      <div class="stat-value" id="totalSesiones">0</div>
-      <div class="stat-label">Sesiones estudiadas</div>
+    <!-- Fila media: tarjetas tipo B y hoy -->
+    <div class="metric-middle-row">
+      <div class="card metric-card">
+        <h4>Sesiones Tipo B</h4>
+        <div class="metric-row"><span>Bien</span><strong id="tipoBBien">0</strong></div>
+        <div class="metric-row"><span>Mal</span><strong id="tipoBMal">0</strong></div>
+        <div class="metric-row"><span>No resueltos</span><strong id="tipoBNoResueltos">0</strong></div>
+        <div class="metric-row"><span>Recall</span><strong id="tipoBRecall">0</strong></div>
+      </div>
+      <div class="card metric-card">
+        <h4>Datos de Hoy</h4>
+        <div class="metric-row"><span>Conjeturas creadas</span><strong id="conjeturasHoy">0</strong></div>
+        <div class="metric-row"><span>Horas estudiadas</span><strong id="horasHoy">0.0 h</strong></div>
+      </div>
     </div>
-    <div class="stat-item">
-      <div class="stat-value" id="totalProblemasA">0</div>
-      <div class="stat-label">Problemas (Tipo A)</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-value" id="tiempoTotalEstudio">0:00:00</div>
-      <div class="stat-label">Tiempo estudiado</div>
-    </div>
-  </div>
 
-  <!-- Tarjetas inferiores (grid 4 columnas) -->
-  <div class="card metric-cards">
-    <div class="metric-card">
-      <h4>Sesiones Tipo B</h4>
-      <div class="metric-row"><span>Bien</span><strong id="tipoBBien">0</strong></div>
-      <div class="metric-row"><span>Mal</span><strong id="tipoBMal">0</strong></div>
-      <div class="metric-row"><span>No resueltos</span><strong id="tipoBNoResueltos">0</strong></div>
-      <div class="metric-row"><span>Recall</span><strong id="tipoBRecall">0</strong></div>
+    <!-- Fila inferior: heatmap -->
+    <div class="card heatmap-card">
+      <h3>Actividad últimos 12 meses</h3>
+      <div id="heatmapContainer" class="heatmap-container"></div>
     </div>
-    <div class="metric-card">
-      <h4>Datos de Hoy</h4>
-      <div class="metric-row"><span>Conjeturas creadas</span><strong id="conjeturasHoy">0</strong></div>
-      <div class="metric-row"><span>Horas estudiadas</span><strong id="horasHoy">0.0 h</strong></div>
-    </div>
-  </div>
-
-  <!-- Gráfico de calor (Heatmap) -->
-  <div class="card heatmap-card">
-    <h3>Actividad últimos 12 meses</h3>
-    <div id="heatmapContainer" class="heatmap-container"></div>
   </div>
 </div>
     <!-- Panel Sueño -->
