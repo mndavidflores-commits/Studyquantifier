@@ -177,40 +177,57 @@
     <!-- Panel Progreso -->
     <div class="panel" id="panelProgreso"><div class="card" id="progresoTemaTableWrap"></div></div>
 
-    <!-- Panel Métricas (renovado) -->
-    <div class="panel" id="panelMetricas">
-      <!-- Horas totales por día y materia -->
-      <div class="card">
-        <h3>Horas estudiadas</h3>
-        <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
-          <div><label>Filtrar</label><select id="filtroHorasMateria"><option value="todas">Todas</option><option value="Matemáticas">Matemáticas</option><option value="Física">Física</option><option value="Química">Química</option></select></div>
-          <div id="horasTotalDia" style="font-weight:bold;"></div>
-          <div id="horasTotalGlobal" style="font-weight:bold;"></div>
-        </div>
-        <div id="tablaHorasDiarias" class="table-wrap" style="max-height: 250px; overflow-y:auto;"></div>
-      </div>
-
-      <!-- Problemas intentados -->
-      <div class="card">
-        <h3>Problemas intentados</h3>
-        <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
-          <div><label>Filtrar</label><select id="filtroProblemasMateria"><option value="todas">Todas</option><option value="Matemáticas">Matemáticas</option><option value="Física">Física</option><option value="Química">Química</option></select></div>
-          <div id="resumenProblemas" style="font-weight:bold;"></div>
-        </div>
-        <div id="tablaProblemasDia" class="table-wrap" style="max-height: 250px; overflow-y:auto;"></div>
-      </div>
-
-      <!-- Avance por materia -->
-      <div class="card">
-        <h3>Avance de temas</h3>
-        <div id="avanceTemasContainer"></div>
-      </div>
-
-      <!-- Gráficos que aún pueden servir -->
-      <div class="card"><h3>Perfil de aprendizaje</h3><div class="chart-container"><canvas id="chartRadar"></canvas></div></div>
-      <div class="card"><h3>Evolución de la tasa de aciertos</h3><div class="chart-container"><canvas id="chartEvolucion"></canvas></div></div>
+    <!-- Panel Métricas (Rediseñado) -->
+<div class="panel" id="panelMetricas">
+  <!-- Cabecera con avatar y racha -->
+  <div class="card metric-header">
+    <div class="avatar">DF</div>
+    <div class="user-info">
+      <div class="user-name">David Flores</div>
+      <div class="user-register">Registrado: <span id="fechaRegistro">--</span></div>
+      <div class="user-streak">🔥 Racha actual: <span id="rachaDias">0</span> días</div>
+      <div class="progress-bar"><div class="progress-fill" id="nivelProgreso" style="width:0%;"></div></div>
     </div>
+  </div>
 
+  <!-- Estadísticas principales (3 columnas) -->
+  <div class="card metric-stats">
+    <div class="stat-item">
+      <div class="stat-value" id="totalSesiones">0</div>
+      <div class="stat-label">Sesiones estudiadas</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="totalProblemasA">0</div>
+      <div class="stat-label">Problemas (Tipo A)</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="tiempoTotalEstudio">0:00:00</div>
+      <div class="stat-label">Tiempo estudiado</div>
+    </div>
+  </div>
+
+  <!-- Tarjetas inferiores (grid 4 columnas) -->
+  <div class="card metric-cards">
+    <div class="metric-card">
+      <h4>Sesiones Tipo B</h4>
+      <div class="metric-row"><span>Bien</span><strong id="tipoBBien">0</strong></div>
+      <div class="metric-row"><span>Mal</span><strong id="tipoBMal">0</strong></div>
+      <div class="metric-row"><span>No resueltos</span><strong id="tipoBNoResueltos">0</strong></div>
+      <div class="metric-row"><span>Recall</span><strong id="tipoBRecall">0</strong></div>
+    </div>
+    <div class="metric-card">
+      <h4>Datos de Hoy</h4>
+      <div class="metric-row"><span>Conjeturas creadas</span><strong id="conjeturasHoy">0</strong></div>
+      <div class="metric-row"><span>Horas estudiadas</span><strong id="horasHoy">0.0 h</strong></div>
+    </div>
+  </div>
+
+  <!-- Gráfico de calor (Heatmap) -->
+  <div class="card heatmap-card">
+    <h3>Actividad últimos 12 meses</h3>
+    <div id="heatmapContainer" class="heatmap-container"></div>
+  </div>
+</div>
     <!-- Panel Sueño -->
     <div class="panel" id="panelSueno">
       <div class="card"><h3>Registrar sueño</h3>
