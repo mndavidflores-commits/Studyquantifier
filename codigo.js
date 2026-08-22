@@ -1690,17 +1690,16 @@ async function generarHeatmap(sesiones) {
   }
 }
 
+
 // ===================== GRÁFICO DE PROBLEMAS =====================
 async function generarGraficoProblemas() {
   const ctx = document.getElementById('chartProblemas')?.getContext('2d');
   if (!ctx) return;
 
-  // Destruir gráfico anterior si existe
   if (chartProblemas) chartProblemas.destroy();
 
   const problemas = await db.sessions.where('tipo').equals('problema').toArray();
   const filtrados = problemas.filter(p => p.materia === materiaGraficoSeleccionada);
-  // Ordenar por fecha/hora para secuencia temporal correcta
   filtrados.sort((a, b) => new Date(a.timestamp || a.fecha) - new Date(b.timestamp || b.fecha));
 
   const puntosA = filtrados.filter(p => p.modo === 'A');
@@ -1713,18 +1712,15 @@ async function generarGraficoProblemas() {
     return '#ffffff';
   }
 
-  // Crear datos con índice secuencial en x
   const dataA = puntosA.map((p, index) => ({
     x: index + 1,
     y: (p.tiempo_s || 0) / 60,
-    problema: p,
-    indiceGlobal: index + 1
+    problema: p
   }));
   const dataB = puntosB.map((p, index) => ({
     x: index + 1,
     y: (p.tiempo_s || 0) / 60,
-    problema: p,
-    indiceGlobal: index + 1
+    problema: p
   }));
 
   const datasets = [];
@@ -1734,7 +1730,7 @@ async function generarGraficoProblemas() {
     pointRadius: 3.5,
     pointHoverRadius: 5,
     pointBackgroundColor: dataA.map(d => colorPorResultado(d.problema.resultado)),
-    pointBorderColor: '#0d0d1a',
+    pointBorderColor: '#323437',
     pointBorderWidth: 1,
     showLine: false,
     type: 'scatter'
@@ -1754,7 +1750,6 @@ async function generarGraficoProblemas() {
     });
   }
 
-  // Calcular promedio móvil de 10 sobre todos los filtrados (ordenados)
   const todos = [...filtrados];
   const promedios = [];
   if (todos.length > 0) {
@@ -1771,32 +1766,26 @@ async function generarGraficoProblemas() {
       label: 'Avg 10',
       data: promedios,
       type: 'line',
-      borderColor: '#e2b714',
+      borderColor: '#ca4754',
       backgroundColor: 'transparent',
       borderWidth: 2.5,
       pointRadius: 0,
-      tension: 0.35,
-      order: 0
+      tension: 0.35
     });
   }
 
-  // Crear gráfico
   chartProblemas = new Chart(ctx, {
     type: 'scatter',
     data: { datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: {
-        mode: 'nearest',
-        intersect: false
-      },
       plugins: {
         tooltip: {
-          backgroundColor: '#1e1e38',
-          titleColor: '#fff',
-          bodyColor: '#cfcfdf',
-          borderColor: '#2a2a4a',
+          backgroundColor: '#2c2e31',
+          titleColor: '#d1d0c5',
+          bodyColor: '#d1d0c5',
+          borderColor: '#646669',
           borderWidth: 1,
           callbacks: {
             title: (items) => {
@@ -1819,202 +1808,63 @@ async function generarGraficoProblemas() {
       scales: {
         x: {
           type: 'linear',
-          title: {
-            display: true,
-            text: 'N.º de problema (secuencial)',
-            color: '#8a8aaa'
-          },
+          title: { display: true, text: 'N.º de problema (secuencial)', color: '#646669' },
           ticks: {
-            color: '#8a8aaa',
+            color: '#646669',
             stepSize: 1,
-            maxRotation: 0,
-            autoSkip: true,
-            callback: function(value) {
-              return Number.isInteger(value) ? value : '';
-            }
+            callback: function(value) { return Number.isInteger(value) ? value : ''; }
           },
-          grid: {
-            color: 'rgba(255,255,255,0.05)',
-            borderDash: [2, 2]
-          }
+          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
         },
         y: {
-          title: {
-            display: true,
-            text: 'Minutos',
-            color: '#8a8aaa'
-          },
+          title: { display: true, text: 'Minutos', color: '#646669' },
           beginAtZero: true,
           grace: '5%',
-          grid: {
-            color: 'rgba(255,255,255,0.05)',
-            borderDash: [2, 2]
-          },
-          ticks: {
-            color: '#8a8aaa'
-          }
+          ticks: { color: '#646669' },
+          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
         }
       }
     }
   });
 }
 
-
-const dataA = puntosA.map(p => ({ x: new Date(p.timestamp || p.fecha), y: (p.tiempo_s || 0) / 60, problema: p }));
-const dataB = puntosB.map(p => ({ x: new Date(p.timestamp || p.fecha), y: (p.tiempo_s || 0) / 60, problema: p }));
-  
-  const datasets = [];
-  datasets.push({
-    label: 'Sesión A',
-    data: dataA,
-    pointRadius: 5,
-    pointHoverRadius: 7,
-    pointBackgroundColor: dataA.map(d => colorPorResultado(d.problema.resultado)),
-    pointBorderColor: dataA.map(d => colorPorResultado(d.problema.resultado)),
-    pointBorderWidth: 1,
-    showLine: false,
-    type: 'scatter'
-  });
-
-  if (mostrarPuntosB) {
-    datasets.push({
-      label: 'Sesión B',
-      data: dataB,
-      pointRadius: 5,
-      pointHoverRadius: 7,
-      pointBackgroundColor: 'transparent',
-      pointBorderColor: dataB.map(d => colorPorResultado(d.problema.resultado)),
-      pointBorderWidth: 2,
-      showLine: false,
-      type: 'scatter'
-    });
-  }
-
-  const todos = [...filtrados];
-  const promedios = [];
-  if (todos.length > 0) {
-    for (let i = 0; i < todos.length; i++) {
-      const inicio = Math.max(0, i - 9);
-      const subconjunto = todos.slice(inicio, i + 1);
-      const suma = subconjunto.reduce((acc, p) => acc + (p.tiempo_s || 0), 0) / 60;
-      promedios.push({ x: new Date(todos[i].timestamp || todos[i].fecha), y: suma / subconjunto.length });
-    }
-  }
-
-  if (mostrarAvg10 && promedios.length > 0) {
-    datasets.push({
-      label: 'Avg 10',
-      data: promedios,
-      type: 'line',
-      borderColor: '#e2b714',
-      backgroundColor: 'transparent',
-      borderWidth: 2,
-      pointRadius: 0,
-      tension: 0.3
-    });
-  }
-
-  chartProblemas = new Chart(ctx, {
-    type: 'scatter',
-    data: { datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        tooltip: {
-          backgroundColor: '#1e1e38',
-          titleColor: '#fff',
-          bodyColor: '#cfcfdf',
-          borderColor: '#2a2a4a',
-          borderWidth: 1,
-          callbacks: {
-            title: (items) => {
-              if (!items.length) return '';
-              const p = items[0].raw?.problema;
-              return p ? `Problema #${p.problema_num || '?'}` : '';
-            },
-            label: (context) => {
-              const p = context.raw?.problema;
-              if (!p) return context.dataset.label === 'Avg 10' ? `Promedio: ${context.parsed.y.toFixed(1)} min` : `Tiempo: ${context.parsed.y.toFixed(1)} min`;
-              const lineas = [`Tiempo: ${((p.tiempo_s || 0) / 60).toFixed(1)} min`, `Resultado: ${p.resultado}`];
-              if (p.confianza) lineas.push(`Confianza: ${p.confianza}`);
-              if (p.codigo_error) lineas.push(`Error: ${p.codigo_error}`);
-              return lineas;
-            }
-          }
-        },
-        legend: { display: false }
-      },
-      scales: {
-        x: {
-          type: 'time',
-          time: { unit: 'day', displayFormats: { day: 'dd MMM' } },
-          grid: { color: 'rgba(255,255,255,0.05)' },
-          ticks: { color: '#8a8aaa' }
-        },
-        y: {
-          title: { display: true, text: 'Minutos', color: '#8a8aaa' },
-          beginAtZero: true,
-          grid: { color: 'rgba(255,255,255,0.05)' },
-          ticks: { color: '#8a8aaa' }
-        }
-      }
-    }
-  });
-
-function configurarEventosGrafico() {
-  if (window._eventosGraficoConfigurados) return;
-  const filtros = document.querySelectorAll('.chart-filter-btn');
-  const toggleAvg10 = document.getElementById('toggleAvg10');
-  const toggleMostrarB = document.getElementById('toggleMostrarB');
-
-  if (!filtros.length || !toggleAvg10 || !toggleMostrarB) return;
-
-  window._eventosGraficoConfigurados = true;
-
-  filtros.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filtros.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      materiaGraficoSeleccionada = btn.dataset.materia;
-      generarGraficoProblemas();
-    });
-  });
-
-  toggleAvg10.addEventListener('click', function() {
-    mostrarAvg10 = !mostrarAvg10;
-    this.classList.toggle('active', mostrarAvg10);
-    generarGraficoProblemas();
-  });
-
-  toggleMostrarB.addEventListener('click', function() {
-    mostrarPuntosB = !mostrarPuntosB;
-    this.classList.toggle('active', mostrarPuntosB);
-    generarGraficoProblemas();
-  });
-}
-
-// Inicialización robusta
-function intentarInicializarGrafico() {
-  if (document.getElementById('chartProblemas')) {
-    configurarEventosGrafico();
-    generarGraficoProblemas();
-  }
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => setTimeout(intentarInicializarGrafico, 300));
-} else {
-  setTimeout(intentarInicializarGrafico, 300);
-}
-
+// Delegación de eventos para filtros y toggles
 document.addEventListener('click', (e) => {
+  const filtroBtn = e.target.closest('.chart-filter-btn');
+  if (filtroBtn) {
+    document.querySelectorAll('.chart-filter-btn').forEach(b => b.classList.remove('active'));
+    filtroBtn.classList.add('active');
+    materiaGraficoSeleccionada = filtroBtn.dataset.materia;
+    generarGraficoProblemas();
+    return;
+  }
+
+  if (e.target.closest('#toggleAvg10')) {
+    mostrarAvg10 = !mostrarAvg10;
+    e.target.closest('#toggleAvg10').classList.toggle('active', mostrarAvg10);
+    generarGraficoProblemas();
+    return;
+  }
+
+  if (e.target.closest('#toggleMostrarB')) {
+    mostrarPuntosB = !mostrarPuntosB;
+    e.target.closest('#toggleMostrarB').classList.toggle('active', mostrarPuntosB);
+    generarGraficoProblemas();
+    return;
+  }
+
   if (e.target.classList.contains('tab-btn') && e.target.dataset.panel === 'panelMetricas') {
     setTimeout(() => {
-      configurarEventosGrafico();
       if (document.getElementById('chartProblemas')) {
         generarGraficoProblemas();
       }
     }, 100);
   }
 });
+
+// Inicialización
+setTimeout(() => {
+  if (document.getElementById('chartProblemas')) {
+    generarGraficoProblemas();
+  }
+}, 300);
