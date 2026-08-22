@@ -1549,9 +1549,6 @@ async function actualizarAvanceTemas() {
   container.innerHTML = html;
 }
 
-document.getElementById('filtroHorasMateria').addEventListener('change', actualizarHorasEstudiadas);
-document.getElementById('filtroProblemasMateria').addEventListener('change', actualizarProblemasIntentados);
-
 function registerSW() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
