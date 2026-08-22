@@ -322,11 +322,6 @@ async function transition(newState) {
       session.remainingSeconds--; session.elapsedTotal++; updatePomoDisplay();
       if (session.remainingSeconds <= 0) {
         stopPomoInterval();
-        if (session.state === State.FOCUS_RUNNING && blindTimer.running) {
-          window.pomodoroPendiente = true;
-          updatePomoDisplay();
-          return;
-        }
         if (session.state === State.FOCUS_RUNNING) {
   // Ahora al terminar el foco, se abre el modal de resumen automáticamente.
   transition(State.SESSION_ENDING);
