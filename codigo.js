@@ -1649,7 +1649,7 @@ async function actualizarPanelMetricas() {
   // Generar heatmap
   await generarHeatmap(sesiones);
 
-    // Generar gráfico de problemas (solo si el canvas existe)
+  // Generar gráfico de problemas (solo si el canvas existe)
   if (document.getElementById('chartProblemas')) {
     await generarGraficoProblemas();
   }
@@ -1692,12 +1692,11 @@ async function generarHeatmap(sesiones) {
     fecha.setDate(fecha.getDate() + 1);
   }
 }
-// ===================== GRÁFICO DE PROBLEMAS =====================
-let eventosGraficoConfigurados = false;
 
+// ===================== GRÁFICO DE PROBLEMAS =====================
 async function generarGraficoProblemas() {
   const ctx = document.getElementById('chartProblemas')?.getContext('2d');
-  if (!ctx) return; // El canvas no existe todavía
+  if (!ctx) return;
 
   if (chartProblemas) chartProblemas.destroy();
 
@@ -1819,12 +1818,14 @@ async function generarGraficoProblemas() {
 }
 
 function configurarEventosGrafico() {
-  if (eventosGraficoConfigurados) return;
+  if (window._eventosGraficoConfigurados) return;
   const filtros = document.querySelectorAll('.chart-filter-btn');
   const toggleAvg10 = document.getElementById('toggleAvg10');
   const toggleMostrarB = document.getElementById('toggleMostrarB');
 
-  if (!filtros.length || !toggleAvg10 || !toggleMostrarB) return; // Elementos no listos
+  if (!filtros.length || !toggleAvg10 || !toggleMostrarB) return;
+
+  window._eventosGraficoConfigurados = true;
 
   filtros.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1846,26 +1847,29 @@ function configurarEventosGrafico() {
     this.classList.toggle('active', mostrarPuntosB);
     generarGraficoProblemas();
   });
-
-  eventosGraficoConfigurados = true;
 }
 
-// Inicialización diferida
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
+// Inicialización robusta
+function intentarInicializarGrafico() {
+  if (document.getElementById('chartProblemas')) {
     configurarEventosGrafico();
-    if (document.getElementById('chartProblemas')) {
-      generarGraficoProblemas();
-    }
-  }, 300);
-});
+    generarGraficoProblemas();
+  }
+}
 
-// También al hacer clic en la pestaña de métricas
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(intentarInicializarGrafico, 300));
+} else {
+  setTimeout(intentarInicializarGrafico, 300);
+}
+
 document.addEventListener('click', (e) => {
   if (e.target.classList.contains('tab-btn') && e.target.dataset.panel === 'panelMetricas') {
     setTimeout(() => {
       configurarEventosGrafico();
-      generarGraficoProblemas();
+      if (document.getElementById('chartProblemas')) {
+        generarGraficoProblemas();
+      }
     }, 100);
   }
 });
