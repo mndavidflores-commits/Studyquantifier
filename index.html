@@ -249,6 +249,21 @@
           <h3>Actividad últimos 12 meses</h3>
           <div id="heatmapContainer" class="heatmap-container"></div>
         </div>
+        <!-- Tarjeta del gráfico de problemas -->
+<div class="card chart-card">
+  <div class="chart-filters" id="chartFilters">
+    <button class="chart-filter-btn active" data-materia="Matemáticas">Matemática</button>
+    <button class="chart-filter-btn" data-materia="Física">Física</button>
+    <button class="chart-filter-btn" data-materia="Química">Química</button>
+  </div>
+  <div class="chart-wrapper">
+    <canvas id="chartProblemas"></canvas>
+  </div>
+  <div class="chart-toggles">
+    <button id="toggleAvg10" class="chart-toggle-btn active">Avg 10</button>
+    <button id="toggleMostrarB" class="chart-toggle-btn active">Mostrar B</button>
+  </div>
+</div>
       </div>
     </div>
 
