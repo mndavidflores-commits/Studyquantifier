@@ -302,7 +302,6 @@ async function transition(newState) {
       document.getElementById('nombreSubtemaHistorial').textContent = document.getElementById('selSubtema').selectedOptions[0]?.textContent || '';
       await actualizarHistorialSubtema();
       setConfigEnabled(false);
-      // Ajustar el número de problema al siguiente disponible
       const libro = document.getElementById('selLibro').value;
       const problemasPrevios = await db.sessions
           .where('tipo').equals('problema')
@@ -323,12 +322,11 @@ async function transition(newState) {
       if (session.remainingSeconds <= 0) {
         stopPomoInterval();
         if (session.state === State.FOCUS_RUNNING) {
-  // Ahora al terminar el foco, se abre el modal de resumen automáticamente.
-  transition(State.SESSION_ENDING);
-} else if (session.state === State.BREAK_RUNNING) {
-  session.remainingSeconds = parseInt(document.getElementById('pomoWork').value)*60;
-  transition(State.FOCUS_RUNNING);
-}
+          transition(State.SESSION_ENDING);
+        } else if (session.state === State.BREAK_RUNNING) {
+          session.remainingSeconds = parseInt(document.getElementById('pomoWork').value)*60;
+          transition(State.FOCUS_RUNNING);
+        }
       }
     }, 1000);
     updatePomoStatusText(); updatePomoButtons();
@@ -393,7 +391,6 @@ document.getElementById('btnPomoReset').addEventListener('click', async () => {
   actualizarTodo();
 });
 
-// Float buttons
 document.getElementById('btnPomoPauseFloat').addEventListener('click', () => {
   if (session.state === State.FOCUS_RUNNING || session.state === State.BREAK_RUNNING) {
     transition(session.state === State.FOCUS_RUNNING ? State.FOCUS_PAUSED : State.BREAK_PAUSED);
@@ -449,7 +446,6 @@ document.getElementById('btnDistrajeFloat').addEventListener('click', () => {
   session.distracciones++; showToast('registrado ✅', 1500);
 });
 
-// Lectura toggle
 function toggleLectura() {
   if (!session.lecturaRunning) {
     if (session.state !== State.FOCUS_RUNNING && session.state !== State.BREAK_RUNNING) return;
@@ -514,7 +510,6 @@ function stopBlindTimerAndShowResult() {
   blindTimer.pendingResult = true;
 }
 
-// Keyboard controls
 document.addEventListener('keydown', e => {
   if (e.key === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey) {
     if (session.state !== State.IDLE && session.state !== State.SESSION_ENDING) {
@@ -547,11 +542,9 @@ document.addEventListener('keyup', e => {
   }
 });
 
-// --- Eventos táctiles para móvil ---
 const activeViewElement = document.getElementById('active-view');
 
 activeViewElement.addEventListener('touchstart', (e) => {
-  // Indicación visual opcional: añadir una clase para feedback
   if (!blindTimer.running && !blindTimer.pendingResult) {
     activeViewElement.classList.add('touch-pressed');
   }
@@ -560,26 +553,22 @@ activeViewElement.addEventListener('touchstart', (e) => {
 activeViewElement.addEventListener('touchend', (e) => {
   activeViewElement.classList.remove('touch-pressed');
   
-  // Si el timer está corriendo, un toque lo detiene
   if (blindTimer.running) {
     e.preventDefault();
     stopBlindTimerAndShowResult();
   }
-  // Si no está corriendo y no hay resultado pendiente, el toque inicia
   else if (!blindTimer.running && !blindTimer.pendingResult) {
     e.preventDefault();
     startBlindTimer();
   }
 }, { passive: false });
 
-// Para PC: clic también detiene si está corriendo
 activeViewElement.addEventListener('click', (e) => {
   if (blindTimer.running) {
     stopBlindTimerAndShowResult();
   }
 });
 
-// Toggle resultado
 document.getElementById('toggleResultado').addEventListener('click', e => {
   if (!e.target.classList.contains('toggle-btn')) return;
   document.querySelectorAll('#toggleResultado .toggle-btn').forEach(b => b.classList.remove('active'));
@@ -592,7 +581,6 @@ document.getElementById('toggleResultado').addEventListener('click', e => {
   else if (val === 'no_resuelto') selError.innerHTML = '<option value="">Ninguno</option><option>ENR-I</option><option>ENR-B</option>';
 });
 
-// Siguiente problema
 document.getElementById('btnSiguienteProblema').addEventListener('click', async () => {
   const modo = document.getElementById('selModo').value, fase = document.getElementById('selFase').value;
   const materia = document.getElementById('selMateria').value, subtema = document.getElementById('selSubtema').value;
@@ -643,7 +631,6 @@ document.getElementById('btnDescartarProblema').addEventListener('click', () => 
   document.getElementById('left-panel').classList.remove('hidden');
 });
 
-// Conjetura inline
 document.getElementById('btnGuardarConjetura').addEventListener('click', async () => {
   const texto = document.getElementById('textoConjetura').value.trim(); if (!texto) return;
   const materia = document.getElementById('selMateria').value, subtema = document.getElementById('selSubtema').value;
@@ -706,7 +693,6 @@ async function actualizarConjeturasFull() {
   html += '</table>'; wrap.innerHTML = html;
 }
 
-// ===================== HISTORIAL DEL SUBTEMA (panel izquierdo) =====================
 async function actualizarHistorialSubtema() {
   const subtemaId = document.getElementById('selSubtema').value;
   if (!subtemaId || subtemaId === '__agregar__') return;
@@ -758,7 +744,6 @@ document.getElementById('btnCerrarDetalle').addEventListener('click', () => {
   document.getElementById('modalDetalleProblema').style.display = 'none';
 });
 
-// ===================== MODO B: SELECTOR DE ERRORES =====================
 document.getElementById('selProblemaPendiente').addEventListener('change', function() {
   const errorId = this.value;
   errorSeleccionado = erroresPendientes.find(e => e.id === errorId) || null;
@@ -803,7 +788,6 @@ async function actualizarUIPorModo() {
   if (esModoB) await mostrarColaErrores();
 }
 
-// ===================== FSRS Y DOMINIO =====================
 function crearInstanciaFSRS(pesos) {
   return fsrs(generatorParameters({
     request_retention: 0.9,
@@ -921,7 +905,6 @@ document.getElementById('btnDescartarRepaso').addEventListener('click', () => {
   document.getElementById('left-panel').classList.remove('hidden');
 });
 
-// ===================== DOMINIO =====================
 async function poblarSelectoresDominio() {
   const selMat = document.getElementById('domMateria');
   if (!selMat) return;
@@ -1004,7 +987,6 @@ document.getElementById('btnGuardarDominio').addEventListener('click', async () 
   actualizarDominioHistorial();
 });
 
-// ===================== MÉTRICAS Y GRÁFICOS =====================
 async function actualizarMetricas() {
   const problemas = await db.sessions.where('tipo').equals('problema').toArray();
   const bien = problemas.filter(s => s.resultado === 'bien').length, mal = problemas.filter(s => s.resultado === 'mal').length;
@@ -1232,8 +1214,7 @@ function actualizarTodo() {
   actualizarSleepHistorial(); actualizarGraficoSueno();
   actualizarConjeturasSesion(); actualizarConjeturasFull();
   actualizarChecklist(); actualizarMetas();
-  actualizarPanelMetricas(); // <-- añade esta línea
-
+  actualizarPanelMetricas();
 }
 
 // ===================== INICIALIZACIÓN =====================
@@ -1309,7 +1290,6 @@ function actualizarCapitulos(libroSeleccionado, subtemaId) {
   }
 }
 
-// Evento para cambiar capítulos al cambiar de libro
 document.getElementById('selLibro').addEventListener('change', function() {
   actualizarCapitulos(this.value, document.getElementById('selSubtema').value);
 });
@@ -1339,7 +1319,6 @@ document.getElementById('selSubtema').addEventListener('change', async function(
   if(this.value!=='__agregar__'){ currentProblemaNum=1; document.getElementById('numProblema').value=1; }
   if (document.getElementById('active-view').classList.contains('active')) {
     actualizarHistorialSubtema();
-// Ajustar número de problema al cambiar de subtema
     const libro = document.getElementById('selLibro').value;
     const problemasPrevios = await db.sessions
         .where('tipo').equals('problema')
@@ -1639,32 +1618,37 @@ async function actualizarPanelMetricas() {
     .filter(s => s.tipo === 'pomodoro')
     .reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0);
   document.getElementById('tiempoTotalEstudio').textContent = formatHMS(tiempoTotalSegundos);
-// Totales generales de problemas (todos los modos)
-const bienGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'bien').length;
-const malGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'mal').length;
-const noResueltosGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'no_resuelto').length;
-document.getElementById('totalBienGeneral').textContent = bienGeneral;
-document.getElementById('totalMalGeneral').textContent = malGeneral;
-document.getElementById('totalNoResueltosGeneral').textContent = noResueltosGeneral;
 
-// Recall: total de repasos (exclusivo de sesiones B)
-document.getElementById('totalRecall').textContent = repasos.length;
+  // Totales generales de problemas (todos los modos)
+  const bienGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'bien').length;
+  const malGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'mal').length;
+  const noResueltosGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'no_resuelto').length;
+  document.getElementById('totalBienGeneral').textContent = bienGeneral;
+  document.getElementById('totalMalGeneral').textContent = malGeneral;
+  document.getElementById('totalNoResueltosGeneral').textContent = noResueltosGeneral;
 
-// Conjeturas totales (todas las fechas)
-const totalConjeturas = conjeturas.length;
-document.getElementById('totalConjeturasGeneral').textContent = totalConjeturas;
-// Datos de hoy
-const hoy = new Date().toISOString().split('T')[0];
-const sesionesHoy = sesiones.filter(s => s.tipo === 'pomodoro' && (s.fecha || new Date(s.timestamp).toISOString().split('T')[0]) === hoy);
-const horasHoy = sesionesHoy.reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0) / 3600;
-document.getElementById('horasHoy').textContent = horasHoy.toFixed(1) + ' h';
-  
-  // Nivel de progreso (opcional: basado en horas totales)
-  const nivelPorcentaje = Math.min(100, Math.round(tiempoTotalSegundos / 3600 / 100 * 100)); // 100h = 100%
+  // Recall: total de repasos (exclusivo de sesiones B)
+  document.getElementById('totalRecall').textContent = repasos.length;
+
+  // Conjeturas totales (todas las fechas)
+  const totalConjeturas = conjeturas.length;
+  document.getElementById('totalConjeturasGeneral').textContent = totalConjeturas;
+
+  // Datos de hoy
+  const hoy = new Date().toISOString().split('T')[0];
+  const sesionesHoy = sesiones.filter(s => s.tipo === 'pomodoro' && (s.fecha || new Date(s.timestamp).toISOString().split('T')[0]) === hoy);
+  const horasHoy = sesionesHoy.reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0) / 3600;
+  document.getElementById('horasHoy').textContent = horasHoy.toFixed(1) + ' h';
+
+  // Nivel de progreso
+  const nivelPorcentaje = Math.min(100, Math.round(tiempoTotalSegundos / 3600 / 100 * 100));
   document.getElementById('nivelProgreso').style.width = nivelPorcentaje + '%';
 
   // Generar heatmap
   await generarHeatmap(sesiones);
+
+  // Generar gráfico de problemas
+  await generarGraficoProblemas();
 }
 
 function formatHMS(segundos) {
@@ -1761,7 +1745,6 @@ async function generarGraficoProblemas() {
     });
   }
 
-  // Promedio móvil de 10
   const todos = [...filtrados];
   const promedios = [];
   if (todos.length > 0) {
@@ -1835,7 +1818,6 @@ async function generarGraficoProblemas() {
   });
 }
 
-// Eventos para filtros y toggles
 function configurarEventosGrafico() {
   document.querySelectorAll('.chart-filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1859,7 +1841,6 @@ function configurarEventosGrafico() {
   });
 }
 
-// Inicializar cuando se abra el panel de métricas
 document.addEventListener('click', (e) => {
   if (e.target.classList.contains('tab-btn') && e.target.dataset.panel === 'panelMetricas') {
     setTimeout(() => {
@@ -1869,7 +1850,6 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Intentar configurar al cargar si el panel ya está activo
 setTimeout(() => {
   if (document.getElementById('panelMetricas').classList.contains('active')) {
     configurarEventosGrafico();
