@@ -1649,8 +1649,10 @@ async function actualizarPanelMetricas() {
   // Generar heatmap
   await generarHeatmap(sesiones);
 
-  // Generar gráfico de problemas
-  await generarGraficoProblemas();
+    // Generar gráfico de problemas (solo si el canvas existe)
+  if (document.getElementById('chartProblemas')) {
+    await generarGraficoProblemas();
+  }
 }
 
 function formatHMS(segundos) {
@@ -1690,12 +1692,12 @@ async function generarHeatmap(sesiones) {
     fecha.setDate(fecha.getDate() + 1);
   }
 }
-
 // ===================== GRÁFICO DE PROBLEMAS =====================
+let eventosGraficoConfigurados = false;
 
 async function generarGraficoProblemas() {
   const ctx = document.getElementById('chartProblemas')?.getContext('2d');
-  if (!ctx) return;
+  if (!ctx) return; // El canvas no existe todavía
 
   if (chartProblemas) chartProblemas.destroy();
 
@@ -1817,28 +1819,48 @@ async function generarGraficoProblemas() {
 }
 
 function configurarEventosGrafico() {
-  document.querySelectorAll('.chart-filter-btn').forEach(btn => {
+  if (eventosGraficoConfigurados) return;
+  const filtros = document.querySelectorAll('.chart-filter-btn');
+  const toggleAvg10 = document.getElementById('toggleAvg10');
+  const toggleMostrarB = document.getElementById('toggleMostrarB');
+
+  if (!filtros.length || !toggleAvg10 || !toggleMostrarB) return; // Elementos no listos
+
+  filtros.forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.chart-filter-btn').forEach(b => b.classList.remove('active'));
+      filtros.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       materiaGraficoSeleccionada = btn.dataset.materia;
       generarGraficoProblemas();
     });
   });
 
-  document.getElementById('toggleAvg10').addEventListener('click', function() {
+  toggleAvg10.addEventListener('click', function() {
     mostrarAvg10 = !mostrarAvg10;
     this.classList.toggle('active', mostrarAvg10);
     generarGraficoProblemas();
   });
 
-  document.getElementById('toggleMostrarB').addEventListener('click', function() {
+  toggleMostrarB.addEventListener('click', function() {
     mostrarPuntosB = !mostrarPuntosB;
     this.classList.toggle('active', mostrarPuntosB);
     generarGraficoProblemas();
   });
+
+  eventosGraficoConfigurados = true;
 }
 
+// Inicialización diferida
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    configurarEventosGrafico();
+    if (document.getElementById('chartProblemas')) {
+      generarGraficoProblemas();
+    }
+  }, 300);
+});
+
+// También al hacer clic en la pestaña de métricas
 document.addEventListener('click', (e) => {
   if (e.target.classList.contains('tab-btn') && e.target.dataset.panel === 'panelMetricas') {
     setTimeout(() => {
@@ -1847,10 +1869,3 @@ document.addEventListener('click', (e) => {
     }, 100);
   }
 });
-
-setTimeout(() => {
-  if (document.getElementById('panelMetricas').classList.contains('active')) {
-    configurarEventosGrafico();
-    generarGraficoProblemas();
-  }
-}, 500);
