@@ -328,13 +328,12 @@ async function transition(newState) {
           return;
         }
         if (session.state === State.FOCUS_RUNNING) {
-          const breakMinutes = parseInt(document.getElementById('pomoBreak').value) || 20;
-          if (breakMinutes > 0) { session.remainingSeconds = breakMinutes * 60; transition(State.BREAK_RUNNING); }
-          else { transition(State.SESSION_ENDING); }
-        } else if (session.state === State.BREAK_RUNNING) {
-          session.remainingSeconds = parseInt(document.getElementById('pomoWork').value)*60;
-          transition(State.FOCUS_RUNNING);
-        }
+  // Ahora al terminar el foco, se abre el modal de resumen automáticamente.
+  transition(State.SESSION_ENDING);
+} else if (session.state === State.BREAK_RUNNING) {
+  session.remainingSeconds = parseInt(document.getElementById('pomoWork').value)*60;
+  transition(State.FOCUS_RUNNING);
+}
       }
     }, 1000);
     updatePomoStatusText(); updatePomoButtons();
@@ -550,6 +549,38 @@ document.addEventListener('keyup', e => {
       e.preventDefault();
       startBlindTimer();
     }
+  }
+});
+
+// --- Eventos táctiles para móvil ---
+const activeViewElement = document.getElementById('active-view');
+
+activeViewElement.addEventListener('touchstart', (e) => {
+  // Indicación visual opcional: añadir una clase para feedback
+  if (!blindTimer.running && !blindTimer.pendingResult) {
+    activeViewElement.classList.add('touch-pressed');
+  }
+}, { passive: true });
+
+activeViewElement.addEventListener('touchend', (e) => {
+  activeViewElement.classList.remove('touch-pressed');
+  
+  // Si el timer está corriendo, un toque lo detiene
+  if (blindTimer.running) {
+    e.preventDefault();
+    stopBlindTimerAndShowResult();
+  }
+  // Si no está corriendo y no hay resultado pendiente, el toque inicia
+  else if (!blindTimer.running && !blindTimer.pendingResult) {
+    e.preventDefault();
+    startBlindTimer();
+  }
+}, { passive: false });
+
+// Para PC: clic también detiene si está corriendo
+activeViewElement.addEventListener('click', (e) => {
+  if (blindTimer.running) {
+    stopBlindTimerAndShowResult();
   }
 });
 
@@ -1206,6 +1237,8 @@ function actualizarTodo() {
   actualizarSleepHistorial(); actualizarGraficoSueno();
   actualizarConjeturasSesion(); actualizarConjeturasFull();
   actualizarChecklist(); actualizarMetas();
+  actualizarPanelMetricas(); // <-- añade esta línea
+
 }
 
 // ===================== INICIALIZACIÓN =====================
@@ -1457,11 +1490,8 @@ document.getElementById('tabNav').addEventListener('click', e => {
   if(e.target.dataset.panel==='panelHistorial') actualizarHistorial();
   if(e.target.dataset.panel==='panelProgreso') actualizarProgreso();
   if(e.target.dataset.panel==='panelMetricas') {
-    actualizarHorasEstudiadas();
-    actualizarProblemasIntentados();
-    actualizarAvanceTemas();
-    actualizarMetricas();
-  }
+    actualizarPanelMetricas();
+}
   if(e.target.dataset.panel==='panelSueno') { actualizarSleepHistorial(); actualizarGraficoSueno(); }
   if(e.target.dataset.panel==='panelConjeturas') actualizarConjeturasFull();
   if(e.target.dataset.panel==='panelChecklist') actualizarChecklist();
@@ -1567,4 +1597,116 @@ async function initApp() {
   document.getElementById('btnLecturaStart').disabled = true;
   document.getElementById('btnLecturaStop').disabled = true;
   actualizarTodo();
+}
+
+// ===================== NUEVO DASHBOARD DE MÉTRICAS =====================
+async function actualizarPanelMetricas() {
+  const sesiones = await db.sessions.toArray();
+  const conjeturas = await db.conjeturas.toArray();
+  const repasos = await db.repasos.toArray();
+
+  // Fecha de registro (primera sesión)
+  if (sesiones.length > 0) {
+    const primeraSesion = sesiones.reduce((min, s) => 
+      new Date(s.timestamp || s.fecha) < new Date(min.timestamp || min.fecha) ? s : min
+    );
+    const fecha = new Date(primeraSesion.timestamp || primeraSesion.fecha);
+    document.getElementById('fechaRegistro').textContent = fecha.toLocaleDateString();
+  } else {
+    document.getElementById('fechaRegistro').textContent = 'Sin datos';
+  }
+
+  // Racha de días estudiando
+  const diasEstudiados = new Set(sesiones.map(s => s.fecha || new Date(s.timestamp).toISOString().split('T')[0]));
+  let racha = 0;
+  let fechaActual = new Date();
+  while (true) {
+    const fechaStr = fechaActual.toISOString().split('T')[0];
+    if (diasEstudiados.has(fechaStr)) {
+      racha++;
+      fechaActual.setDate(fechaActual.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  document.getElementById('rachaDias').textContent = racha;
+
+  // Sesiones estudiadas (total de pomodoros)
+  const totalSesiones = sesiones.filter(s => s.tipo === 'pomodoro').length;
+  document.getElementById('totalSesiones').textContent = totalSesiones;
+
+  // Problemas tipo A
+  const problemasA = sesiones.filter(s => s.tipo === 'problema' && s.modo === 'A');
+  document.getElementById('totalProblemasA').textContent = problemasA.length;
+
+  // Tiempo total estudiado (todas las sesiones tipo pomodoro)
+  const tiempoTotalSegundos = sesiones
+    .filter(s => s.tipo === 'pomodoro')
+    .reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0);
+  document.getElementById('tiempoTotalEstudio').textContent = formatHMS(tiempoTotalSegundos);
+
+  // Sesiones tipo B
+  const problemasB = sesiones.filter(s => s.tipo === 'problema' && s.modo === 'B');
+  const bienB = problemasB.filter(p => p.resultado === 'bien').length;
+  const malB = problemasB.filter(p => p.resultado === 'mal').length;
+  const noResueltosB = problemasB.filter(p => p.resultado === 'no_resuelto').length;
+  document.getElementById('tipoBBien').textContent = bienB;
+  document.getElementById('tipoBMal').textContent = malB;
+  document.getElementById('tipoBNoResueltos').textContent = noResueltosB;
+  // Recall = total de repasos registrados en la tabla repasos
+  document.getElementById('tipoBRecall').textContent = repasos.length;
+
+  // Datos de hoy
+  const hoy = new Date().toISOString().split('T')[0];
+  const conjeturasHoy = conjeturas.filter(c => (c.fecha || new Date(c.timestamp).toISOString().split('T')[0]) === hoy).length;
+  document.getElementById('conjeturasHoy').textContent = conjeturasHoy;
+
+  const sesionesHoy = sesiones.filter(s => s.tipo === 'pomodoro' && (s.fecha || new Date(s.timestamp).toISOString().split('T')[0]) === hoy);
+  const horasHoy = sesionesHoy.reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0) / 3600;
+  document.getElementById('horasHoy').textContent = horasHoy.toFixed(1) + ' h';
+
+  // Nivel de progreso (opcional: basado en horas totales)
+  const nivelPorcentaje = Math.min(100, Math.round(tiempoTotalSegundos / 3600 / 100 * 100)); // 100h = 100%
+  document.getElementById('nivelProgreso').style.width = nivelPorcentaje + '%';
+
+  // Generar heatmap
+  await generarHeatmap(sesiones);
+}
+
+function formatHMS(segundos) {
+  const horas = Math.floor(segundos / 3600);
+  const minutos = Math.floor((segundos % 3600) / 60);
+  const segundosRest = Math.floor(segundos % 60);
+  return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundosRest).padStart(2, '0')}`;
+}
+
+async function generarHeatmap(sesiones) {
+  const container = document.getElementById('heatmapContainer');
+  if (!container) return;
+  
+  const hoy = new Date();
+  const inicio = new Date();
+  inicio.setMonth(hoy.getMonth() - 11);
+  inicio.setDate(1);
+
+  const diasMap = new Map();
+  sesiones.filter(s => s.tipo === 'pomodoro').forEach(s => {
+    const fecha = s.fecha || new Date(s.timestamp).toISOString().split('T')[0];
+    const horas = (s.tiempo_pomodoro || 0) / 3600;
+    diasMap.set(fecha, (diasMap.get(fecha) || 0) + horas);
+  });
+
+  container.innerHTML = '';
+  let fecha = new Date(inicio);
+  while (fecha <= hoy) {
+    const fechaStr = fecha.toISOString().split('T')[0];
+    const horas = diasMap.get(fechaStr) || 0;
+    const nivel = horas === 0 ? 0 : (horas <= 1 ? 1 : (horas <= 2 ? 2 : (horas <= 4 ? 3 : 4)));
+    const div = document.createElement('div');
+    div.className = 'heatmap-day';
+    div.dataset.level = nivel;
+    div.title = `${fechaStr}: ${horas.toFixed(1)}h`;
+    container.appendChild(div);
+    fecha.setDate(fecha.getDate() + 1);
+  }
 }
