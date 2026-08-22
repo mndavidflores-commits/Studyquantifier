@@ -606,10 +606,29 @@ tr:hover {
 
 
 /* ===== NUEVO PANEL DE MÉTRICAS ===== */
-.metric-header {
+/* ===== NUEVO PANEL DE MÉTRICAS (Grid) ===== */
+.metric-dashboard {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Fila superior: perfil + estadísticas */
+.metric-top-row {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: 20px;
+  align-items: stretch;
+}
+
+/* Perfil */
+.metric-profile {
   display: flex;
   align-items: center;
   gap: 15px;
+  padding: 20px;
 }
 .avatar {
   width: 50px;
@@ -622,14 +641,17 @@ tr:hover {
   justify-content: center;
   font-weight: bold;
   font-size: 1.2rem;
+  flex-shrink: 0;
 }
 .user-info {
   flex: 1;
+  min-width: 0;
 }
 .user-name {
   font-size: 1.2rem;
   font-weight: 600;
   color: #fff;
+  margin-bottom: 2px;
 }
 .user-register {
   font-size: 0.8rem;
@@ -638,19 +660,36 @@ tr:hover {
 .user-streak {
   font-size: 0.9rem;
   color: var(--accent3);
-  margin-bottom: 4px;
+  margin: 4px 0;
+}
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--surface2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 10px;
+  transition: width 0.4s;
 }
 
+/* Estadísticas principales */
 .metric-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  text-align: center;
 }
 .stat-item {
   background: var(--surface2);
   border-radius: var(--radius-sm);
-  padding: 15px;
+  padding: 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 .stat-value {
   font-size: 1.8rem;
@@ -663,28 +702,37 @@ tr:hover {
   color: var(--text2);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin-top: 5px;
 }
 
-.metric-cards {
+/* Fila media: dos tarjetas */
+.metric-middle-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  align-items: stretch;
 }
 .metric-card {
   background: var(--surface2);
-  padding: 15px;
+  padding: 20px;
   border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
 }
 .metric-card h4 {
   color: #fff;
-  margin-bottom: 10px;
-  font-size: 0.9rem;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
 }
 .metric-row {
   display: flex;
   justify-content: space-between;
-  padding: 4px 0;
+  padding: 6px 0;
   font-size: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+.metric-row:last-child {
+  border-bottom: none;
 }
 .metric-row strong {
   color: var(--accent3);
@@ -692,21 +740,28 @@ tr:hover {
 }
 
 /* Heatmap */
+.heatmap-card {
+  padding: 20px;
+}
 .heatmap-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 12px);
+  gap: 3px;
   margin-top: 10px;
+  overflow-x: auto;
+  padding-bottom: 5px;
 }
 .heatmap-day {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  background: var(--surface2);
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: #1e1e38;
   transition: transform 0.15s;
+  cursor: pointer;
 }
 .heatmap-day:hover {
-  transform: scale(1.3);
+  transform: scale(1.4);
 }
 .heatmap-day[data-level="0"] { background: #1e1e38; }
 .heatmap-day[data-level="1"] { background: #2a2a55; }
@@ -714,6 +769,42 @@ tr:hover {
 .heatmap-day[data-level="3"] { background: #5c7cfa; }
 .heatmap-day[data-level="4"] { background: #8aa2ff; }
 
+/* ===== MEJORAS SCROLL MÓVIL ===== */
+html, body {
+  height: 100dvh;
+  overflow-y: auto;
+}
+.app-container {
+  height: 100dvh;
+  overflow-y: auto;
+}
+#main-area {
+  overflow-y: auto;
+}
+.panel.active {
+  overflow-y: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .metric-top-row {
+    grid-template-columns: 1fr; /* una sola columna */
+    gap: 15px;
+  }
+  .metric-stats {
+    grid-template-columns: 1fr; /* apila las estadísticas */
+  }
+  .metric-middle-row {
+    grid-template-columns: 1fr; /* apila las tarjetas */
+  }
+  .metric-profile {
+    flex-direction: column;
+    text-align: center;
+  }
+  .avatar {
+    margin-bottom: 10px;
+  }
+}
 /* ===== MEJORAS SCROLL MÓVIL ===== */
 html, body {
   height: 100dvh;
