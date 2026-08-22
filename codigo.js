@@ -1961,7 +1961,6 @@ const dataB = puntosB.map(p => ({ x: new Date(p.timestamp || p.fecha), y: (p.tie
       }
     }
   });
-}
 
 function configurarEventosGrafico() {
   if (window._eventosGraficoConfigurados) return;
