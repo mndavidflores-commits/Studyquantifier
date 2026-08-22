@@ -177,83 +177,81 @@
     <!-- Panel Progreso -->
     <div class="panel" id="panelProgreso"><div class="card" id="progresoTemaTableWrap"></div></div>
 
-    <!-- Panel Métricas (Rediseñado) -->
-<!-- Panel Métricas (Rediseñado con Grid) -->
-<div class="panel" id="panelMetricas">
-  <div class="metric-dashboard">
-    <!-- Fila superior: perfil + estadísticas principales -->
-    <div class="metric-top-row">
-      <!-- Perfil -->
-      <div class="card metric-profile">
-        <div class="avatar">DF</div>
-        <div class="user-info">
-          <div class="user-name">David Flores</div>
-          <div class="user-register">Registrado: <span id="fechaRegistro">--</span></div>
-          <div class="user-streak">🔥 Racha actual: <span id="rachaDias">0</span> días</div>
-          <div class="progress-bar"><div class="progress-fill" id="nivelProgreso" style="width:0%;"></div></div>
+    <!-- Panel Métricas (Rediseñado con Grid) -->
+    <div class="panel" id="panelMetricas">
+      <div class="metric-dashboard">
+        <!-- Fila superior: perfil + estadísticas principales -->
+        <div class="metric-top-row">
+          <!-- Perfil -->
+          <div class="card metric-profile">
+            <div class="avatar">DF</div>
+            <div class="user-info">
+              <div class="user-name">David Flores</div>
+              <div class="user-register">Registrado: <span id="fechaRegistro">--</span></div>
+              <div class="user-streak">🔥 Racha actual: <span id="rachaDias">0</span> días</div>
+              <div class="progress-bar"><div class="progress-fill" id="nivelProgreso" style="width:0%;"></div></div>
+            </div>
+          </div>
+          <!-- Estadísticas -->
+          <div class="metric-stats">
+            <div class="stat-item">
+              <div class="stat-value" id="totalSesiones">0</div>
+              <div class="stat-label">Sesiones estudiadas</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="totalProblemasA">0</div>
+              <div class="stat-label">Problemas (Tipo A)</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="tiempoTotalEstudio">0:00:00</div>
+              <div class="stat-label">Tiempo estudiado</div>
+            </div>
+          </div>
         </div>
-      </div>
-      <!-- Estadísticas -->
-      <div class="metric-stats">
-        <div class="stat-item">
-          <div class="stat-value" id="totalSesiones">0</div>
-          <div class="stat-label">Sesiones estudiadas</div>
+
+        <!-- Fila media: dos tarjetas horizontales -->
+        <div class="metric-middle-row">
+          <!-- Tarjeta izquierda: 4 columnas -->
+          <div class="card metric-card-horizontal">
+            <div class="metric-horizontal-item">
+              <div class="metric-horizontal-label">Bien</div>
+              <div class="metric-horizontal-value" id="totalBienGeneral">0</div>
+            </div>
+            <div class="metric-horizontal-item">
+              <div class="metric-horizontal-label">Mal</div>
+              <div class="metric-horizontal-value" id="totalMalGeneral">0</div>
+            </div>
+            <div class="metric-horizontal-item">
+              <div class="metric-horizontal-label">No resueltos</div>
+              <div class="metric-horizontal-value" id="totalNoResueltosGeneral">0</div>
+            </div>
+            <div class="metric-horizontal-item">
+              <div class="metric-horizontal-label">Recall</div>
+              <div class="metric-horizontal-value" id="totalRecall">0</div>
+            </div>
+          </div>
+
+          <!-- Tarjeta derecha: 2 columnas -->
+          <div class="card metric-card-horizontal">
+            <div class="metric-horizontal-item">
+              <div class="metric-horizontal-label">Conjeturas creadas</div>
+              <div class="metric-horizontal-value" id="totalConjeturasGeneral">0</div>
+            </div>
+            <div class="metric-horizontal-item">
+              <div class="metric-horizontal-label">Horas estudiadas hoy</div>
+              <div class="metric-horizontal-value" id="horasHoy">0.0 h</div>
+            </div>
+          </div>
         </div>
-        <div class="stat-item">
-          <div class="stat-value" id="totalProblemasA">0</div>
-          <div class="stat-label">Problemas (Tipo A)</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value" id="tiempoTotalEstudio">0:00:00</div>
-          <div class="stat-label">Tiempo estudiado</div>
+
+        <!-- Fila inferior: heatmap -->
+        <div class="card heatmap-card">
+          <h3>Actividad últimos 12 meses</h3>
+          <div id="heatmapContainer" class="heatmap-container"></div>
         </div>
       </div>
     </div>
 
-    <!-- Fila media: tarjetas tipo B y hoy -->
-    <!-- Fila media: dos tarjetas horizontales -->
-    <div class="metric-middle-row">
-      <!-- Tarjeta izquierda: 4 columnas -->
-      <div class="card metric-card-horizontal">
-        <div class="metric-horizontal-item">
-          <div class="metric-horizontal-label">Bien</div>
-          <div class="metric-horizontal-value" id="totalBienGeneral">0</div>
-        </div>
-        <div class="metric-horizontal-item">
-          <div class="metric-horizontal-label">Mal</div>
-          <div class="metric-horizontal-value" id="totalMalGeneral">0</div>
-        </div>
-        <div class="metric-horizontal-item">
-          <div class="metric-horizontal-label">No resueltos</div>
-          <div class="metric-horizontal-value" id="totalNoResueltosGeneral">0</div>
-        </div>
-        <div class="metric-horizontal-item">
-          <div class="metric-horizontal-label">Recall</div>
-          <div class="metric-horizontal-value" id="totalRecall">0</div>
-        </div>
-      </div>
-
-      <!-- Tarjeta derecha: 2 columnas -->
-      <div class="card metric-card-horizontal">
-        <div class="metric-horizontal-item">
-          <div class="metric-horizontal-label">Conjeturas creadas</div>
-          <div class="metric-horizontal-value" id="totalConjeturasGeneral">0</div>
-        </div>
-        <div class="metric-horizontal-item">
-          <div class="metric-horizontal-label">Horas estudiadas hoy</div>
-          <div class="metric-horizontal-value" id="horasHoy">0.0 h</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Fila inferior: heatmap -->
-    <div class="card heatmap-card">
-      <h3>Actividad últimos 12 meses</h3>
-      <div id="heatmapContainer" class="heatmap-container"></div>
-    </div>
-  </div><!-- cierre metric-dashboard -->
-</div><!-- cierre panelMetricas -->
-    
     <!-- Panel Sueño -->
     <div class="panel" id="panelSueno">
       <div class="card"><h3>Registrar sueño</h3>
