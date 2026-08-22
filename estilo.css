@@ -15,8 +15,8 @@ html, body {
 }
 
 body {
-  background:var(--bg); color:var(--text); font-family:var(--font);
-  min-height:100vh; line-height:1.5; letter-spacing:0.01em;
+  background: var(--bg); color: var(--text); font-family: var(--font);
+  min-height: 100vh; line-height: 1.5; letter-spacing: 0.01em;
 }
 
 .app-container {
@@ -25,49 +25,55 @@ body {
   flex-direction: column;
   overflow: hidden; /* evita scroll fuera del contenedor */
 }
+
 /* ========== AUTENTICACIÓN ========== */
 #auth-section.hidden {
-    display: none !important;
-    height: 0 !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
+  display: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
+
 /* ========== BARRA SUPERIOR ========== */
 #topbar {
-  display:flex; align-items:center; justify-content:space-between;
-  background:var(--surface); border-bottom:1px solid var(--border);
-  padding:8px 20px; height:56px; flex-shrink:0;
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 8px 20px; height: 56px; flex-shrink: 0;
 }
-#topbar.hidden { display:none !important; }
+#topbar.hidden { display: none !important; }
 
-.brand { display:flex; flex-direction:column; min-width:140px; }
-.brand .app-name { font-size:1.1rem; font-weight:600; color:#fff; }
-.brand .user-email { font-size:0.7rem; color:var(--text2); }
+.brand { display: flex; flex-direction: column; min-width: 140px; }
+.brand .app-name { font-size: 1.1rem; font-weight: 600; color: #fff; }
+.brand .user-email { font-size: 0.7rem; color: var(--text2); }
 
-.tab-nav { display:flex; gap:4px; overflow-x:auto; }
+.tab-nav { display: flex; gap: 4px; overflow-x: auto; }
 .tab-btn {
-  padding:6px 14px; border:none; background:transparent; color:var(--text2);
-  border-radius:var(--radius-sm); cursor:pointer; font-size:0.82rem; white-space:nowrap;
+  padding: 6px 14px; border: none; background: transparent; color: var(--text2);
+  border-radius: var(--radius-sm); cursor: pointer; font-size: 0.82rem; white-space: nowrap;
   transition: background 0.2s, color 0.2s;
 }
-.tab-btn.active { background:var(--accent); color:#fff; }
-.tab-btn:hover { background:rgba(92,124,250,0.15); color:#fff; }
+.tab-btn.active { background: var(--accent); color: #fff; }
+.tab-btn:hover { background: rgba(92, 124, 250, 0.15); color: #fff; }
 
-.topbar-icons { display:flex; gap:8px; }
+.topbar-icons { display: flex; gap: 8px; }
 .topbar-icons button {
-  width:30px; height:30px; background:var(--surface2); border:1px solid var(--border);
-  border-radius:6px; color:var(--text); cursor:pointer; font-size:0.9rem;
+  width: 30px; height: 30px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); cursor: pointer; font-size: 0.9rem;
   transition: background 0.2s;
 }
-.topbar-icons button:hover { background:var(--accent); color:#fff; }
+.topbar-icons button:hover { background: var(--accent); color: #fff; }
 
 /* ========== PANELES ========== */
-.panel { display:none; }
+.panel { display: none; }
 .panel.active {
-  display:grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap:14px; align-items:start; animation: fadeIn 0.22s ease;
-  overflow-y:auto; padding:14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 14px;
+  align-items: start;
+  animation: fadeIn 0.22s ease;
+  overflow-y: auto;
+  padding: 14px;
 }
 #panelSesion.active {
   display: flex;
@@ -75,15 +81,14 @@ body {
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden;  /* ← evita scroll en este panel */
+  overflow: hidden;
 }
 
 @keyframes fadeIn {
-  from { opacity:0; transform:translateY(8px); }
-  to   { opacity:1; transform:translateY(0); }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ========== ÁREA PRINCIPAL ========== */
 /* ========== ÁREA PRINCIPAL ========== */
 #main-area {
   flex: 1;
@@ -91,8 +96,9 @@ body {
   position: relative;
   height: 100%;
   width: 100%;
-  overflow:hidden;
+  overflow: hidden;
 }
+
 /* ---------- VISTA IDLE (centrada) ---------- */
 #idle-view {
   display: flex;
@@ -101,20 +107,18 @@ body {
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
-  margin-top: 40px;               /* ← NUEVO: espacio superior */
+  margin-top: 40px;
   justify-content: center;
-  align-items: stretch;           /* ← MODIFICADO: para igualar altura */
+  align-items: stretch;
   opacity: 1;
   transform: scale(1);
   transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
 }
-
 #idle-view.hidden {
   display: none !important;
   opacity: 0;
   transform: scale(0.95);
   pointer-events: none;
-
 }
 
 .card {
@@ -134,12 +138,12 @@ body {
   color: var(--accent);
 }
 
-/* Tarjetas de configuración y pomodoro con el mismo ancho */
 .config-card, .pomo-card {
   flex: 1 1 0;
   min-width: 0;
   max-width: calc(50% - 10px);
 }
+
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -223,17 +227,13 @@ button.small {
   font-size: 0.75rem;
 }
 
-/* Botón Iniciar centrado bajo el círculo */
 #pomoControls {
   justify-content: center;
 }
-
-/* Texto "Foco" centrado sobre los botones */
 #pomoStatus {
   text-align: center;
 }
 
-/* Círculo del pomodoro (IDLE) */
 .pomo-circle {
   width: 180px;
   height: 180px;
@@ -268,9 +268,9 @@ button.small {
   margin: 0;
   height: 100%;
   opacity: 1;
-  overflow: hidden;  /* ← evita scroll en esta vista */
+  overflow: hidden;
 }
-/* Rectángulo flotante del pomodoro (fijo) */
+
 #pomo-float {
   position: fixed;
   top: 12px;
@@ -286,9 +286,7 @@ button.small {
   z-index: 20;
   box-shadow: var(--shadow);
 }
-#pomo-float.hidden {
-  display: none;
-}
+#pomo-float.hidden { display: none; }
 #pomo-float .timer {
   font-family: var(--mono);
   font-size: 1.2rem;
@@ -303,7 +301,6 @@ button.small {
   font-size: 0.8rem;
 }
 
-/* Panel izquierdo (historial) – columna normal */
 #left-panel {
   width: 250px;
   flex-shrink: 0;
@@ -312,14 +309,11 @@ button.small {
   border-right: 1px solid var(--border);
   padding: 15px;
   box-sizing: border-box;
-  /* height: 100%;  ← ELIMINAR o comentar esta línea */
-  align-self: stretch;   /* ← NUEVO: para que ocupe la altura del contenedor */
-  margin-left: 20px;     /* separación izquierda */
-  margin-top: 20px;      /* ← NUEVO: separación superior (fuera de la caja) */
+  align-self: stretch;
+  margin-left: 20px;
+  margin-top: 20px;
 }
-#left-panel.hidden {
-  display: none;
-}
+#left-panel.hidden { display: none; }
 #left-panel h4 {
   color: #fff;
   margin-bottom: 10px;
@@ -344,7 +338,6 @@ button.small {
   background: rgba(92, 124, 250, 0.1);
 }
 
-/* Zona central – ocupa el resto y centra el cronómetro */
 #central-zone {
   flex: 1;
   min-width: 0;
@@ -356,21 +349,19 @@ button.small {
   margin: 0;
   height: 100%;
   overflow-y: auto;
-  padding-top: 90px;   /* ← NUEVO: margen superior */
+  padding-top: 90px;
 }
-/* Configuración del problema */
+
 #problema-config {
   display: flex;
   gap: 15px;
   align-items: flex-end;
-  margin: 0;           /* ← elimina todos los márgenes */
+  margin: 0;
   flex-wrap: wrap;
   justify-content: center;
   flex-shrink: 0;
 }
-#problema-config.hidden {
-  display: none;
-}
+#problema-config.hidden { display: none; }
 #problema-config > div {
   display: flex;
   flex-direction: column;
@@ -381,14 +372,13 @@ button.small {
   min-width: 100px;
 }
 
-/* Cronómetro */
 .timer-display {
   font-size: 5rem;
   font-family: var(--mono);
   font-weight: 700;
   color: #fff;
   text-align: center;
-  margin: auto 0;   /* ← centra verticalmente en el espacio disponible */
+  margin: auto 0;
 }
 #timerLabel {
   text-align: center;
@@ -396,23 +386,20 @@ button.small {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text2);
-  margin: 0;           /* ← ya está, pero verifica */
+  margin: 0;
 }
-/* Línea de conjetura */
+
 #conjetura-inline {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-top: 10px;
 }
-#conjetura-inline.hidden {
-  display: none;
-}
+#conjetura-inline.hidden { display: none; }
 #conjetura-inline input {
   width: 300px;
 }
 
-/* Formulario de resultado */
 #cardResultado {
   margin-top: 20px;
   max-width: 500px;
@@ -441,20 +428,18 @@ button.small {
 }
 
 #conjeturas-sesion-wrap {
-  margin: 0;           /* ← elimina cualquier margen */
+  margin: 0;
   max-width: 600px;
   width: 100%;
   animation: fadeIn 0.3s ease;
   flex-shrink: 0;
-  display: none;       /* ← inicialmente oculto, se muestra con JS */
+  display: none;
 }
-
 #listaConjeturasSesion {
   max-height: 200px;
   overflow-y: auto;
 }
 
-/* Badges */
 .result-b {
   background: var(--good);
   color: #fff;
@@ -477,7 +462,6 @@ button.small {
   font-weight: 600;
 }
 
-/* Modales */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -500,7 +484,6 @@ button.small {
   box-shadow: var(--shadow);
 }
 
-/* Otros paneles */
 .table-wrap {
   overflow-x: auto;
 }
@@ -562,7 +545,6 @@ tr:hover {
   opacity: 1;
 }
 
-/* Estado: cronómetro corriendo (se ocultan elementos) */
 #active-view.cronometro-corriendo #pomo-float,
 #active-view.cronometro-corriendo #left-panel,
 #active-view.cronometro-corriendo #problema-config,
@@ -570,19 +552,15 @@ tr:hover {
 #active-view.cronometro-corriendo #conjeturas-sesion-wrap {
   display: none !important;
 }
-
 #active-view.cronometro-corriendo .timer-display {
   font-size: 16rem;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   #topbar { flex-wrap: wrap; height: auto; padding: 10px; }
   .tab-nav { order: 3; width: 100%; justify-content: center; margin-top: 6px; }
   .brand { min-width: auto; }
-
   #idle-view { flex-direction: column; align-items: center; }
-
   #active-view.active {
     flex-direction: column;
     width: 100%;
@@ -603,9 +581,6 @@ tr:hover {
   #pomo-float { padding: 6px 12px; gap: 6px; font-size: 0.7rem; }
 }
 
-
-
-/* ===== NUEVO PANEL DE MÉTRICAS ===== */
 /* ===== NUEVO PANEL DE MÉTRICAS (Grid) ===== */
 .metric-dashboard {
   display: grid;
@@ -615,7 +590,6 @@ tr:hover {
   margin: 0 auto;
 }
 
-/* Fila superior: perfil + estadísticas */
 .metric-top-row {
   display: grid;
   grid-template-columns: 1fr 3fr;
@@ -623,7 +597,6 @@ tr:hover {
   align-items: stretch;
 }
 
-/* Perfil */
 .metric-profile {
   display: flex;
   align-items: center;
@@ -676,7 +649,6 @@ tr:hover {
   transition: width 0.4s;
 }
 
-/* Estadísticas principales */
 .metric-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -705,8 +677,6 @@ tr:hover {
   margin-top: 5px;
 }
 
-/* Fila media: dos tarjetas */
-/* Fila media: tarjetas horizontales */
 .metric-middle-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -719,13 +689,10 @@ tr:hover {
   padding: 20px;
   display: grid;
   gap: 10px;
-  /* Número de columnas según la tarjeta */
 }
-/* Tarjeta izquierda: 4 columnas */
 .metric-card-horizontal:first-child {
   grid-template-columns: repeat(4, 1fr);
 }
-/* Tarjeta derecha: 2 columnas */
 .metric-card-horizontal:last-child {
   grid-template-columns: repeat(2, 1fr);
 }
@@ -750,7 +717,7 @@ tr:hover {
   font-family: var(--mono);
   line-height: 1.2;
 }
-/* Heatmap */
+
 .heatmap-card {
   padding: 20px;
 }
@@ -780,26 +747,66 @@ tr:hover {
 .heatmap-day[data-level="3"] { background: #5c7cfa; }
 .heatmap-day[data-level="4"] { background: #8aa2ff; }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .metric-top-row {
-    grid-template-columns: 1fr; /* una sola columna */
-    gap: 15px;
-  }
-  .metric-stats {
-    grid-template-columns: 1fr; /* apila las estadísticas */
-  }
-  .metric-middle-row {
-    grid-template-columns: 1fr; /* apila las tarjetas */
-  }
-  .metric-profile {
-    flex-direction: column;
-    text-align: center;
-  }
-  .avatar {
-    margin-bottom: 10px;
-  }
+/* ===== GRÁFICO DE PROBLEMAS (Monkeytype) ===== */
+.chart-card {
+  background: #323437;
+  border: none;
+  padding: 20px;
 }
+.chart-filters {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.chart-filter-btn {
+  padding: 6px 16px;
+  background: transparent;
+  border: 1px solid #646669;
+  border-radius: 6px;
+  color: #d1d0c5;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+.chart-filter-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+.chart-filter-btn.active {
+  background: #e2b714;
+  color: #000;
+  border-color: #e2b714;
+}
+.chart-toggle-btn {
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid #646669;
+  border-radius: 20px;
+  color: #d1d0c5;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+.chart-toggle-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+.chart-toggle-btn.active {
+  background: #e2b714;
+  color: #000;
+  border-color: #e2b714;
+}
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  margin-bottom: 8px;
+}
+.chart-toggles {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 /* ===== MEJORAS SCROLL MÓVIL ===== */
 html, body {
   height: 100dvh;
@@ -816,61 +823,28 @@ html, body {
   overflow-y: auto;
 }
 
-/* ===== GRÁFICO DE PROBLEMAS ===== */
-.chart-card {
-  padding: 20px;
-}
-.chart-filters {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-.chart-filter-btn {
-  padding: 8px 20px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-}
-.chart-filter-btn.active {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-.chart-filter-btn:hover {
-  filter: brightness(1.2);
-}
-.chart-wrapper {
-  position: relative;
-  width: 100%;
-  height: 350px;
-  margin-bottom: 10px;
-}
-.chart-toggles {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-.chart-toggle-btn {
-  padding: 6px 14px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  cursor: pointer;
-  font-size: 0.8rem;
-  transition: all 0.2s;
-}
-.chart-toggle-btn.active {
-  background: var(--accent);
-  color: #fff;
-}
-
-
+/* ===== IMPORTANTE: Panel de métricas no usar grid genérico ===== */
 #panelMetricas.active {
   display: block;
+}
+
+/* ===== RESPONSIVE MÉTRICAS ===== */
+@media (max-width: 768px) {
+  .metric-top-row {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  .metric-stats {
+    grid-template-columns: 1fr;
+  }
+  .metric-middle-row {
+    grid-template-columns: 1fr;
+  }
+  .metric-profile {
+    flex-direction: column;
+    text-align: center;
+  }
+  .avatar {
+    margin-bottom: 10px;
+  }
 }
