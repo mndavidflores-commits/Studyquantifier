@@ -51,8 +51,10 @@ const temarioEmbebido = [
   {id:2,materia:'Álgebra',etapa:'B1',nombre:'Polinomios'}
 ];
 let currentTemario = [...temarioEmbebido];
-let chartTiempo, chartRadar, chartEvolucion;
-
+let chartTiempo, chartRadar, chartEvolucion, chartProblemas = null;
+let materiaGraficoSeleccionada = 'Matemáticas';
+let mostrarAvg10 = true;
+let mostrarPuntosB = true;
 let appInitialized = false;
 let erroresPendientes = [];
 
@@ -1690,10 +1692,6 @@ async function generarHeatmap(sesiones) {
 }
 
 // ===================== GRÁFICO DE PROBLEMAS =====================
-let materiaGraficoSeleccionada = 'Matemáticas';
-let mostrarAvg10 = true;
-let mostrarPuntosB = true;
-let chartProblemas = null;
 
 async function generarGraficoProblemas() {
   const ctx = document.getElementById('chartProblemas')?.getContext('2d');
