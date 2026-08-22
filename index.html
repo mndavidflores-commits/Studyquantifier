@@ -212,43 +212,37 @@
 
     <!-- Fila media: tarjetas tipo B y hoy -->
     <!-- Fila media: dos tarjetas horizontales -->
-<div class="metric-middle-row">
-  <!-- Tarjeta izquierda: 4 columnas -->
-  <div class="card metric-card-horizontal">
-    <div class="metric-horizontal-item">
-      <div class="metric-horizontal-label">Bien</div>
-      <div class="metric-horizontal-value" id="totalBienGeneral">0</div>
-    </div>
-    <div class="metric-horizontal-item">
-      <div class="metric-horizontal-label">Mal</div>
-      <div class="metric-horizontal-value" id="totalMalGeneral">0</div>
-    </div>
-    <div class="metric-horizontal-item">
-      <div class="metric-horizontal-label">No resueltos</div>
-      <div class="metric-horizontal-value" id="totalNoResueltosGeneral">0</div>
-    </div>
-    <div class="metric-horizontal-item">
-      <div class="metric-horizontal-label">Recall</div>
-      <div class="metric-horizontal-value" id="totalRecall">0</div>
-    </div>
-  </div>
+    <div class="metric-middle-row">
+      <!-- Tarjeta izquierda: 4 columnas -->
+      <div class="card metric-card-horizontal">
+        <div class="metric-horizontal-item">
+          <div class="metric-horizontal-label">Bien</div>
+          <div class="metric-horizontal-value" id="totalBienGeneral">0</div>
+        </div>
+        <div class="metric-horizontal-item">
+          <div class="metric-horizontal-label">Mal</div>
+          <div class="metric-horizontal-value" id="totalMalGeneral">0</div>
+        </div>
+        <div class="metric-horizontal-item">
+          <div class="metric-horizontal-label">No resueltos</div>
+          <div class="metric-horizontal-value" id="totalNoResueltosGeneral">0</div>
+        </div>
+        <div class="metric-horizontal-item">
+          <div class="metric-horizontal-label">Recall</div>
+          <div class="metric-horizontal-value" id="totalRecall">0</div>
+        </div>
+      </div>
 
-  <!-- Tarjeta derecha: 2 columnas -->
-  <div class="card metric-card-horizontal">
-    <div class="metric-horizontal-item">
-      <div class="metric-horizontal-label">Conjeturas creadas</div>
-      <div class="metric-horizontal-value" id="totalConjeturasGeneral">0</div>
-    </div>
-    <div class="metric-horizontal-item">
-      <div class="metric-horizontal-label">Horas estudiadas hoy</div>
-      <div class="metric-horizontal-value" id="horasHoy">0.0 h</div>
-    </div>
-  </div>
-</div>
-      <div class="card metric-card">
-        <h4>Datos de Hoy</h4>
-        <div class="metric-row"><span>Conjeturas creadas</span><strong id="conjeturasHoy">0</strong></div>
-        <div class="metric-row"><span>Horas estudiadas</span><strong id="horasHoy">0.0 h</strong></div>
+      <!-- Tarjeta derecha: 2 columnas -->
+      <div class="card metric-card-horizontal">
+        <div class="metric-horizontal-item">
+          <div class="metric-horizontal-label">Conjeturas creadas</div>
+          <div class="metric-horizontal-value" id="totalConjeturasGeneral">0</div>
+        </div>
+        <div class="metric-horizontal-item">
+          <div class="metric-horizontal-label">Horas estudiadas hoy</div>
+          <div class="metric-horizontal-value" id="horasHoy">0.0 h</div>
+        </div>
       </div>
     </div>
 
@@ -257,8 +251,9 @@
       <h3>Actividad últimos 12 meses</h3>
       <div id="heatmapContainer" class="heatmap-container"></div>
     </div>
-  </div>
-</div>
+  </div><!-- cierre metric-dashboard -->
+</div><!-- cierre panelMetricas -->
+    
     <!-- Panel Sueño -->
     <div class="panel" id="panelSueno">
       <div class="card"><h3>Registrar sueño</h3>
