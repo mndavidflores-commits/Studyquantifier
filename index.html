@@ -7,7 +7,9 @@
   <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkVzdHVkaW8gdjI4IiwKICAic2hvcnRfbmFtZSI6ICJFc3R1ZGlvIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwZDBkMWEiLAogICJ0aGVtZV9jb2xvciI6ICIjMGQwZDFhIiwKICAiZGVzY3JpcHRpb24iOiAiSGVycmFtaWVudGEgZGUgcmVnaXN0cm8gZGUgZXN0dWRpbyBjb24gdGF4b25vbcOtYSBBL0IvQyB5IGZhc2VzIEEtQjEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDE5MiAxOTInJTNFJTNDcmVjdCB3aWR0aD0nMTkyJyBoZWlnaHQ9JzE5MicgZmlsbD0nIzBkMGQxYScvJTNFJTNDdGV4dCB4PSc5NicgeT0nMTEwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmb250LXNpemU9JzcyJyBmaWxsPScjNWM3Y2ZhJyBmb250LWZhbWlseT0nc2Fucy1zZXJpZicgZm9udC13ZWlnaHQ9J2JvbGQnJTNFRSM8L3RleHQ+PC9zdmc+IgogICAgfQogIF0KfQ==">
   <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Lexend+Deca:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="estilo.css?v=18">
 </head>
 <body>  
@@ -250,21 +252,22 @@
           <h3>Actividad últimos 12 meses</h3>
           <div id="heatmapContainer" class="heatmap-container"></div>
         </div>
+
         <!-- Tarjeta del gráfico de problemas -->
-<div class="card chart-card">
-  <div class="chart-filters" id="chartFilters">
-    <button class="chart-filter-btn active" data-materia="Matemáticas">Matemática</button>
-    <button class="chart-filter-btn" data-materia="Física">Física</button>
-    <button class="chart-filter-btn" data-materia="Química">Química</button>
-  </div>
-  <div class="chart-wrapper">
-    <canvas id="chartProblemas"></canvas>
-  </div>
-  <div class="chart-toggles">
-    <button id="toggleAvg10" class="chart-toggle-btn active">Avg 10</button>
-    <button id="toggleMostrarB" class="chart-toggle-btn active">Mostrar B</button>
-  </div>
-</div>
+        <div class="card chart-card">
+          <div class="chart-filters" id="chartFilters">
+            <button class="chart-filter-btn active" data-materia="Matemáticas">Matemática</button>
+            <button class="chart-filter-btn" data-materia="Física">Física</button>
+            <button class="chart-filter-btn" data-materia="Química">Química</button>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chartProblemas"></canvas>
+          </div>
+          <div class="chart-toggles">
+            <button id="toggleAvg10" class="chart-toggle-btn active">Avg 10</button>
+            <button id="toggleMostrarB" class="chart-toggle-btn active">Mostrar B</button>
+          </div>
+        </div>
       </div>
     </div>
 
