@@ -1653,13 +1653,12 @@ document.getElementById('totalRecall').textContent = repasos.length;
 // Conjeturas totales (todas las fechas)
 const totalConjeturas = conjeturas.length;
 document.getElementById('totalConjeturasGeneral').textContent = totalConjeturas;
-
 // Datos de hoy
 const hoy = new Date().toISOString().split('T')[0];
 const sesionesHoy = sesiones.filter(s => s.tipo === 'pomodoro' && (s.fecha || new Date(s.timestamp).toISOString().split('T')[0]) === hoy);
 const horasHoy = sesionesHoy.reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0) / 3600;
 document.getElementById('horasHoy').textContent = horasHoy.toFixed(1) + ' h';
-
+  
   // Nivel de progreso (opcional: basado en horas totales)
   const nivelPorcentaje = Math.min(100, Math.round(tiempoTotalSegundos / 3600 / 100 * 100)); // 100h = 100%
   document.getElementById('nivelProgreso').style.width = nivelPorcentaje + '%';
