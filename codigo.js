@@ -1639,22 +1639,26 @@ async function actualizarPanelMetricas() {
     .filter(s => s.tipo === 'pomodoro')
     .reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0);
   document.getElementById('tiempoTotalEstudio').textContent = formatHMS(tiempoTotalSegundos);
+// Totales generales de problemas (todos los modos)
+const bienGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'bien').length;
+const malGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'mal').length;
+const noResueltosGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'no_resuelto').length;
+document.getElementById('totalBienGeneral').textContent = bienGeneral;
+document.getElementById('totalMalGeneral').textContent = malGeneral;
+document.getElementById('totalNoResueltosGeneral').textContent = noResueltosGeneral;
 
-  // Sesiones tipo B
-  const problemasB = sesiones.filter(s => s.tipo === 'problema' && s.modo === 'B');
-  const bienB = problemasB.filter(p => p.resultado === 'bien').length;
-  const malB = problemasB.filter(p => p.resultado === 'mal').length;
-  const noResueltosB = problemasB.filter(p => p.resultado === 'no_resuelto').length;
-  document.getElementById('tipoBBien').textContent = bienB;
-  document.getElementById('tipoBMal').textContent = malB;
-  document.getElementById('tipoBNoResueltos').textContent = noResueltosB;
-  // Recall = total de repasos registrados en la tabla repasos
-  document.getElementById('tipoBRecall').textContent = repasos.length;
+// Recall: total de repasos (exclusivo de sesiones B)
+document.getElementById('totalRecall').textContent = repasos.length;
 
-  // Datos de hoy
-  const hoy = new Date().toISOString().split('T')[0];
-  const conjeturasHoy = conjeturas.filter(c => (c.fecha || new Date(c.timestamp).toISOString().split('T')[0]) === hoy).length;
-  document.getElementById('conjeturasHoy').textContent = conjeturasHoy;
+// Conjeturas totales (todas las fechas)
+const totalConjeturas = conjeturas.length;
+document.getElementById('totalConjeturasGeneral').textContent = totalConjeturas;
+
+// Datos de hoy
+const hoy = new Date().toISOString().split('T')[0];
+const sesionesHoy = sesiones.filter(s => s.tipo === 'pomodoro' && (s.fecha || new Date(s.timestamp).toISOString().split('T')[0]) === hoy);
+const horasHoy = sesionesHoy.reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0) / 3600;
+document.getElementById('horasHoy').textContent = horasHoy.toFixed(1) + ' h';
 
   const sesionesHoy = sesiones.filter(s => s.tipo === 'pomodoro' && (s.fecha || new Date(s.timestamp).toISOString().split('T')[0]) === hoy);
   const horasHoy = sesionesHoy.reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0) / 3600;
