@@ -1660,10 +1660,6 @@ const sesionesHoy = sesiones.filter(s => s.tipo === 'pomodoro' && (s.fecha || ne
 const horasHoy = sesionesHoy.reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0) / 3600;
 document.getElementById('horasHoy').textContent = horasHoy.toFixed(1) + ' h';
 
-  const sesionesHoy = sesiones.filter(s => s.tipo === 'pomodoro' && (s.fecha || new Date(s.timestamp).toISOString().split('T')[0]) === hoy);
-  const horasHoy = sesionesHoy.reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0) / 3600;
-  document.getElementById('horasHoy').textContent = horasHoy.toFixed(1) + ' h';
-
   // Nivel de progreso (opcional: basado en horas totales)
   const nivelPorcentaje = Math.min(100, Math.round(tiempoTotalSegundos / 3600 / 100 * 100)); // 100h = 100%
   document.getElementById('nivelProgreso').style.width = nivelPorcentaje + '%';
