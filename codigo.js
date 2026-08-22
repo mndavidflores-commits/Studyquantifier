@@ -1714,9 +1714,10 @@ async function generarGraficoProblemas() {
     return '#ffffff';
   }
 
-  const dataA = puntosA.map(p => ({ x: new Date(p.timestamp || p.fecha), y: p.tiempo_s || 0, problema: p }));
-  const dataB = puntosB.map(p => ({ x: new Date(p.timestamp || p.fecha), y: p.tiempo_s || 0, problema: p }));
 
+const dataA = puntosA.map(p => ({ x: new Date(p.timestamp || p.fecha), y: (p.tiempo_s || 0) / 60, problema: p }));
+const dataB = puntosB.map(p => ({ x: new Date(p.timestamp || p.fecha), y: (p.tiempo_s || 0) / 60, problema: p }));
+  
   const datasets = [];
   datasets.push({
     label: 'Sesión A',
@@ -1750,7 +1751,7 @@ async function generarGraficoProblemas() {
     for (let i = 0; i < todos.length; i++) {
       const inicio = Math.max(0, i - 9);
       const subconjunto = todos.slice(inicio, i + 1);
-      const suma = subconjunto.reduce((acc, p) => acc + (p.tiempo_s || 0), 0);
+      const suma = subconjunto.reduce((acc, p) => acc + (p.tiempo_s || 0), 0) / 60;
       promedios.push({ x: new Date(todos[i].timestamp || todos[i].fecha), y: suma / subconjunto.length });
     }
   }
@@ -1790,7 +1791,7 @@ async function generarGraficoProblemas() {
             label: (context) => {
               const p = context.raw?.problema;
               if (!p) return context.dataset.label === 'Avg 10' ? `Promedio: ${context.parsed.y.toFixed(1)} min` : `Tiempo: ${context.parsed.y.toFixed(1)} min`;
-              const lineas = [`Tiempo: ${p.tiempo_s?.toFixed(1)} min`, `Resultado: ${p.resultado}`];
+              const lineas = [`Tiempo: ${((p.tiempo_s || 0) / 60).toFixed(1)} min`, `Resultado: ${p.resultado}`];
               if (p.confianza) lineas.push(`Confianza: ${p.confianza}`);
               if (p.codigo_error) lineas.push(`Error: ${p.codigo_error}`);
               return lineas;
