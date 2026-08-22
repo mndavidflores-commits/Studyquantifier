@@ -1695,10 +1695,12 @@ async function generarGraficoProblemas() {
   const ctx = document.getElementById('chartProblemas')?.getContext('2d');
   if (!ctx) return;
 
+  // Destruir gráfico anterior si existe
   if (chartProblemas) chartProblemas.destroy();
 
   const problemas = await db.sessions.where('tipo').equals('problema').toArray();
   const filtrados = problemas.filter(p => p.materia === materiaGraficoSeleccionada);
+  // Ordenar por fecha/hora para secuencia temporal correcta
   filtrados.sort((a, b) => new Date(a.timestamp || a.fecha) - new Date(b.timestamp || b.fecha));
 
   const puntosA = filtrados.filter(p => p.modo === 'A');
@@ -1710,6 +1712,152 @@ async function generarGraficoProblemas() {
     if (resultado === 'no_resuelto') return '#5c7cfa';
     return '#ffffff';
   }
+
+  // Crear datos con índice secuencial en x
+  const dataA = puntosA.map((p, index) => ({
+    x: index + 1,
+    y: (p.tiempo_s || 0) / 60,
+    problema: p,
+    indiceGlobal: index + 1
+  }));
+  const dataB = puntosB.map((p, index) => ({
+    x: index + 1,
+    y: (p.tiempo_s || 0) / 60,
+    problema: p,
+    indiceGlobal: index + 1
+  }));
+
+  const datasets = [];
+  datasets.push({
+    label: 'Sesión A',
+    data: dataA,
+    pointRadius: 3.5,
+    pointHoverRadius: 5,
+    pointBackgroundColor: dataA.map(d => colorPorResultado(d.problema.resultado)),
+    pointBorderColor: '#0d0d1a',
+    pointBorderWidth: 1,
+    showLine: false,
+    type: 'scatter'
+  });
+
+  if (mostrarPuntosB) {
+    datasets.push({
+      label: 'Sesión B',
+      data: dataB,
+      pointRadius: 3.5,
+      pointHoverRadius: 5,
+      pointBackgroundColor: 'transparent',
+      pointBorderColor: dataB.map(d => colorPorResultado(d.problema.resultado)),
+      pointBorderWidth: 2,
+      showLine: false,
+      type: 'scatter'
+    });
+  }
+
+  // Calcular promedio móvil de 10 sobre todos los filtrados (ordenados)
+  const todos = [...filtrados];
+  const promedios = [];
+  if (todos.length > 0) {
+    for (let i = 0; i < todos.length; i++) {
+      const inicio = Math.max(0, i - 9);
+      const subconjunto = todos.slice(inicio, i + 1);
+      const sumaMinutos = subconjunto.reduce((acc, p) => acc + (p.tiempo_s || 0) / 60, 0);
+      promedios.push({ x: i + 1, y: sumaMinutos / subconjunto.length });
+    }
+  }
+
+  if (mostrarAvg10 && promedios.length > 0) {
+    datasets.push({
+      label: 'Avg 10',
+      data: promedios,
+      type: 'line',
+      borderColor: '#e2b714',
+      backgroundColor: 'transparent',
+      borderWidth: 2.5,
+      pointRadius: 0,
+      tension: 0.35,
+      order: 0
+    });
+  }
+
+  // Crear gráfico
+  chartProblemas = new Chart(ctx, {
+    type: 'scatter',
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'nearest',
+        intersect: false
+      },
+      plugins: {
+        tooltip: {
+          backgroundColor: '#1e1e38',
+          titleColor: '#fff',
+          bodyColor: '#cfcfdf',
+          borderColor: '#2a2a4a',
+          borderWidth: 1,
+          callbacks: {
+            title: (items) => {
+              if (!items.length) return '';
+              const p = items[0].raw?.problema;
+              return p ? `Problema #${p.problema_num || '?'}` : '';
+            },
+            label: (context) => {
+              const p = context.raw?.problema;
+              if (!p) return context.dataset.label === 'Avg 10' ? `Promedio: ${context.parsed.y.toFixed(1)} min` : `Tiempo: ${context.parsed.y.toFixed(1)} min`;
+              const lineas = [`Tiempo: ${((p.tiempo_s || 0) / 60).toFixed(1)} min`, `Resultado: ${p.resultado}`];
+              if (p.confianza) lineas.push(`Confianza: ${p.confianza}`);
+              if (p.codigo_error) lineas.push(`Error: ${p.codigo_error}`);
+              return lineas;
+            }
+          }
+        },
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          title: {
+            display: true,
+            text: 'N.º de problema (secuencial)',
+            color: '#8a8aaa'
+          },
+          ticks: {
+            color: '#8a8aaa',
+            stepSize: 1,
+            maxRotation: 0,
+            autoSkip: true,
+            callback: function(value) {
+              return Number.isInteger(value) ? value : '';
+            }
+          },
+          grid: {
+            color: 'rgba(255,255,255,0.05)',
+            borderDash: [2, 2]
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Minutos',
+            color: '#8a8aaa'
+          },
+          beginAtZero: true,
+          grace: '5%',
+          grid: {
+            color: 'rgba(255,255,255,0.05)',
+            borderDash: [2, 2]
+          },
+          ticks: {
+            color: '#8a8aaa'
+          }
+        }
+      }
+    }
+  });
+}
 
 
 const dataA = puntosA.map(p => ({ x: new Date(p.timestamp || p.fecha), y: (p.tiempo_s || 0) / 60, problema: p }));
