@@ -1,7 +1,22 @@
 const CACHE = 'estudio-v30';
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(['./', './index.html', './codigo.js', './estilo.css']))
+    caches.open(CACHE).then(cache => cache.addAll([
+  './',
+  './index.html',
+  './estilo.css',
+  './js/main.js',
+  './js/config.js',
+  './js/utils.js',
+  './js/sync.js',
+  './js/ui.js',
+  './js/pomodoro.js',
+  './js/timer.js',
+  './js/repasos.js',
+  './js/graficos.js',
+  './js/metricas.js',
+  './js/app.js'
+]))
   );
   self.skipWaiting();
 });
