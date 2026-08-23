@@ -360,3 +360,107 @@ document.addEventListener('click', (e) => {
     return;
   }
 });
+
+// ===================== GRÁFICO DE BARRAS DIARIAS =====================
+let chartBarrasDiarias = null;
+let filtroMateriaDiaria = 'Todos';
+let filtroTipoSesionDiaria = 'Todos';
+
+export async function generarGraficoBarrasDiarias() {
+  const ctx = document.getElementById('chartBarrasDiarias')?.getContext('2d');
+  if (!ctx) return;
+
+  if (chartBarrasDiarias) chartBarrasDiarias.destroy();
+
+  const sesiones = await db.sessions.toArray();
+  const filtradas = sesiones.filter(s => {
+    if (filtroMateriaDiaria !== 'Todos' && s.materia !== filtroMateriaDiaria) return false;
+    if (filtroTipoSesionDiaria !== 'Todos' && s.modo !== filtroTipoSesionDiaria) return false;
+    return true;
+  });
+
+  const pomodoros = filtradas.filter(s => s.tipo === 'pomodoro');
+  const problemas = filtradas.filter(s => s.tipo === 'problema');
+
+  const diasMap = new Map(); // fecha -> { horas, problemas }
+
+  pomodoros.forEach(s => {
+    const fecha = s.fecha || new Date(s.timestamp).toISOString().split('T')[0];
+    const entrada = diasMap.get(fecha) || { horas: 0, problemas: 0 };
+    entrada.horas += (s.tiempo_pomodoro || 0) / 3600;
+    diasMap.set(fecha, entrada);
+  });
+
+  problemas.forEach(s => {
+    const fecha = s.fecha || new Date(s.timestamp).toISOString().split('T')[0];
+    const entrada = diasMap.get(fecha) || { horas: 0, problemas: 0 };
+    entrada.problemas += 1;
+    diasMap.set(fecha, entrada);
+  });
+
+  const labels = [...diasMap.keys()].sort();
+  const horas = labels.map(d => diasMap.get(d).horas);
+  const problemasCount = labels.map(d => diasMap.get(d).problemas);
+
+  chartBarrasDiarias = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Horas',
+        data: horas,
+        backgroundColor: '#ca4754',
+        hoverBackgroundColor: '#e06c78',
+        borderColor: '#ca4754',
+        borderWidth: 1,
+        borderRadius: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          backgroundColor: '#2c2e31',
+          titleColor: '#d1d0c5',
+          bodyColor: '#d1d0c5',
+          borderColor: '#646669',
+          borderWidth: 1,
+          callbacks: {
+            title: (items) => items[0]?.label || '',
+            label: (context) => {
+              const index = context.dataIndex;
+              const horasValor = horas[index].toFixed(2);
+              const problemasValor = problemasCount[index];
+              return [`Horas: ${horasValor} h`, `Problemas: ${problemasValor}`];
+            }
+          }
+        },
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#646669', maxRotation: 0, autoSkip: true, maxTicksLimit: 15 },
+          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+        },
+        y: {
+          title: { display: true, text: 'Horas', color: '#646669' },
+          ticks: { color: '#646669' },
+          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+        }
+      }
+    }
+  });
+}
+
+// Delegación de eventos para los selectores del gráfico diario
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'filtroMateriaBarras') {
+    filtroMateriaDiaria = e.target.value;
+    generarGraficoBarrasDiarias();
+  } else if (e.target.id === 'filtroTipoSesionBarras') {
+    filtroTipoSesionDiaria = e.target.value;
+    generarGraficoBarrasDiarias();
+  }
+});
+
