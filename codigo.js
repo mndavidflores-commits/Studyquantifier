@@ -51,7 +51,7 @@ const temarioEmbebido = [
   {id:2,materia:'Álgebra',etapa:'B1',nombre:'Polinomios'}
 ];
 let currentTemario = [...temarioEmbebido];
-let chartTiempo, chartRadar, chartEvolucion, chartProblemas = null;
+let chartTiempo, chartRadar, chartEvolucion, chartProblemas = null, chartFSRS = null;
 let materiaGraficoSeleccionada = 'Matemáticas';
 let mostrarAvg10 = true;
 let mostrarPuntosB = true;
@@ -853,7 +853,7 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
   if (!errorSeleccionado) return;
   const calBtn = document.querySelector('#toggleCalificacion .toggle-btn.active');
   if (!calBtn) { showToast('Selecciona una calificación.'); return; }
-  const calificacion = parseInt(calBtn.dataset.val);
+  const calificacion = calBtn.dataset.val === 'bien' ? 3 : 1; // Good=3, Again=1
   const consultoSolucion = document.getElementById('chkConsultoSolucion').checked;
   const materia = document.getElementById('selMateria').value, subtema = document.getElementById('selSubtema').value;
   const subtemaNombre = document.getElementById('selSubtema').selectedOptions[0]?.textContent || '';
@@ -864,12 +864,14 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
   const ahora = new Date();
   const resultado = f.next(cardReconstruida, ahora, calificacion);
   await guardarLocalYOutbox('repasos', 'repasos', {
-    error_id: errorSeleccionado.id, fecha: ahora.toISOString(), calificacion,
-    intervalo_dias_asignado: resultado.log.scheduled_days,
-    dias_desde_repaso_anterior: resultado.log.elapsed_days,
-    tiempo_recall_s: Math.round(blindTimer.seconds * 10) / 10,
-    consulto_solucion: consultoSolucion
-  });
+  error_id: errorSeleccionado.id, fecha: ahora.toISOString(), calificacion,
+  intervalo_dias_asignado: resultado.log.scheduled_days,
+  dias_desde_repaso_anterior: resultado.log.elapsed_days,
+  tiempo_recall_s: Math.round(blindTimer.seconds * 10) / 10,
+  consulto_solucion: consultoSolucion,
+  estabilidad: resultado.card.stability,
+  dificultad: resultado.card.difficulty
+});
   await actualizarErrorParcial(errorSeleccionado.id, {
     fsrs_estabilidad: resultado.card.stability,
     fsrs_dificultad: resultado.card.difficulty,
@@ -1651,6 +1653,10 @@ async function actualizarPanelMetricas() {
     await generarGraficoProblemas();
   }
 }
+  // Generar gráfico FSRS
+  if (document.getElementById('chartFSRS')) {
+    await generarGraficoFSRS();
+  }
 
 function formatHMS(segundos) {
   const horas = Math.floor(segundos / 3600);
@@ -1711,7 +1717,86 @@ async function generarGraficoProblemas() {
     if (resultado === 'no_resuelto') return '#5c7cfa';
     return '#ffffff';
   }
+async function generarGraficoFSRS() {
+  const ctx = document.getElementById('chartFSRS')?.getContext('2d');
+  if (!ctx) return;
 
+  if (chartFSRS) chartFSRS.destroy();
+
+  const repasos = await db.repasos.orderBy('fecha').toArray();
+  if (repasos.length === 0) return;
+
+  // Agrupar por día (fecha) y promediar estabilidad y dificultad
+  const porDia = {};
+  repasos.forEach(r => {
+    const dia = r.fecha?.split('T')[0] || new Date(r.fecha).toISOString().split('T')[0];
+    if (!porDia[dia]) porDia[dia] = { estabilidadTotal: 0, dificultadTotal: 0, count: 0 };
+    porDia[dia].estabilidadTotal += (r.estabilidad || 0);
+    porDia[dia].dificultadTotal += (r.dificultad || 0);
+    porDia[dia].count++;
+  });
+
+  const dias = Object.keys(porDia).sort();
+  const estabilidadPromedio = dias.map(d => porDia[d].estabilidadTotal / porDia[d].count);
+  const dificultadPromedio = dias.map(d => porDia[d].dificultadTotal / porDia[d].count);
+
+  chartFSRS = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dias,
+      datasets: [
+        {
+          label: 'Estabilidad promedio',
+          data: estabilidadPromedio,
+          borderColor: '#ca4754',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 3,
+          tension: 0.3
+        },
+        {
+          label: 'Dificultad promedio',
+          data: dificultadPromedio,
+          borderColor: '#646669',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 3,
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          backgroundColor: '#2c2e31',
+          titleColor: '#d1d0c5',
+          bodyColor: '#d1d0c5',
+          borderColor: '#646669',
+          borderWidth: 1
+        },
+        legend: {
+          display: true,
+          labels: {
+            color: '#d1d0c5',
+            font: { family: 'Roboto Mono' }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#646669' },
+          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+        },
+        y: {
+          ticks: { color: '#646669' },
+          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+        }
+      }
+    }
+  });
+}
   const dataA = puntosA.map((p, index) => ({
     x: index + 1,
     y: (p.tiempo_s || 0) / 60,
