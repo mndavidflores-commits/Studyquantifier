@@ -181,3 +181,23 @@ html, body {
   scrollbar-width: thin;
   scrollbar-color: #646669 #2c2e31;
 }
+
+
+/* ===== SCROLL MÓVIL Y CONTENEDORES ===== */
+html, body {
+  height: 100dvh;
+  overflow-y: auto;
+}
+
+.app-container {
+  height: 100dvh;
+  overflow-y: auto;
+}
+
+#main-area {
+  overflow-y: auto;
+}
+
+.panel.active {
+  overflow-y: auto;
+}
