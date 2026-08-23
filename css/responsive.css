@@ -1,0 +1,144 @@
+/* ========== RESPONSIVE MÓVIL ========== */
+@media (max-width: 768px) {
+  /* Barra superior */
+  #topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px;
+  }
+  .tab-nav {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+    white-space: nowrap;
+  }
+  .tab-btn {
+    flex-shrink: 0;
+  }
+
+  /* Configuración en una columna */
+  .grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  select,
+  input,
+  textarea {
+    width: 100% !important;
+    max-width: 100%;
+  }
+
+  /* Botones de agregar materia/subtema */
+  #agregarMateriaRow,
+  #agregarSubtemaRow {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px !important;
+  }
+  #agregarMateriaRow input,
+  #agregarSubtemaRow input,
+  #agregarMateriaRow button,
+  #agregarSubtemaRow button {
+    width: 100% !important;
+  }
+
+  /* Tarjetas de inicio */
+  #idle-view {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+    margin-top: 20px;
+    padding: 0 16px;
+  }
+  .config-card,
+  .pomo-card {
+    max-width: 100% !important;
+    width: 100%;
+  }
+
+  /* Vista activa */
+  #active-view.active {
+    flex-direction: column;
+    width: 100%;
+    overflow-y: auto;
+  }
+  #left-panel {
+    width: 100%;
+    max-height: 200px;
+    margin: 10px 0;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  #central-zone {
+    padding-top: 70px;
+  }
+  #problema-config {
+    gap: 10px;
+  }
+  #problema-config > div {
+    width: 100%;
+  }
+  #problema-config input,
+  #problema-config select {
+    width: 100% !important;
+  }
+
+  /* Cronómetro */
+  .timer-display {
+    font-size: 4rem;
+  }
+  #active-view.cronometro-corriendo .timer-display {
+    font-size: 6rem;
+  }
+  #pomo-float {
+    padding: 6px 10px;
+    gap: 6px;
+    font-size: 0.7rem;
+  }
+
+  /* Métricas compactas */
+  .metric-top-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .metric-profile {
+    flex-direction: column;
+    text-align: center;
+    padding: 15px;
+  }
+  .metric-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stat-item {
+    padding: 12px 8px;
+    min-height: 0;
+  }
+  .stat-value {
+    font-size: 1.4rem;
+  }
+  .metric-middle-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .metric-card-horizontal {
+    padding: 12px;
+    gap: 6px;
+  }
+  .metric-card-horizontal:first-child,
+  .metric-card-horizontal:last-child {
+    grid-template-columns: 1fr 1fr;
+  }
+  .metric-horizontal-value {
+    font-size: 1.4rem;
+  }
+  .avatar {
+    margin-bottom: 10px;
+  }
+}
