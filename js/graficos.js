@@ -329,3 +329,34 @@ export async function actualizarGraficoSueno() {
     }
   });
 }
+
+// ===================== EVENTOS DEL GRÁFICO =====================
+document.addEventListener('click', (e) => {
+  // Filtro de materia
+  const filtroBtn = e.target.closest('.chart-filter-btn');
+  if (filtroBtn) {
+    document.querySelectorAll('.chart-filter-btn').forEach(b => b.classList.remove('active'));
+    filtroBtn.classList.add('active');
+    state.materiaGraficoSeleccionada = filtroBtn.dataset.materia;
+    generarGraficoProblemas();
+    return;
+  }
+
+  // Toggle Avg10
+  const toggleAvg10 = e.target.closest('#toggleAvg10');
+  if (toggleAvg10) {
+    state.mostrarAvg10 = !state.mostrarAvg10;
+    toggleAvg10.classList.toggle('active', state.mostrarAvg10);
+    generarGraficoProblemas();
+    return;
+  }
+
+  // Toggle Mostrar B
+  const toggleMostrarB = e.target.closest('#toggleMostrarB');
+  if (toggleMostrarB) {
+    state.mostrarPuntosB = !state.mostrarPuntosB;
+    toggleMostrarB.classList.toggle('active', state.mostrarPuntosB);
+    generarGraficoProblemas();
+    return;
+  }
+});
