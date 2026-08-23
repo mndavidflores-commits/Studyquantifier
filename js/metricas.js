@@ -1,6 +1,6 @@
 import { db, state } from './config.js';
 import { formatTime, formatHMS } from './utils.js';
-import { generarHeatmap, generarGraficoProblemas, generarGraficoFSRS } from './graficos.js';
+import { generarHeatmap, generarGraficoProblemas, generarGraficoFSRS, generarGraficoBarrasDiarias } from './graficos.js';
 
 // ===================== MÉTRICAS GENERALES =====================
 export async function actualizarMetricas() {
@@ -180,5 +180,8 @@ export async function actualizarPanelMetricas() {
   }
   if (document.getElementById('chartFSRS')) {
     await generarGraficoFSRS();
+  }
+ if (document.getElementById('chartBarrasDiarias')) {
+    await generarGraficoBarrasDiarias();
   }
 }
