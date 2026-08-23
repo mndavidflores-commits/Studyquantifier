@@ -154,3 +154,30 @@ label {
   margin-bottom: 4px;
   font-family: var(--mono);
 }
+
+/* ========== BARRA DE DESPLAZAMIENTO ========== */
+/* Para navegadores WebKit (Brave, Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #2c2e31; /* color de fondo de las tarjetas */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #646669; /* gris oscuro */
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ca4754; /* rojo coral al pasar el mouse */
+}
+
+/* Para Firefox */
+html, body {
+  scrollbar-width: thin;
+  scrollbar-color: #646669 #2c2e31;
+}
