@@ -63,12 +63,13 @@ button.small {
 }
 
 .topbar-icons button {
-  background: transparent;
-  border: none;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   width: auto;
   height: auto;
   padding: 4px;
-  color: var(--text2); /* gris claro secundario */
+  color: var(--text2); /* gris claro */
   cursor: pointer;
   font-size: 1.1rem;
   line-height: 1;
@@ -76,13 +77,21 @@ button.small {
 }
 
 .topbar-icons button:hover {
-  background: transparent;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   color: var(--accent); /* rojo coral */
   transform: translateY(-1px);
 }
 
 .topbar-icons button:active {
   transform: scale(0.95);
+}
+
+.topbar-icons button:focus {
+  outline: none;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 /* ========== TOGGLES ========== */
 .toggle-group {
