@@ -601,29 +601,110 @@ tr:hover {
 }
 
 @media (max-width: 768px) {
-  #topbar { flex-wrap: wrap; height: auto; padding: 10px; }
-  .tab-nav { order: 3; width: 100%; justify-content: center; margin-top: 6px; }
-  .brand { min-width: auto; }
-  #idle-view { flex-direction: column; align-items: center; }
+  /* ===== BARRA SUPERIOR SCROLLABLE ===== */
+  #topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px;
+  }
+  .tab-nav {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+  }
+  .tab-btn {
+    flex-shrink: 0; /* Evita que se compriman */
+  }
+
+  /* ===== GRID DE CONFIGURACIÓN A UNA COLUMNA ===== */
+  .grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ===== SELECTS E INPUTS OCUPAN TODO EL ANCHO ===== */
+  select,
+  input,
+  textarea {
+    width: 100% !important;
+    max-width: 100%;
+  }
+
+  /* ===== BOTONES DE AGREGAR MATERIA/SUBTEMA EN COLUMNA ===== */
+  #agregarMateriaRow,
+  #agregarSubtemaRow {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px !important;
+  }
+  #agregarMateriaRow input,
+  #agregarSubtemaRow input {
+    width: 100% !important;
+  }
+  #agregarMateriaRow button,
+  #agregarSubtemaRow button {
+    width: 100% !important;
+  }
+
+  /* ===== SEPARACIÓN ENTRE TARJETAS ===== */
+  #idle-view {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+    margin-top: 20px;
+    padding: 0 16px;
+  }
+  .config-card,
+  .pomo-card {
+    max-width: 100% !important;
+    width: 100%;
+  }
+
+  /* ===== VISTA ACTIVA ===== */
   #active-view.active {
     flex-direction: column;
     width: 100%;
+    overflow-y: auto;
   }
   #left-panel {
     width: 100%;
-    height: auto;
     max-height: 200px;
+    margin: 10px 0;
     border-right: none;
     border-bottom: 1px solid var(--border);
   }
   #central-zone {
-    margin-top: 10px;
-    justify-content: flex-start;
+    padding-top: 70px;
   }
-  .timer-display { font-size: 5rem; }
-  #active-view.cronometro-corriendo .timer-display { font-size: 8rem; }
-  #pomo-float { padding: 6px 12px; gap: 6px; font-size: 0.7rem; }
-}
+  #problema-config {
+    gap: 10px;
+  }
+  #problema-config > div {
+    width: 100%;
+  }
+  #problema-config input,
+  #problema-config select {
+    width: 100% !important;
+  }
+
+  /* ===== CRONÓMETRO ===== */
+  .timer-display {
+    font-size: 4rem;
+  }
+  #active-view.cronometro-corriendo .timer-display {
+    font-size: 6rem;
+  }
+  #pomo-float {
+    padding: 6px 10px;
+    gap: 6px;
+    font-size: 0.7rem;
+  }
+}  
 
 /* Panel de métricas */
 .metric-dashboard {
