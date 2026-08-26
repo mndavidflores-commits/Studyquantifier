@@ -142,3 +142,96 @@
     margin-bottom: 10px;
   }
 }
+
+
+/* ===== CORRECCIÓN DESBORDAMIENTO EN MÉTRICAS (MÓVIL) ===== */
+@media (max-width: 768px) {
+  /* Contenedor principal de métricas sin desbordar */
+  #panelMetricas.active {
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 0 12px;
+  }
+
+  .metric-dashboard {
+    display: block; /* en lugar de grid, para evitar anchos fijos raros */
+    width: 100%;
+    max-width: 100%;
+    gap: 0;
+    margin: 0;
+  }
+
+  .metric-top-row,
+  .metric-middle-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .metric-profile {
+    width: 100%;
+    flex-direction: column;
+    text-align: center;
+    padding: 15px;
+  }
+
+  .metric-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .metric-card-horizontal {
+    width: 100%;
+    max-width: 100%;
+    padding: 12px;
+  }
+
+  /* Tarjetas de gráficos y heatmap */
+  .chart-card,
+  .heatmap-card {
+    width: 100%;
+    max-width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
+  }
+
+  .chart-wrapper {
+    width: 100%;
+    max-width: 100%;
+    height: auto; /* permite que Chart.js se adapte */
+    overflow-x: hidden;
+  }
+
+  .chart-filters {
+    width: 100%;
+    max-width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chart-filters select {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 5px;
+  }
+
+  /* El heatmap puede conservar scroll horizontal interno, pero no provocar scroll global */
+  .heatmap-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ajuste de canvas para que no se salgan */
+  canvas {
+    max-width: 100%;
+    height: auto !important;
+  }
+}
