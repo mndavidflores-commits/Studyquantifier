@@ -256,4 +256,5 @@ document.getElementById('btnDescartarRepaso').addEventListener('click', () => {
   document.querySelectorAll('#toggleCalificacion .toggle-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('chkConsultoSolucion').checked = false;
   document.getElementById('left-panel').classList.remove('hidden');
+  actualizarHistorialSubtema();
 });
