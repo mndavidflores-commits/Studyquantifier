@@ -82,7 +82,6 @@ export function detenerTemporizadorCiego() {
   state.blindTimer.pendingResult = false;
   document.getElementById('cardResultado').style.display = 'none';
   document.getElementById('timerLabel').textContent = 'En pausa';
-  state.blindTimer.seconds = 0;
   updateBlindDisplay();
   document.getElementById('active-view').classList.remove('cronometro-corriendo');
 }
