@@ -192,6 +192,7 @@ document.getElementById('btnDescartarProblema').addEventListener('click', () => 
   state.blindTimer.pendingResult = false;
   document.getElementById('active-view').classList.remove('cronometro-corriendo');
   document.getElementById('left-panel').classList.remove('hidden');
+    actualizarHistorialSubtema();
 });
 
 // ===================== GUARDAR CONJETURA =====================
