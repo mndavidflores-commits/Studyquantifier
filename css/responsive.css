@@ -1,6 +1,6 @@
 /* ========== RESPONSIVE MÓVIL ========== */
 @media (max-width: 768px) {
-  /* Barra superior */
+  /* ===== BARRA SUPERIOR ===== */
   #topbar {
     flex-wrap: wrap;
     height: auto;
@@ -21,7 +21,7 @@
     flex-shrink: 0;
   }
 
-  /* Configuración en una columna */
+  /* ===== CONFIGURACIÓN EN UNA COLUMNA ===== */
   .grid-2 {
     grid-template-columns: 1fr !important;
   }
@@ -33,7 +33,7 @@
     max-width: 100%;
   }
 
-  /* Botones de agregar materia/subtema */
+  /* ===== BOTONES DE AGREGAR MATERIA/SUBTEMA ===== */
   #agregarMateriaRow,
   #agregarSubtemaRow {
     display: flex !important;
@@ -48,7 +48,7 @@
     width: 100% !important;
   }
 
-  /* Tarjetas de inicio */
+  /* ===== TARJETAS DE INICIO ===== */
   #idle-view {
     flex-direction: column;
     align-items: stretch;
@@ -62,7 +62,7 @@
     width: 100%;
   }
 
-  /* Vista activa */
+  /* ===== VISTA ACTIVA ===== */
   #active-view.active {
     flex-direction: column;
     width: 100%;
@@ -89,7 +89,7 @@
     width: 100% !important;
   }
 
-  /* Cronómetro */
+  /* ===== CRONÓMETRO ===== */
   .timer-display {
     font-size: 4rem;
   }
@@ -102,7 +102,7 @@
     font-size: 0.7rem;
   }
 
-  /* Métricas compactas */
+  /* ===== MÉTRICAS COMPACTAS ===== */
   .metric-top-row {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -141,12 +141,8 @@
   .avatar {
     margin-bottom: 10px;
   }
-}
 
-
-/* ===== CORRECCIÓN DESBORDAMIENTO EN MÉTRICAS (MÓVIL) ===== */
-@media (max-width: 768px) {
-  /* Contenedor principal de métricas sin desbordar */
+  /* ===== CORRECCIÓN DESBORDAMIENTO EN MÉTRICAS ===== */
   #panelMetricas.active {
     width: 100%;
     overflow-x: hidden;
@@ -155,7 +151,7 @@
   }
 
   .metric-dashboard {
-    display: block; /* en lugar de grid, para evitar anchos fijos raros */
+    display: block;
     width: 100%;
     max-width: 100%;
     gap: 0;
@@ -192,7 +188,6 @@
     padding: 12px;
   }
 
-  /* Tarjetas de gráficos y heatmap */
   .chart-card,
   .heatmap-card {
     width: 100%;
@@ -204,8 +199,9 @@
   .chart-wrapper {
     width: 100%;
     max-width: 100%;
-    height: auto; /* permite que Chart.js se adapte */
-    overflow-x: hidden;
+    height: 250px;          /* Altura fija para evitar colapso */
+    overflow: hidden;
+    position: relative;
   }
 
   .chart-filters {
@@ -221,7 +217,6 @@
     margin-bottom: 5px;
   }
 
-  /* El heatmap puede conservar scroll horizontal interno, pero no provocar scroll global */
   .heatmap-container {
     width: 100%;
     max-width: 100%;
@@ -229,9 +224,8 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Ajuste de canvas para que no se salgan */
   canvas {
     max-width: 100%;
-    height: auto !important;
+    height: 100% !important;  /* Importante: Chart.js controla la altura */
   }
 }
