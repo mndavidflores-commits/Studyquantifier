@@ -1,6 +1,5 @@
 import { showToast, formatTime, hoyLocal } from './utils.js';
 import { db, state } from './config.js';
-import { formatTime, showToast } from './utils.js';
 import { guardarLocalYOutbox, syncAll } from './sync.js';
 import { updateBlindDisplay } from './ui.js';
 import { fsrs, generatorParameters, createEmptyCard, State as EstadoFSRS } from 'https://cdn.jsdelivr.net/npm/ts-fsrs@5.4.1/+esm';

@@ -1,6 +1,5 @@
 import { showToast, formatTime, hoyLocal } from './utils.js';
 import { db, supabase, state, State } from './config.js';
-import { showToast, formatTime } from './utils.js';
 import { syncAll, guardarLocalYOutbox, corregirSesionId, pullChanges } from './sync.js';
 import { actualizarPanelMetricas, actualizarMetricas } from './metricas.js';
 import {
