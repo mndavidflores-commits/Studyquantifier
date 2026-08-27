@@ -1,4 +1,4 @@
-import { showToast, formatTime, hoyLocal } from './utils.js';
+import { showToast, formatTime, hoyLocal, fechaLocale } from './utils.js';
 import { db, supabase, state, State } from './config.js';
 import { syncAll, guardarLocalYOutbox, corregirSesionId, pullChanges } from './sync.js';
 import { actualizarPanelMetricas, actualizarMetricas } from './metricas.js';
@@ -83,7 +83,7 @@ async function actualizarHistorial() {
   const allSessions = await db.sessions.orderBy('timestamp').reverse().toArray();
   const grouped = {};
   allSessions.forEach(s => {
-    const fecha = s.fecha || new Date(s.timestamp).toISOString().split('T')[0];
+    const fecha = s.fecha || fechaLocale(s.timestamp);
     if (!grouped[fecha]) grouped[fecha] = [];
     grouped[fecha].push(s);
   });
@@ -234,7 +234,9 @@ async function actualizarMetas() {
 
   const inicioSemana = new Date(hoy);
   inicioSemana.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
-  const sessionsSem = await db.sessions.where('fecha').between(inicioSemana.toISOString().split('T')[0], hoy.toISOString().split('T')[0], true, true).and(s => s.tipo === 'pomodoro').toArray();
+  const inicioSemanaStr = fechaLocale(inicioSemana);
+  const fechaHoy = hoyLocal();
+  const sessionsSem = await db.sessions.where('fecha').between(inicioSemanaStr, fechaHoy, true, true).and(s => s.tipo === 'pomodoro').toArray();
   const minSem = sessionsSem.reduce((a, s) => a + (s.tiempo_pomodoro || 0), 0) / 3600;
   const metaSemanal = parseFloat(document.getElementById('metaSemanal').value) || 15;
   document.getElementById('progresoSemanal').textContent = `${minSem.toFixed(1)}h / ${metaSemanal}h`;

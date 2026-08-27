@@ -22,8 +22,17 @@ export function showToast(msg, duration = 2600) {
   clearTimeout(toastTimeout);
   toastTimeout = setTimeout(() => t.classList.remove('show'), duration);
 }
+
 export function hoyLocal() {
   const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function fechaLocale(date = new Date()) {
+  const d = date instanceof Date ? date : new Date(date);
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');

@@ -74,7 +74,7 @@ export async function actualizarHistorialSubtema() {
   let html = '';
 
   gruposArray.forEach((grupo, index) => {
-    const fecha = grupo.probs[0].fecha || new Date(grupo.probs[0].timestamp).toISOString().split('T')[0];
+    const fecha = grupo.probs[0].fecha || new Date(grupo.probs[0].timestamp).toLocaleDateString('en-CA');
     const numProblemas = grupo.probs.length;
     const openClass = (index === gruposArray.length - 1) ? ' open' : '';
 
@@ -242,7 +242,8 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
   const resultado = f.next(cardReconstruida, ahora, calificacion);
   await guardarLocalYOutbox('repasos', 'repasos', {
     error_id: state.errorSeleccionado.id,
-    fecha: ahora.toISOString(),
+    fecha: hoyLocal(),
+    timestamp: ahora.toISOString(),
     calificacion,
     intervalo_dias_asignado: resultado.log.scheduled_days,
     dias_desde_repaso_anterior: resultado.log.elapsed_days,

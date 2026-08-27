@@ -1,5 +1,5 @@
 import { db, state } from './config.js';
-import { formatTime, formatHMS } from './utils.js';
+import { formatTime, formatHMS, hoyLocal, fechaLocale } from './utils.js';
 import { generarHeatmap, generarGraficoProblemas, generarGraficoFSRS, generarGraficoBarrasDiarias, generarGraficoHorasSemana } from './graficos.js';
 
 // ===================== MÉTRICAS GENERALES =====================
@@ -63,7 +63,7 @@ export async function actualizarMetricas() {
     const ctxLine = document.getElementById('chartEvolucion').getContext('2d');
     const dias = {};
     problemas.forEach(s => {
-      const dia = s.fecha || new Date(s.timestamp).toISOString().split('T')[0];
+      const dia = s.fecha || fechaLocale(s.timestamp);
       if (!dias[dia]) dias[dia] = { bien: 0, mal: 0 };
       if (s.resultado === 'bien') dias[dia].bien++;
       else if (s.resultado === 'mal') dias[dia].mal++;
@@ -96,11 +96,11 @@ export async function actualizarPanelMetricas() {
     document.getElementById('fechaRegistro').textContent = 'Sin datos';
   }
 
-  const diasEstudiados = new Set(sesiones.map(s => s.fecha || new Date(s.timestamp).toISOString().split('T')[0]));
+  const diasEstudiados = new Set(sesiones.map(s => s.fecha || fechaLocale(s.timestamp)));
   let racha = 0;
   let fechaActual = new Date();
   while (true) {
-    const fechaStr = fechaActual.toISOString().split('T')[0];
+    const fechaStr = fechaLocale(fechaActual);
     if (diasEstudiados.has(fechaStr)) {
       racha++;
       fechaActual.setDate(fechaActual.getDate() - 1);
@@ -132,8 +132,8 @@ export async function actualizarPanelMetricas() {
 
   document.getElementById('totalConjeturasGeneral').textContent = conjeturas.length;
 
-  const hoy = new Date().toISOString().split('T')[0];
-  const sesionesHoy = sesiones.filter(s => s.tipo === 'pomodoro' && (s.fecha || new Date(s.timestamp).toISOString().split('T')[0]) === hoy);
+  const hoy = hoyLocal();
+  const sesionesHoy = sesiones.filter(s => s.tipo === 'pomodoro' && (s.fecha || fechaLocale(s.timestamp)) === hoy);
   const horasHoy = sesionesHoy.reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0) / 3600;
   document.getElementById('horasHoy').textContent = horasHoy.toFixed(1) + ' h';
 
