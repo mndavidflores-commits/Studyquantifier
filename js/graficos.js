@@ -1,3 +1,4 @@
+
 import { db, state } from './config.js';
 
 let chartSuenoInst = null;
@@ -7,7 +8,8 @@ export async function generarGraficoProblemas() {
   const ctx = document.getElementById('chartProblemas')?.getContext('2d');
   if (!ctx) return;
 
-  if (state.chartProblemas) state.chartProblemas.destroy();
+const chartExistente = Chart.getChart(ctx);
+if (chartExistente) chartExistente.destroy();
 
   const problemas = await db.sessions.where('tipo').equals('problema').toArray();
   const filtrados = problemas.filter(p => p.materia === state.materiaGraficoSeleccionada);
@@ -258,7 +260,10 @@ export async function generarHeatmap(sesiones) {
 export async function actualizarGraficoSueno() {
   const ctx = document.getElementById('chartSueno')?.getContext('2d');
   if (!ctx) return;
-  if (chartSuenoInst) chartSuenoInst.destroy();
+
+  // Destruye cualquier gráfico existente en este canvas
+  const chartExistente = Chart.getChart(ctx);
+  if (chartExistente) chartExistente.destroy();
 
   const registros = await db.sueno.orderBy('fecha').toArray();
   if (registros.length === 0) return;
@@ -276,7 +281,7 @@ export async function actualizarGraficoSueno() {
     return h * 60 + m;
   });
 
-  chartSuenoInst = new Chart(ctx, {
+  new Chart(ctx, {
     type: 'line',
     data: {
       labels,
