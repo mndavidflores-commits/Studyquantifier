@@ -377,3 +377,19 @@
 #active-view.cronometro-corriendo .timer-display {
   font-size: 16rem;
 }
+
+
+/* Transición suave entre vistas */
+#idle-view.fade-out {
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
+}
+
+#active-view.fade-in {
+  opacity: 1 !important;
+}
+
+#active-view {
+  transition: opacity 0.4s ease;
+}

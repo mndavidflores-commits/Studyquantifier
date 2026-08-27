@@ -141,7 +141,7 @@ document.getElementById('btnSiguienteProblema').addEventListener('click', async 
   const subtemaNombreProblema = document.getElementById('selSubtema').selectedOptions[0]?.textContent || '';
   const idProblema = await guardarLocalYOutbox('study_sessions', 'sessions', {
     tipo: 'problema',
-    fecha: new Date().toISOString().split('T')[0],
+    fecha: hoyLocal(),
     timestamp: Date.now(),
     modo, fase, materia, subtema_id: subtema, subtema_nombre: subtemaNombreProblema,
     libro: document.getElementById('selLibro').value,
@@ -206,7 +206,7 @@ document.getElementById('btnGuardarConjetura').addEventListener('click', async (
   const subtema = document.getElementById('selSubtema').value;
   const problemaNum = (state.blindTimer.running || state.blindTimer.pendingResult) ? state.blindTimer.previousProblemaNum : null;
   await guardarLocalYOutbox('conjeturas', 'conjeturas', {
-    fecha: new Date().toISOString().split('T')[0],
+    fecha: hoyLocal(),
     texto,
     materia: materia !== '__agregar__' ? materia : null,
     subtema_id: subtema !== '__agregar__' ? subtema : null,

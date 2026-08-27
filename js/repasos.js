@@ -258,7 +258,7 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
     proxima_revision: resultado.card.due.toISOString()
   });
   await guardarLocalYOutbox('study_sessions', 'sessions', {
-    tipo: 'problema', fecha: new Date().toISOString().split('T')[0], timestamp: Date.now(),
+    tipo: 'problema', fecha: hoyLocal(), timestamp: Date.now(),
     modo: 'B', fase: document.getElementById('selFase').value, materia, subtema_id: subtema,
     subtema_nombre: subtemaNombre,
     libro: document.getElementById('selLibro').value,

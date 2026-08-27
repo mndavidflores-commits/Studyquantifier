@@ -1,3 +1,4 @@
+import { showToast, formatTime, hoyLocal } from './utils.js';
 import { db, supabase, state, State } from './config.js';
 import { showToast, formatTime } from './utils.js';
 import { syncAll, guardarLocalYOutbox, corregirSesionId, pullChanges } from './sync.js';
@@ -53,7 +54,7 @@ export async function initApp() {
   marcarDiasActivos();
   await poblarMaterias();
   document.getElementById('selMateria').dispatchEvent(new Event('change'));
-  document.getElementById('fechaSueno').value = new Date().toISOString().split('T')[0];
+  document.getElementById('fechaSueno').value = hoyLocal();
   updatePomoDisplay(); updatePomoStatusText(); updatePomoButtons();
   setConfigEnabled(true);
   document.getElementById('btnDistraje').disabled = true;
@@ -205,7 +206,7 @@ async function actualizarChecklist() {
   container.querySelectorAll('.checklist-cb').forEach(cb => cb.addEventListener('change', async function() {
     const stid = this.dataset.stid;
     if (this.checked) {
-      await guardarLocalYOutbox('checklist', 'checklist', { id: stid, subtema_id: stid, fecha_completado: new Date().toISOString().split('T')[0] }, 'subtema_id,user_id');
+      await guardarLocalYOutbox('checklist', 'checklist', { id: stid, subtema_id: stid, fecha_completado: hoyLocal() }, 'subtema_id,user_id');
     } else {
       await db.checklist.where('subtema_id').equals(stid).delete();
       await db.outbox.put({ table: 'checklist', record_id: stid, operation: 'delete', data: { subtema_id: stid, user_id: state.sessionActual.user.id, deleted_at: new Date().toISOString() }, onConflict: 'subtema_id,user_id', created_at: new Date().toISOString() });
@@ -452,7 +453,7 @@ document.getElementById('btnGuardarResumen').addEventListener('click', async () 
   const tiempoTotal = problemas.reduce((a, p) => a + (p.tiempo_s || 0), 0);
   const conjs = (await db.conjeturas.where('sesion_id').equals(state.session.tempId).toArray()).length;
   const idSesion = await guardarLocalYOutbox('study_sessions', 'sessions', {
-    tipo: 'pomodoro', fecha: new Date().toISOString().split('T')[0], timestamp: Date.now(),
+    tipo: 'pomodoro', fecha: hoyLocal(), timestamp: Date.now(),
     modo: document.getElementById('selModo').value, fase: document.getElementById('selFase').value,
     materia: document.getElementById('selMateria').value, subtema_id: document.getElementById('selSubtema').value,
     libro: document.getElementById('selLibro').value, capitulo: document.getElementById('selCapitulo').value,
@@ -791,7 +792,7 @@ document.getElementById('btnGuardarDominio').addEventListener('click', async () 
     return;
   }
   const existente = await buscarDominioTema(materia, subtemaId);
-  const hoy = new Date().toISOString().split('T')[0];
+  const hoy = hoyLocal();
   const cambios = {};
   const aprobado = aciertos >= 9;
   if (tipoEval === 'inmediata') {

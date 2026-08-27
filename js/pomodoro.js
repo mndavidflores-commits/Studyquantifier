@@ -45,8 +45,24 @@ export async function transition(newState) {
       await actualizarUIPorModo();
       document.getElementById('topbar').classList.add('hidden');
       document.getElementById('auth-section').classList.add('hidden');
-      document.getElementById('idle-view').classList.add('hidden');
-      document.getElementById('active-view').classList.add('active');
+
+      const idleView = document.getElementById('idle-view');
+      const activeView = document.getElementById('active-view');
+
+      // Iniciar desvanecimiento de idle
+      idleView.classList.add('fade-out');
+
+      // Después de la animación, ocultar idle y mostrar active con fade
+      setTimeout(() => {
+        idleView.classList.add('hidden');
+        idleView.classList.remove('fade-out');
+
+        activeView.classList.add('active');
+        // Forzar reflow para que la transición se active
+        void activeView.offsetWidth;
+        activeView.classList.add('fade-in');
+      }, 400); // coincide con la duración de la transición
+      
       document.getElementById('pomo-float').classList.remove('hidden');
       document.getElementById('left-panel').classList.remove('hidden');
       document.getElementById('nombreSubtemaHistorial').textContent = document.getElementById('selSubtema').selectedOptions[0]?.textContent || '';
