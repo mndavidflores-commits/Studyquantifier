@@ -220,7 +220,7 @@ async function actualizarMetas() {
   const diaSemana = hoy.getDay();
   const esDiaActivo = state.diasActivosMeta.includes(diaSemana);
 
-  const sessionsHoy = await db.sessions.where('fecha').equals(hoy.toISOString().split('T')[0]).and(s => s.tipo === 'pomodoro').toArray();
+  const sessionsHoy = await db.sessions.where('fecha').equals(hoyLocal()).and(s => s.tipo === 'pomodoro').toArray();
   const minHoy = sessionsHoy.reduce((a, s) => a + (s.tiempo_pomodoro || 0), 0) / 3600;
   const metaDiaria = parseFloat(document.getElementById('metaDiaria').value) || 3;
 
