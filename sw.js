@@ -1,28 +1,28 @@
-const CACHE = 'estudio-v32';
+const CACHE = 'estudio-v33';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE).then(cache => cache.addAll([
-  './',
-  './index.html',
-  './css/base.css',
-  './css/componentes.css',
-  './css/layout.css',
-  './css/metricas.css',
-  './css/responsive.css',
-  './js/main.js',
-  './js/config.js',
-  './js/utils.js',
-  './js/sync.js',
-  './js/ui.js',
-  './js/pomodoro.js',
-  './js/timer.js',
-  './js/repasos.js',
-  './js/graficos.js',
-  './js/metricas.js',
-  './js/app.js'
-]))
+      './',
+      './index.html',
+      './css/base.css',
+      './css/componentes.css',
+      './css/layout.css',
+      './css/metricas.css',
+      './css/responsive.css',
+      './js/main.js',
+      './js/config.js',
+      './js/utils.js',
+      './js/sync.js',
+      './js/ui.js',
+      './js/pomodoro.js',
+      './js/timer.js',
+      './js/repasos.js',
+      './js/graficos.js',
+      './js/metricas.js',
+      './js/app.js'
+    ]))
   );
 });
 
@@ -40,7 +40,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
 
-  // Para navegación, usamos network-first
+  // Para navegación: network-first
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -52,7 +52,7 @@ self.addEventListener('fetch', event => {
         .catch(() => caches.match(event.request))
     );
   } else {
-    // Para archivos estáticos, network-first con fallback a caché
+    // Para estáticos: network-first con fallback a caché
     event.respondWith(
       fetch(event.request)
         .then(response => {

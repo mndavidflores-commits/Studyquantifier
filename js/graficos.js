@@ -35,17 +35,19 @@ export async function generarGraficoProblemas() {
   }));
 
   const datasets = [];
-  datasets.push({
-    label: 'Sesión A',
-    data: dataA,
-    pointRadius: 3.5,
-    pointHoverRadius: 5,
-    pointBackgroundColor: dataA.map(d => colorPorResultado(d.problema.resultado)),
-    pointBorderColor: '#323437',
-    pointBorderWidth: 1,
-    showLine: false,
-    type: 'scatter'
-  });
+  if (state.mostrarPuntosA) {
+    datasets.push({
+      label: 'Sesión A',
+      data: dataA,
+      pointRadius: 3.5,
+      pointHoverRadius: 5,
+      pointBackgroundColor: dataA.map(d => colorPorResultado(d.problema.resultado)),
+      pointBorderColor: '#323437',
+      pointBorderWidth: 1,
+      showLine: false,
+      type: 'scatter'
+    });
+  }
 
   if (state.mostrarPuntosB) {
     datasets.push({
@@ -330,37 +332,6 @@ export async function actualizarGraficoSueno() {
   });
 }
 
-// ===================== EVENTOS DEL GRÁFICO =====================
-document.addEventListener('click', (e) => {
-  // Filtro de materia
-  const filtroBtn = e.target.closest('.chart-filter-btn');
-  if (filtroBtn) {
-    document.querySelectorAll('.chart-filter-btn').forEach(b => b.classList.remove('active'));
-    filtroBtn.classList.add('active');
-    state.materiaGraficoSeleccionada = filtroBtn.dataset.materia;
-    generarGraficoProblemas();
-    return;
-  }
-
-  // Toggle Avg10
-  const toggleAvg10 = e.target.closest('#toggleAvg10');
-  if (toggleAvg10) {
-    state.mostrarAvg10 = !state.mostrarAvg10;
-    toggleAvg10.classList.toggle('active', state.mostrarAvg10);
-    generarGraficoProblemas();
-    return;
-  }
-
-  // Toggle Mostrar B
-  const toggleMostrarB = e.target.closest('#toggleMostrarB');
-  if (toggleMostrarB) {
-    state.mostrarPuntosB = !state.mostrarPuntosB;
-    toggleMostrarB.classList.toggle('active', state.mostrarPuntosB);
-    generarGraficoProblemas();
-    return;
-  }
-});
-
 // ===================== GRÁFICO DE BARRAS DIARIAS =====================
 let chartBarrasDiarias = null;
 let filtroMateriaDiaria = 'Todos';
@@ -382,7 +353,7 @@ export async function generarGraficoBarrasDiarias() {
   const pomodoros = filtradas.filter(s => s.tipo === 'pomodoro');
   const problemas = filtradas.filter(s => s.tipo === 'problema');
 
-  const diasMap = new Map(); // fecha -> { horas, problemas }
+  const diasMap = new Map();
 
   pomodoros.forEach(s => {
     const fecha = s.fecha || new Date(s.timestamp).toISOString().split('T')[0];
@@ -430,9 +401,7 @@ export async function generarGraficoBarrasDiarias() {
             title: (items) => items[0]?.label || '',
             label: (context) => {
               const index = context.dataIndex;
-              const horasValor = horas[index].toFixed(2);
-              const problemasValor = problemasCount[index];
-              return [`Horas: ${horasValor} h`, `Problemas: ${problemasValor}`];
+              return [`Horas: ${horas[index].toFixed(2)} h`, `Problemas: ${problemasCount[index]}`];
             }
           }
         },
@@ -453,7 +422,132 @@ export async function generarGraficoBarrasDiarias() {
   });
 }
 
-// Delegación de eventos para los selectores del gráfico diario
+// ===================== GRÁFICO SEMANAL =====================
+let chartHorasSemana = null;
+let semanaOffset = 0;
+
+export async function generarGraficoHorasSemana() {
+  const ctx = document.getElementById('chartHorasSemana')?.getContext('2d');
+  if (!ctx) return;
+
+  if (chartHorasSemana) chartHorasSemana.destroy();
+
+  const hoy = new Date();
+  const lunesActual = new Date(hoy);
+  lunesActual.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
+  lunesActual.setHours(0, 0, 0, 0);
+
+  const lunesObjetivo = new Date(lunesActual);
+  lunesObjetivo.setDate(lunesActual.getDate() + semanaOffset * 7);
+
+  const domingoObjetivo = new Date(lunesObjetivo);
+  domingoObjetivo.setDate(lunesObjetivo.getDate() + 6);
+
+  const formatear = d => d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
+  const rangoElem = document.getElementById('rangoSemana');
+  if (rangoElem) rangoElem.textContent = `${formatear(lunesObjetivo)} - ${formatear(domingoObjetivo)}`;
+
+  const etiquetas = [];
+  const data = [];
+  for (let i = 0; i < 7; i++) {
+    const dia = new Date(lunesObjetivo);
+    dia.setDate(lunesObjetivo.getDate() + i);
+    const fechaStr = dia.toISOString().split('T')[0];
+    etiquetas.push(dia.toLocaleDateString('es-PE', { weekday: 'short', day: 'numeric' }));
+    const sesionesDia = await db.sessions.where('fecha').equals(fechaStr).and(s => s.tipo === 'pomodoro').toArray();
+    const horas = sesionesDia.reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0) / 3600;
+    data.push(horas);
+  }
+
+  chartHorasSemana = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: etiquetas,
+      datasets: [{
+        label: 'Horas',
+        data,
+        backgroundColor: '#ca4754',
+        hoverBackgroundColor: '#e06c78',
+        borderColor: '#ca4754',
+        borderWidth: 1,
+        borderRadius: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          backgroundColor: '#2c2e31',
+          titleColor: '#d1d0c5',
+          bodyColor: '#d1d0c5',
+          borderColor: '#646669',
+          borderWidth: 1,
+          callbacks: {
+            label: (context) => `Horas: ${context.parsed.y.toFixed(2)} h`
+          }
+        },
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#646669' },
+          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+        },
+        y: {
+          title: { display: true, text: 'Horas', color: '#646669' },
+          ticks: { color: '#646669' },
+          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+        }
+      }
+    }
+  });
+}
+
+// ===================== DELEGACIÓN DE EVENTOS PARA GRÁFICOS =====================
+document.addEventListener('click', (e) => {
+  const filtroBtn = e.target.closest('.chart-filter-btn');
+  if (filtroBtn) {
+    document.querySelectorAll('.chart-filter-btn').forEach(b => b.classList.remove('active'));
+    filtroBtn.classList.add('active');
+    state.materiaGraficoSeleccionada = filtroBtn.dataset.materia;
+    generarGraficoProblemas();
+    return;
+  }
+
+  const toggleAvg10 = e.target.closest('#toggleAvg10');
+  if (toggleAvg10) {
+    state.mostrarAvg10 = !state.mostrarAvg10;
+    toggleAvg10.classList.toggle('active', state.mostrarAvg10);
+    generarGraficoProblemas();
+    return;
+  }
+
+  const toggleMostrarA = e.target.closest('#toggleMostrarA');
+  if (toggleMostrarA) {
+    state.mostrarPuntosA = !state.mostrarPuntosA;
+    toggleMostrarA.classList.toggle('active', state.mostrarPuntosA);
+    generarGraficoProblemas();
+    return;
+  }
+
+  const toggleMostrarB = e.target.closest('#toggleMostrarB');
+  if (toggleMostrarB) {
+    state.mostrarPuntosB = !state.mostrarPuntosB;
+    toggleMostrarB.classList.toggle('active', state.mostrarPuntosB);
+    generarGraficoProblemas();
+    return;
+  }
+
+  if (e.target.closest('#semanaAnterior')) {
+    semanaOffset--;
+    generarGraficoHorasSemana();
+  } else if (e.target.closest('#semanaSiguiente')) {
+    semanaOffset++;
+    generarGraficoHorasSemana();
+  }
+});
+
 document.addEventListener('change', (e) => {
   if (e.target.id === 'filtroMateriaBarras') {
     filtroMateriaDiaria = e.target.value;
@@ -463,4 +557,3 @@ document.addEventListener('change', (e) => {
     generarGraficoBarrasDiarias();
   }
 });
-

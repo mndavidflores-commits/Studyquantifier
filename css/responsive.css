@@ -197,7 +197,7 @@
     box-sizing: border-box;
   }
 
-  /* Altura fija forzada para evitar colapso */
+  /* Altura fija para evitar colapso */
   .chart-wrapper,
   .chart-container {
     width: 100%;

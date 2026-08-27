@@ -1,7 +1,6 @@
 import { state, State } from './config.js';
 import { formatTime } from './utils.js';
 
-// ===================== UI HELPERS =====================
 export function setConfigEnabled(enabled) {
   document.getElementById('selFase').disabled = !enabled;
   document.getElementById('selModo').disabled = !enabled;
@@ -82,6 +81,7 @@ export function detenerTemporizadorCiego() {
   state.blindTimer.pendingResult = false;
   document.getElementById('cardResultado').style.display = 'none';
   document.getElementById('timerLabel').textContent = 'En pausa';
+  // Ya no reseteamos seconds aquí
   updateBlindDisplay();
   document.getElementById('active-view').classList.remove('cronometro-corriendo');
 }

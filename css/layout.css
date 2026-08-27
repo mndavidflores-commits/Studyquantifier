@@ -318,6 +318,53 @@
   overflow-y: auto;
 }
 
+/* ========== AGRUPACIÓN DE HISTORIAL (ACORDEÓN) ========== */
+.sesion-group {
+  margin-bottom: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.sesion-header {
+  padding: 8px 10px;
+  background: var(--surface2);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: var(--mono);
+  color: var(--text);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+
+.sesion-header:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.sesion-header .arrow {
+  transition: transform 0.2s;
+}
+
+.sesion-group.open .sesion-header .arrow {
+  transform: rotate(90deg);
+}
+
+.sesion-content {
+  display: none;
+}
+
+.sesion-group.open .sesion-content {
+  display: block;
+}
+
+.sesion-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
 /* ========== CRONÓMETRO CORRIENDO ========== */
 #active-view.cronometro-corriendo #pomo-float,
 #active-view.cronometro-corriendo #left-panel,

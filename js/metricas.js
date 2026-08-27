@@ -1,6 +1,6 @@
 import { db, state } from './config.js';
 import { formatTime, formatHMS } from './utils.js';
-import { generarHeatmap, generarGraficoProblemas, generarGraficoFSRS, generarGraficoBarrasDiarias } from './graficos.js';
+import { generarHeatmap, generarGraficoProblemas, generarGraficoFSRS, generarGraficoBarrasDiarias, generarGraficoHorasSemana } from './graficos.js';
 
 // ===================== MÉTRICAS GENERALES =====================
 export async function actualizarMetricas() {
@@ -22,7 +22,6 @@ export async function actualizarMetricas() {
     `;
   }
 
-  // Gráficos antiguos solo si existen
   if (document.getElementById('chartTiempoMateria')) {
     if (state.chartTiempo) state.chartTiempo.destroy();
     const ctxBar = document.getElementById('chartTiempoMateria').getContext('2d');
@@ -82,32 +81,11 @@ export async function actualizarMetricas() {
   }
 }
 
-export async function actualizarProgreso() {
-  const wrap = document.getElementById('progresoTemaTableWrap');
-  if (!wrap) return;
-  const problemas = await db.sessions.where('tipo').equals('problema').toArray();
-  const agg = {};
-  problemas.forEach(s => {
-    const k = s.materia + '|||' + s.subtema_id;
-    if (!agg[k]) agg[k] = { materia: s.materia, subtema: s.subtema_nombre || s.subtema_id, intentos: 0, bien: 0 };
-    agg[k].intentos++;
-    if (s.resultado === 'bien') agg[k].bien++;
-  });
-  let html = '<table><tr><th>Materia</th><th>Subtema</th><th>Intentos</th><th>Aciertos</th></tr>';
-  Object.values(agg).forEach(r => {
-    html += `<tr><td>${r.materia}</td><td>${r.subtema}</td><td>${r.intentos}</td><td>${r.intentos ? Math.round(r.bien / r.intentos * 100) : 0}%</td></tr>`;
-  });
-  html += '</table>';
-  wrap.innerHTML = html;
-}
-
-// ===================== PANEL DE MÉTRICAS NUEVO =====================
 export async function actualizarPanelMetricas() {
   const sesiones = await db.sessions.toArray();
   const conjeturas = await db.conjeturas.toArray();
   const repasos = await db.repasos.toArray();
 
-  // Fecha de registro (primera sesión)
   if (sesiones.length > 0) {
     const primeraSesion = sesiones.reduce((min, s) =>
       new Date(s.timestamp || s.fecha) < new Date(min.timestamp || min.fecha) ? s : min
@@ -118,7 +96,6 @@ export async function actualizarPanelMetricas() {
     document.getElementById('fechaRegistro').textContent = 'Sin datos';
   }
 
-  // Racha de días estudiando
   const diasEstudiados = new Set(sesiones.map(s => s.fecha || new Date(s.timestamp).toISOString().split('T')[0]));
   let racha = 0;
   let fechaActual = new Date();
@@ -133,21 +110,17 @@ export async function actualizarPanelMetricas() {
   }
   document.getElementById('rachaDias').textContent = racha;
 
-  // Sesiones estudiadas (total de pomodoros)
   const totalSesiones = sesiones.filter(s => s.tipo === 'pomodoro').length;
   document.getElementById('totalSesiones').textContent = totalSesiones;
 
-  // Problemas tipo A
   const problemasA = sesiones.filter(s => s.tipo === 'problema' && s.modo === 'A');
   document.getElementById('totalProblemasA').textContent = problemasA.length;
 
-  // Tiempo total estudiado
   const tiempoTotalSegundos = sesiones
     .filter(s => s.tipo === 'pomodoro')
     .reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0);
   document.getElementById('tiempoTotalEstudio').textContent = formatHMS(tiempoTotalSegundos);
 
-  // Totales generales de problemas
   const bienGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'bien').length;
   const malGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'mal').length;
   const noResueltosGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'no_resuelto').length;
@@ -155,33 +128,22 @@ export async function actualizarPanelMetricas() {
   document.getElementById('totalMalGeneral').textContent = malGeneral;
   document.getElementById('totalNoResueltosGeneral').textContent = noResueltosGeneral;
 
-  // Recall
   document.getElementById('totalRecall').textContent = repasos.length;
 
-  // Conjeturas totales
   document.getElementById('totalConjeturasGeneral').textContent = conjeturas.length;
 
-  // Horas hoy
   const hoy = new Date().toISOString().split('T')[0];
   const sesionesHoy = sesiones.filter(s => s.tipo === 'pomodoro' && (s.fecha || new Date(s.timestamp).toISOString().split('T')[0]) === hoy);
   const horasHoy = sesionesHoy.reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0) / 3600;
   document.getElementById('horasHoy').textContent = horasHoy.toFixed(1) + ' h';
 
-  // Nivel de progreso
   const nivelPorcentaje = Math.min(100, Math.round(tiempoTotalSegundos / 3600 / 100 * 100));
   document.getElementById('nivelProgreso').style.width = nivelPorcentaje + '%';
 
-  // Heatmap
   await generarHeatmap(sesiones);
 
-  // Gráficos
-  if (document.getElementById('chartProblemas')) {
-    await generarGraficoProblemas();
-  }
-  if (document.getElementById('chartFSRS')) {
-    await generarGraficoFSRS();
-  }
- if (document.getElementById('chartBarrasDiarias')) {
-    await generarGraficoBarrasDiarias();
-  }
+  if (document.getElementById('chartProblemas')) await generarGraficoProblemas();
+  if (document.getElementById('chartFSRS')) await generarGraficoFSRS();
+  if (document.getElementById('chartBarrasDiarias')) await generarGraficoBarrasDiarias();
+  if (document.getElementById('chartHorasSemana')) await generarGraficoHorasSemana();
 }

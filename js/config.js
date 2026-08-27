@@ -37,7 +37,6 @@ export const State = {
   BREAK_RUNNING: 'BREAK_RUNNING', BREAK_PAUSED: 'BREAK_PAUSED', SESSION_ENDING: 'SESSION_ENDING'
 };
 
-// Objeto de estado mutable (evita reasignar variables exportadas)
 export const state = {
   session: {
     state: State.IDLE,
@@ -74,8 +73,10 @@ export const state = {
   chartFSRS: null,
   materiaGraficoSeleccionada: 'Matemáticas',
   mostrarAvg10: true,
+  mostrarPuntosA: true,
   mostrarPuntosB: true,
+  diasActivosMeta: [1, 2, 3, 4, 5, 6, 0],
   appInitialized: false
 };
 
-export const temarioEmbebido = [...state.currentTemario]; // copia estática
+export const temarioEmbebido = [...state.currentTemario];

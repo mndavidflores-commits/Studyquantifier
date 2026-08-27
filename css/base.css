@@ -47,7 +47,7 @@ body {
   overflow: hidden;
 }
 
-/* ========== AUTENTICACIÓN ========== */
+/* Autenticación */
 #auth-section.hidden {
   display: none !important;
   height: 0 !important;
@@ -56,7 +56,7 @@ body {
   padding: 0 !important;
 }
 
-/* ========== PANELES ========== */
+/* Paneles */
 .panel {
   display: none;
 }
@@ -85,7 +85,7 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ========== ÁREA PRINCIPAL ========== */
+/* Área principal */
 #main-area {
   flex: 1;
   padding: 0;
@@ -95,7 +95,7 @@ body {
   overflow: hidden;
 }
 
-/* ========== TARJETAS ========== */
+/* Tarjetas */
 .card {
   background: var(--surface);
   border: none;
@@ -116,14 +116,14 @@ body {
   color: var(--accent);
 }
 
-/* ========== GRID ========== */
+/* Grid */
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
-/* ========== FORMULARIOS ========== */
+/* Formularios */
 select,
 input,
 textarea {
@@ -155,35 +155,32 @@ label {
   font-family: var(--mono);
 }
 
-/* ========== BARRA DE DESPLAZAMIENTO ========== */
-/* Para navegadores WebKit (Brave, Chrome, Edge, Safari) */
+/* Barra de desplazamiento */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #2c2e31; /* color de fondo de las tarjetas */
+  background: #2c2e31;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #646669; /* gris oscuro */
+  background: #646669;
   border-radius: 10px;
   transition: background 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ca4754; /* rojo coral al pasar el mouse */
+  background: #ca4754;
 }
 
-/* Para Firefox */
 html, body {
   scrollbar-width: thin;
   scrollbar-color: #646669 #2c2e31;
 }
 
-
-/* ===== SCROLL MÓVIL Y CONTENEDORES ===== */
+/* Scroll móvil y contenedores */
 html, body {
   height: 100dvh;
   overflow-y: auto;
@@ -200,4 +197,22 @@ html, body {
 
 .panel.active {
   overflow-y: auto;
+}
+
+/* Evitar scroll horizontal global */
+html, body {
+  overflow-x: hidden;
+}
+
+.app-container {
+  overflow-x: hidden;
+}
+
+#main-area,
+.panel.active,
+.metric-dashboard,
+.chart-wrapper,
+.chart-container,
+.heatmap-container {
+  max-width: 100%;
 }

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Estudio v28</title>
+  <link rel="icon" href="data:,">
   <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkVzdHVkaW8gdjI4IiwKICAic2hvcnRfbmFtZSI6ICJFc3R1ZGlvIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwZDBkMWEiLAogICJ0aGVtZV9jb2xvciI6ICIjMGQwZDFhIiwKICAiZGVzY3JpcHRpb24iOiAiSGVycmFtaWVudGEgZGUgcmVnaXN0cm8gZGUgZXN0dWRpbyBjb24gdGF4b25vbcOtYSBBL0IvQyB5IGZhc2VzIEEtQjEiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDE5MiAxOTInJTNFJTNDcmVjdCB3aWR0aD0nMTkyJyBoZWlnaHQ9JzE5MicgZmlsbD0nIzBkMGQxYScvJTNFJTNDdGV4dCB4PSc5NicgeT0nMTEwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmb250LXNpemU9JzcyJyBmaWxsPScjNWM3Y2ZhJyBmb250LWZhbWlseT0nc2Fucy1zZXJpZicgZm9udC13ZWlnaHQ9J2JvbGQnJTNFRSM8L3RleHQ+PC9zdmc+IgogICAgfQogIF0KfQ==">
   <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -15,7 +16,7 @@
   <link rel="stylesheet" href="css/componentes.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/metricas.css">
-  <link rel="stylesheet" href="css/responsive.css">  
+  <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>  
 <div class="app-container">
@@ -26,7 +27,7 @@
   </div>
 
   <div id="app-content" style="display:none;">
-    <!-- BARRA SUPERIOR (visible solo en IDLE) -->
+    <!-- BARRA SUPERIOR -->
     <header id="topbar">
       <div class="brand">
         <div class="app-name">studyquantifier</div>
@@ -34,41 +35,39 @@
       </div>
       <nav class="tab-nav" id="tabNav">
         <button class="tab-btn active" data-panel="panelSesion">Sesión</button>
-        <button class="tab-btn" data-panel="panelHistorial">Historial</button>
-        <button class="tab-btn" data-panel="panelProgreso">Progreso</button>
         <button class="tab-btn" data-panel="panelMetricas">Métricas</button>
-        <button class="tab-btn" data-panel="panelSueno">Sueño</button>
-        <button class="tab-btn" data-panel="panelConjeturas">Conjeturas</button>
-        <button class="tab-btn" data-panel="panelChecklist">Checklist</button>
         <button class="tab-btn" data-panel="panelMetas">Metas</button>
+        <button class="tab-btn" data-panel="panelSueno">Sueño</button>
+        <button class="tab-btn" data-panel="panelHistorial">Historial</button>
+        <button class="tab-btn" data-panel="panelConjeturas">Conjeturas</button>
+        <button class="tab-btn" data-panel="panelNotas">Notas</button>
+        <button class="tab-btn" data-panel="panelChecklist">Checklist</button>
         <button class="tab-btn" data-panel="panelDominio">Dominio</button>
       </nav>
       <div class="topbar-icons">
-  <button id="btnExport" title="Exportar">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-  </button>
-  <button id="btnImport" title="Importar">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-  </button>
-  <button id="btnLoadTemario" title="Cargar temario">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
-  </button>
-  <button id="btnSyncNow" title="Sincronizar">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-  </button>
-  <button id="btnLogoutTop" title="Cerrar sesión">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-  </button>
-</div>
+        <button id="btnExport" title="Exportar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+        <button id="btnImport" title="Importar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+        <button id="btnLoadTemario" title="Cargar temario">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+        </button>
+        <button id="btnSyncNow" title="Sincronizar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+        <button id="btnLogoutTop" title="Cerrar sesión">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
       <input type="file" id="importFile" accept=".json" style="display:none">
       <input type="file" id="temarioFile" accept=".json" style="display:none">
     </header>
 
     <!-- PANELES -->
-    <!-- Panel Sesión (contiene la nueva estructura) -->
     <div id="panelSesion" class="panel active">
       <div id="main-area">
-        <!-- VISTA IDLE -->
         <div id="idle-view">
           <div class="card config-card">
             <h3>Configuración de la sesión</h3>
@@ -103,7 +102,6 @@
           </div>
         </div>
 
-        <!-- VISTA ACTIVA -->
         <div id="active-view">
           <div id="pomo-float">
             <span id="pomoFloatTime" class="timer">90:00</span>
@@ -152,7 +150,6 @@
             <div id="cardResultado" class="card" style="display:none;">
               <h3>Resultado</h3>
               <div id="tiempoMostrado"></div>
-              <!-- Formulario modo A -->
               <div id="formResultadoA">
                 <div class="grid-2">
                   <div>
@@ -164,6 +161,10 @@
                     </div>
                   </div>
                   <div id="divCodigoError" style="display:none;"><label>Error</label><select id="selCodigoError"></select></div>
+                  <div id="divNotaProblema" style="display:none;">
+                    <label>Nota</label>
+                    <input type="text" id="notaProblema" placeholder="Razón por la que no llegaste a la respuesta">
+                  </div>
                   <div id="divConfianza"><label>Confianza</label><select id="selConfianza"><option value="3" selected>3</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="5">5</option></select></div>
                   <div><label>Bloom</label><select id="selBloom"><option value="3" selected>3</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
                   <div><label>Dificultad</label><select id="selDifExp"><option value="3" selected>3</option><option value="1">1</option><option value="2">2</option><option value="4">4</option><option value="5">5</option></select></div>
@@ -171,7 +172,6 @@
                 </div>
                 <div class="btn-row"><button id="btnDescartarProblema">Descartar</button><button id="btnSiguienteProblema" class="primary">Siguiente problema</button></div>
               </div>
-              <!-- Formulario modo B -->
               <div id="formResultadoB" style="display:none;">
                 <div class="grid-2">
                   <div><label>Calificación</label><div class="toggle-group" id="toggleCalificacion"><button class="toggle-btn" data-val="bien">Bien</button><button class="toggle-btn" data-val="mal">Mal</button></div></div>
@@ -190,17 +190,10 @@
       </div>
     </div>
 
-    <!-- Panel Historial -->
-    <div class="panel" id="panelHistorial"><div class="card" id="historialContainer"></div></div>
-    <!-- Panel Progreso -->
-    <div class="panel" id="panelProgreso"><div class="card" id="progresoTemaTableWrap"></div></div>
-
-    <!-- Panel Métricas (Rediseñado con Grid) -->
+    <!-- Panel Métricas -->
     <div class="panel" id="panelMetricas">
       <div class="metric-dashboard">
-        <!-- Fila superior: perfil + estadísticas principales -->
         <div class="metric-top-row">
-          <!-- Perfil -->
           <div class="card metric-profile">
             <div class="avatar">DF</div>
             <div class="user-info">
@@ -210,109 +203,110 @@
               <div class="progress-bar"><div class="progress-fill" id="nivelProgreso" style="width:0%;"></div></div>
             </div>
           </div>
-          <!-- Estadísticas -->
           <div class="metric-stats">
-            <div class="stat-item">
-              <div class="stat-value" id="totalSesiones">0</div>
-              <div class="stat-label">Sesiones estudiadas</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value" id="totalProblemasA">0</div>
-              <div class="stat-label">Problemas (Tipo A)</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value" id="tiempoTotalEstudio">0:00:00</div>
-              <div class="stat-label">Tiempo estudiado</div>
-            </div>
+            <div class="stat-item"><div class="stat-value" id="totalSesiones">0</div><div class="stat-label">Sesiones estudiadas</div></div>
+            <div class="stat-item"><div class="stat-value" id="totalProblemasA">0</div><div class="stat-label">Problemas (Tipo A)</div></div>
+            <div class="stat-item"><div class="stat-value" id="tiempoTotalEstudio">0:00:00</div><div class="stat-label">Tiempo estudiado</div></div>
           </div>
         </div>
 
-        <!-- Fila media: dos tarjetas horizontales -->
         <div class="metric-middle-row">
-          <!-- Tarjeta izquierda: 4 columnas -->
           <div class="card metric-card-horizontal">
-            <div class="metric-horizontal-item">
-              <div class="metric-horizontal-label">Bien</div>
-              <div class="metric-horizontal-value" id="totalBienGeneral">0</div>
-            </div>
-            <div class="metric-horizontal-item">
-              <div class="metric-horizontal-label">Mal</div>
-              <div class="metric-horizontal-value" id="totalMalGeneral">0</div>
-            </div>
-            <div class="metric-horizontal-item">
-              <div class="metric-horizontal-label">No resueltos</div>
-              <div class="metric-horizontal-value" id="totalNoResueltosGeneral">0</div>
-            </div>
-            <div class="metric-horizontal-item">
-              <div class="metric-horizontal-label">Recall</div>
-              <div class="metric-horizontal-value" id="totalRecall">0</div>
-            </div>
+            <div class="metric-horizontal-item"><div class="metric-horizontal-label">Bien</div><div class="metric-horizontal-value" id="totalBienGeneral">0</div></div>
+            <div class="metric-horizontal-item"><div class="metric-horizontal-label">Mal</div><div class="metric-horizontal-value" id="totalMalGeneral">0</div></div>
+            <div class="metric-horizontal-item"><div class="metric-horizontal-label">No resueltos</div><div class="metric-horizontal-value" id="totalNoResueltosGeneral">0</div></div>
+            <div class="metric-horizontal-item"><div class="metric-horizontal-label">Recall</div><div class="metric-horizontal-value" id="totalRecall">0</div></div>
           </div>
-
-          <!-- Tarjeta derecha: 2 columnas -->
           <div class="card metric-card-horizontal">
-            <div class="metric-horizontal-item">
-              <div class="metric-horizontal-label">Conjeturas creadas</div>
-              <div class="metric-horizontal-value" id="totalConjeturasGeneral">0</div>
-            </div>
-            <div class="metric-horizontal-item">
-              <div class="metric-horizontal-label">Horas estudiadas hoy</div>
-              <div class="metric-horizontal-value" id="horasHoy">0.0 h</div>
-            </div>
+            <div class="metric-horizontal-item"><div class="metric-horizontal-label">Conjeturas creadas</div><div class="metric-horizontal-value" id="totalConjeturasGeneral">0</div></div>
+            <div class="metric-horizontal-item"><div class="metric-horizontal-label">Horas estudiadas hoy</div><div class="metric-horizontal-value" id="horasHoy">0.0 h</div></div>
           </div>
         </div>
 
-        <!-- Fila inferior: heatmap -->
         <div class="card heatmap-card">
           <h3>Actividad últimos 12 meses</h3>
           <div id="heatmapContainer" class="heatmap-container"></div>
         </div>
 
-        <!-- Tarjeta del gráfico de problemas -->
         <div class="card chart-card">
           <div class="chart-filters" id="chartFilters">
             <button class="chart-filter-btn active" data-materia="Matemáticas">Matemática</button>
             <button class="chart-filter-btn" data-materia="Física">Física</button>
             <button class="chart-filter-btn" data-materia="Química">Química</button>
           </div>
-          <div class="chart-wrapper">
-            <canvas id="chartProblemas"></canvas>
-          </div>
+          <div class="chart-wrapper"><canvas id="chartProblemas"></canvas></div>
           <div class="chart-toggles">
             <button id="toggleAvg10" class="chart-toggle-btn active">Avg 10</button>
+            <button id="toggleMostrarA" class="chart-toggle-btn active">Mostrar A</button>
             <button id="toggleMostrarB" class="chart-toggle-btn active">Mostrar B</button>
           </div>
         </div>
 
-        <!-- Tarjeta del gráfico FSRS -->
         <div class="card chart-card">
           <h3>Evolución de la memoria (FSRS)</h3>
-          <div class="chart-wrapper">
-            <canvas id="chartFSRS"></canvas>
+          <div class="chart-wrapper"><canvas id="chartFSRS"></canvas></div>
+        </div>
+
+        <div class="card chart-card">
+          <h3>Rendimiento diario</h3>
+          <div class="chart-filters" style="justify-content: flex-start; gap: 10px; flex-wrap: wrap;">
+            <select id="filtroMateriaBarras">
+              <option value="Todos">Todos</option>
+              <option value="Matemática">Matemática</option>
+              <option value="Física">Física</option>
+              <option value="Química">Química</option>
+            </select>
+            <select id="filtroTipoSesionBarras">
+              <option value="Todos">Todos</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="EXT-S">EXT-S</option>
+            </select>
+          </div>
+          <div class="chart-wrapper"><canvas id="chartBarrasDiarias"></canvas></div>
+        </div>
+
+        <div class="card chart-card">
+          <h3>Horas por semana</h3>
+          <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+            <button id="semanaAnterior" class="chart-toggle-btn">← Semana anterior</button>
+            <span id="rangoSemana" style="font-family:var(--mono); font-size:0.8rem;"></span>
+            <button id="semanaSiguiente" class="chart-toggle-btn">Semana siguiente →</button>
+          </div>
+          <div class="chart-wrapper"><canvas id="chartHorasSemana"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Metas -->
+    <div class="panel" id="panelMetas">
+      <div class="card">
+        <h3>Configuración de metas</h3>
+        <div style="margin-bottom:10px;">
+          <label>Días activos para meta diaria</label>
+          <div class="btn-row" id="diasActivosMeta">
+            <button class="toggle-btn" data-dia="1">L</button>
+            <button class="toggle-btn" data-dia="2">M</button>
+            <button class="toggle-btn" data-dia="3">X</button>
+            <button class="toggle-btn" data-dia="4">J</button>
+            <button class="toggle-btn" data-dia="5">V</button>
+            <button class="toggle-btn" data-dia="6">S</button>
+            <button class="toggle-btn" data-dia="0">D</button>
           </div>
         </div>
-        <!-- Tarjeta del gráfico de barras diarias -->
-<div class="card chart-card">
-  <h3>Rendimiento diario</h3>
-  <div class="chart-filters" style="justify-content: flex-start; gap: 10px; flex-wrap: wrap;">
-    <select id="filtroMateriaBarras">
-      <option value="Todos">Todos</option>
-      <option value="Matemática">Matemática</option>
-      <option value="Física">Física</option>
-      <option value="Química">Química</option>
-    </select>
-    <select id="filtroTipoSesionBarras">
-      <option value="Todos">Todos</option>
-      <option value="A">A</option>
-      <option value="B">B</option>
-      <option value="C">C</option>
-      <option value="EXT-S">EXT-S</option>
-    </select>
-  </div>
-  <div class="chart-wrapper">
-    <canvas id="chartBarrasDiarias"></canvas>
-  </div>
-</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div><label>Meta diaria (h)</label><input type="number" id="metaDiaria" value="3" step="0.5"></div>
+          <div><label>Meta semanal (h)</label><input type="number" id="metaSemanal" value="15" step="0.5"></div>
+        </div>
+        <button class="primary" id="btnGuardarMetas" style="margin-top:10px;">Guardar metas</button>
+      </div>
+      <div class="card">
+        <h3>Seguimiento</h3>
+        <div><strong>Hoy:</strong> <span id="progresoDiario">0h</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="progressDiario" style="width:0%;background:var(--accent);"></div></div>
+        <div><strong>Semana:</strong> <span id="progresoSemanal">0h</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="progressSemanal" style="width:0%;"></div></div>
       </div>
     </div>
 
@@ -332,8 +326,25 @@
       <div class="card"><h3>Evolución del sueño</h3><div class="chart-container"><canvas id="chartSueno"></canvas></div></div>
     </div>
 
+    <!-- Panel Historial -->
+    <div class="panel" id="panelHistorial"><div class="card" id="historialContainer"></div></div>
+
     <!-- Panel Conjeturas -->
     <div class="panel" id="panelConjeturas"><div class="card" id="listaConjeturasFull"></div></div>
+
+    <!-- Panel Notas -->
+    <div class="panel" id="panelNotas">
+      <div class="card">
+        <h3>Filtros de notas</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+          <div><label>Materia</label><select id="filtroNotaMateria"></select></div>
+          <div><label>Subtema</label><select id="filtroNotaSubtema"></select></div>
+          <div><label>Capítulo</label><select id="filtroNotaCapitulo"></select></div>
+        </div>
+        <div class="table-wrap" id="listaNotas"></div>
+      </div>
+    </div>
+
     <!-- Panel Checklist -->
     <div class="panel" id="panelChecklist">
       <div class="card"><h3>Checklist de temas completados</h3>
@@ -342,11 +353,7 @@
         <div id="checklistContainer" style="max-height:50vh;overflow-y:auto;margin-top:8px;"></div>
       </div>
     </div>
-    <!-- Panel Metas -->
-    <div class="panel" id="panelMetas">
-      <div class="card"><label>Meta diaria (h)</label><input type="number" id="metaDiaria" value="3" step="0.5"><label>Meta semanal (h)</label><input type="number" id="metaSemanal" value="15" step="0.5"><button id="btnGuardarMetas">Guardar</button></div>
-      <div class="card"><div><strong>Hoy:</strong> <span id="progresoDiario">0h</span></div><div class="progress-bar"><div class="progress-fill" id="progressDiario" style="width:0%;background:var(--accent);"></div></div><div><strong>Semana:</strong> <span id="progresoSemanal">0h</span></div><div class="progress-bar"><div class="progress-fill" id="progressSemanal" style="width:0%;"></div></div></div>
-    </div>
+
     <!-- Panel Dominio -->
     <div class="panel" id="panelDominio">
       <div class="card"><h3>Registrar resultado de evaluación</h3>
@@ -373,6 +380,7 @@
         <button id="btnCancelarResumen">Cancelar</button>
       </div>
     </div>
+
     <!-- Modal detalle problema -->
     <div class="modal-overlay" id="modalDetalleProblema" style="display:none;">
       <div class="modal">

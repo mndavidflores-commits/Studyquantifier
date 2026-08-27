@@ -120,6 +120,7 @@ document.getElementById('toggleResultado').addEventListener('click', e => {
   const val = e.target.dataset.val;
   document.getElementById('divCodigoError').style.display = (val === 'mal' || val === 'no_resuelto') ? 'block' : 'none';
   document.getElementById('divConfianza').style.display = (val === 'no_resuelto') ? 'none' : 'block';
+  document.getElementById('divNotaProblema').style.display = (val === 'mal' || val === 'no_resuelto') ? 'block' : 'none';
   const selError = document.getElementById('selCodigoError');
   if (val === 'mal') selError.innerHTML = '<option value="">Ninguno</option><option>EA</option><option>EC</option><option>EP</option><option>ET</option>';
   else if (val === 'no_resuelto') selError.innerHTML = '<option value="">Ninguno</option><option>ENR-I</option><option>ENR-B</option>';
@@ -136,6 +137,7 @@ document.getElementById('btnSiguienteProblema').addEventListener('click', async 
   const resultado = resultadoBtn.dataset.val;
   const codError = (resultado === 'mal' || resultado === 'no_resuelto') ? document.getElementById('selCodigoError').value : null;
   const confianza = (resultado === 'no_resuelto') ? null : parseInt(document.getElementById('selConfianza').value);
+  const nota = (resultado === 'mal' || resultado === 'no_resuelto') ? document.getElementById('notaProblema').value.trim() : null;
   const subtemaNombreProblema = document.getElementById('selSubtema').selectedOptions[0]?.textContent || '';
   const idProblema = await guardarLocalYOutbox('study_sessions', 'sessions', {
     tipo: 'problema',
@@ -146,7 +148,7 @@ document.getElementById('btnSiguienteProblema').addEventListener('click', async 
     capitulo: document.getElementById('selCapitulo').value,
     problema_num: state.blindTimer.previousProblemaNum,
     tiempo_s: Math.round(state.blindTimer.seconds * 10) / 10,
-    resultado, codigo_error: codError,
+    resultado, codigo_error: codError, nota,
     dificultad_experimentada: parseInt(document.getElementById('selDifExp').value),
     confianza, intentos: parseInt(document.getElementById('numIntentos').value) || 1,
     nivel_bloom: parseInt(document.getElementById('selBloom').value),
@@ -165,6 +167,7 @@ document.getElementById('btnSiguienteProblema').addEventListener('click', async 
   document.getElementById('cardResultado').style.display = 'none';
   document.getElementById('timerDisplay').style.display = 'block';
   document.getElementById('conjetura-inline').classList.remove('hidden');
+  document.getElementById('notaProblema').value = '';
   state.blindTimer.seconds = 0;
   updateBlindDisplay();
   state.blindTimer.pendingResult = false;
@@ -192,7 +195,7 @@ document.getElementById('btnDescartarProblema').addEventListener('click', () => 
   state.blindTimer.pendingResult = false;
   document.getElementById('active-view').classList.remove('cronometro-corriendo');
   document.getElementById('left-panel').classList.remove('hidden');
-    actualizarHistorialSubtema();
+  actualizarHistorialSubtema();
 });
 
 // ===================== GUARDAR CONJETURA =====================

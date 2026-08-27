@@ -1,9 +1,7 @@
-import {
-  db, supabase, state, State
-} from './config.js';
+import { db, supabase, state, State } from './config.js';
 import { showToast, formatTime } from './utils.js';
 import { syncAll, guardarLocalYOutbox, corregirSesionId, pullChanges } from './sync.js';
-import { actualizarPanelMetricas, actualizarMetricas, actualizarProgreso } from './metricas.js';
+import { actualizarPanelMetricas, actualizarMetricas } from './metricas.js';
 import {
   actualizarHistorialSubtema, actualizarConjeturasSesion,
   actualizarUIPorModo, mostrarColaErrores
@@ -48,6 +46,11 @@ export async function initApp() {
     state.currentTemario.length = 0;
     state.currentTemario.push(...storedTemario.contenido);
   }
+  const diasGuardados = await db.metas.get('diasActivosMeta');
+  if (diasGuardados && Array.isArray(diasGuardados.value)) {
+    state.diasActivosMeta = diasGuardados.value;
+  }
+  marcarDiasActivos();
   await poblarMaterias();
   document.getElementById('selMateria').dispatchEvent(new Event('change'));
   document.getElementById('fechaSueno').value = new Date().toISOString().split('T')[0];
@@ -62,7 +65,6 @@ export async function initApp() {
 // ===================== ACTUALIZACIÓN GLOBAL =====================
 export function actualizarTodo() {
   actualizarHistorial();
-  actualizarProgreso();
   actualizarMetricas();
   actualizarSleepHistorial();
   actualizarGraficoSueno();
@@ -71,6 +73,7 @@ export function actualizarTodo() {
   actualizarChecklist();
   actualizarMetas();
   actualizarPanelMetricas();
+  actualizarNotas();
 }
 
 // ===================== HISTORIAL COMPLETO =====================
@@ -113,15 +116,11 @@ async function actualizarHistorial() {
   };
 }
 
-// ===================== CONJETURAS COMPLETAS =====================
 async function actualizarConjeturasFull() {
   const conjs = await db.conjeturas.orderBy('timestamp').reverse().toArray();
   const wrap = document.getElementById('listaConjeturasFull');
   if (!wrap) return;
-  if (!conjs.length) {
-    wrap.innerHTML = 'Sin conjeturas.';
-    return;
-  }
+  if (!conjs.length) { wrap.innerHTML = 'Sin conjeturas.'; return; }
   let html = '<table><tr><th>Conjetura</th><th>Materia</th><th>Ejercicio</th><th>Subtema</th><th>Fecha</th></tr>';
   conjs.forEach(c => {
     const d = new Date(c.timestamp);
@@ -131,7 +130,6 @@ async function actualizarConjeturasFull() {
   wrap.innerHTML = html;
 }
 
-// ===================== SUEÑO =====================
 function calcularHoras(acostar, despertar) {
   if (!acostar || !despertar) return 0;
   const [hA, mA] = acostar.split(':').map(Number);
@@ -145,10 +143,7 @@ async function actualizarSleepHistorial() {
   const wrap = document.getElementById('sleepHistorialTable');
   if (!wrap) return;
   const registros = await db.sueno.orderBy('fecha').reverse().toArray();
-  if (!registros.length) {
-    wrap.innerHTML = '<p style="color:var(--text2);">Sin registros de sueño.</p>';
-    return;
-  }
+  if (!registros.length) { wrap.innerHTML = '<p style="color:var(--text2);">Sin registros de sueño.</p>'; return; }
   function formato12h(hora24) {
     if (!hora24) return '-';
     const [h, m] = hora24.split(':').map(Number);
@@ -180,7 +175,6 @@ async function actualizarSleepHistorial() {
   });
 }
 
-// ===================== CHECKLIST =====================
 async function actualizarChecklist() {
   const container = document.getElementById('checklistContainer');
   if (!container) return;
@@ -194,10 +188,7 @@ async function actualizarChecklist() {
   for (const mat of todasMaterias) {
     const tem = state.currentTemario.filter(t => t.materia === mat);
     const extras = subtemasExtra.filter(e => e.materia === mat);
-    const subs = [
-      ...tem.map(t => ({ id: t.id.toString(), nombre: t.nombre, etapa: t.etapa })),
-      ...extras.map(e => ({ id: 'extra_' + e.id, nombre: e.nombre, etapa: e.etapa || 'Personalizado' }))
-    ];
+    const subs = [...tem.map(t => ({ id: t.id.toString(), nombre: t.nombre, etapa: t.etapa })), ...extras.map(e => ({ id: 'extra_' + e.id, nombre: e.nombre, etapa: e.etapa || 'Personalizado' }))];
     if (!subs.length) continue;
     html += `<h4>${mat}</h4>`;
     subs.forEach(st => {
@@ -224,20 +215,97 @@ async function actualizarChecklist() {
   }));
 }
 
-// ===================== METAS =====================
 async function actualizarMetas() {
-  const hoy = new Date().toISOString().split('T')[0];
-  const sessionsHoy = await db.sessions.where('fecha').equals(hoy).and(s => s.tipo === 'pomodoro').toArray();
+  const hoy = new Date();
+  const diaSemana = hoy.getDay();
+  const esDiaActivo = state.diasActivosMeta.includes(diaSemana);
+
+  const sessionsHoy = await db.sessions.where('fecha').equals(hoy.toISOString().split('T')[0]).and(s => s.tipo === 'pomodoro').toArray();
   const minHoy = sessionsHoy.reduce((a, s) => a + (s.tiempo_pomodoro || 0), 0) / 3600;
   const metaDiaria = parseFloat(document.getElementById('metaDiaria').value) || 3;
-  document.getElementById('progresoDiario').textContent = `${minHoy.toFixed(1)}h / ${metaDiaria}h`;
-  document.getElementById('progressDiario').style.width = Math.min(100, (minHoy / metaDiaria) * 100) + '%';
-  const inicio = new Date(); inicio.setDate(inicio.getDate() - inicio.getDay() + 1);
-  const sessionsSem = await db.sessions.where('fecha').between(inicio.toISOString().split('T')[0], hoy, true, true).and(s => s.tipo === 'pomodoro').toArray();
+
+  if (esDiaActivo) {
+    document.getElementById('progresoDiario').textContent = `${minHoy.toFixed(1)}h / ${metaDiaria}h`;
+    document.getElementById('progressDiario').style.width = Math.min(100, (minHoy / metaDiaria) * 100) + '%';
+  } else {
+    document.getElementById('progresoDiario').textContent = `${minHoy.toFixed(1)}h (día no activo)`;
+    document.getElementById('progressDiario').style.width = '0%';
+  }
+
+  const inicioSemana = new Date(hoy);
+  inicioSemana.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
+  const sessionsSem = await db.sessions.where('fecha').between(inicioSemana.toISOString().split('T')[0], hoy.toISOString().split('T')[0], true, true).and(s => s.tipo === 'pomodoro').toArray();
   const minSem = sessionsSem.reduce((a, s) => a + (s.tiempo_pomodoro || 0), 0) / 3600;
   const metaSemanal = parseFloat(document.getElementById('metaSemanal').value) || 15;
   document.getElementById('progresoSemanal').textContent = `${minSem.toFixed(1)}h / ${metaSemanal}h`;
   document.getElementById('progressSemanal').style.width = Math.min(100, (minSem / metaSemanal) * 100) + '%';
+}
+
+async function actualizarNotas() {
+  const wrap = document.getElementById('listaNotas');
+  if (!wrap) return;
+
+  const problemas = await db.sessions.where('tipo').equals('problema').toArray();
+  const notas = problemas.filter(p => p.modo === 'A' && p.nota && p.nota.trim() !== '');
+
+  const selMat = document.getElementById('filtroNotaMateria');
+  const selSub = document.getElementById('filtroNotaSubtema');
+  const selCap = document.getElementById('filtroNotaCapitulo');
+
+  if (selMat) {
+    const materias = [...new Set(state.currentTemario.map(t => t.materia))];
+    const matsDB = await db.materias.toArray();
+    const todasMaterias = [...new Set([...materias, ...matsDB.map(m => m.nombre)])];
+    const materiaActual = selMat.value || 'Todos';
+    selMat.innerHTML = '<option value="Todos">Todas</option>' + todasMaterias.map(m => `<option value="${m}">${m}</option>`).join('');
+    selMat.value = materiaActual;
+  }
+
+  if (selSub) {
+    const materiaSeleccionada = selMat.value !== 'Todos' ? selMat.value : null;
+    const subtemas = [];
+    if (materiaSeleccionada) {
+      const tem = state.currentTemario.filter(t => t.materia === materiaSeleccionada);
+      const extras = await db.subtemas_extra.where('materia').equals(materiaSeleccionada).toArray();
+      subtemas.push(...tem.map(t => ({ id: t.id.toString(), nombre: t.nombre })));
+      subtemas.push(...extras.map(e => ({ id: 'extra_' + e.id, nombre: e.nombre })));
+    } else {
+      const tem = state.currentTemario;
+      const extras = await db.subtemas_extra.toArray();
+      subtemas.push(...tem.map(t => ({ id: t.id.toString(), nombre: t.nombre })));
+      subtemas.push(...extras.map(e => ({ id: 'extra_' + e.id, nombre: e.nombre })));
+    }
+    const subActual = selSub.value || 'Todos';
+    selSub.innerHTML = '<option value="Todos">Todos</option>' + subtemas.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
+    selSub.value = subActual;
+  }
+
+  if (selCap) {
+    const capitulos = new Set();
+    notas.forEach(n => { if (n.capitulo) capitulos.add(n.capitulo); });
+    const capActual = selCap.value || 'Todos';
+    selCap.innerHTML = '<option value="Todos">Todos</option>' + [...capitulos].map(c => `<option value="${c}">${c}</option>`).join('');
+    selCap.value = capActual;
+  }
+
+  const filtradas = notas.filter(n => {
+    if (selMat.value !== 'Todos' && n.materia !== selMat.value) return false;
+    if (selSub.value !== 'Todos' && n.subtema_id !== selSub.value) return false;
+    if (selCap.value !== 'Todos' && n.capitulo !== selCap.value) return false;
+    return true;
+  });
+
+  if (!filtradas.length) {
+    wrap.innerHTML = '<p style="color:var(--text2);">Sin notas.</p>';
+    return;
+  }
+
+  let html = '<table><tr><th>Materia</th><th>Subtema</th><th>Problema</th><th>Capítulo</th><th>Nota</th></tr>';
+  filtradas.forEach(n => {
+    html += `<tr><td>${n.materia || ''}</td><td>${n.subtema_nombre || n.subtema_id || ''}</td><td>${n.problema_num || '-'}</td><td>${n.capitulo || '-'}</td><td>${n.nota}</td></tr>`;
+  });
+  html += '</table>';
+  wrap.innerHTML = html;
 }
 
 // ===================== SELECTORES MATERIA/SUBTEMA =====================
@@ -323,16 +391,15 @@ document.getElementById('tabNav').addEventListener('click', e => {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById(e.target.dataset.panel).classList.add('active');
   if (e.target.dataset.panel === 'panelHistorial') actualizarHistorial();
-  if (e.target.dataset.panel === 'panelProgreso') actualizarProgreso();
   if (e.target.dataset.panel === 'panelMetricas') actualizarPanelMetricas();
   if (e.target.dataset.panel === 'panelSueno') { actualizarSleepHistorial(); actualizarGraficoSueno(); }
   if (e.target.dataset.panel === 'panelConjeturas') actualizarConjeturasFull();
+  if (e.target.dataset.panel === 'panelNotas') actualizarNotas();
   if (e.target.dataset.panel === 'panelChecklist') actualizarChecklist();
   if (e.target.dataset.panel === 'panelMetas') actualizarMetas();
   if (e.target.dataset.panel === 'panelDominio') { poblarSelectoresDominio(); actualizarDominioHistorial(); }
 });
 
-// Auth
 document.getElementById('btn-login').addEventListener('click', async () => {
   await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href.split('#')[0] } });
 });
@@ -343,7 +410,7 @@ document.getElementById('btnLogoutTop').addEventListener('click', async () => {
   await supabase.auth.signOut(); actualizarUI(null);
 });
 
-// Pomodoro botones
+// Pomodoro buttons
 document.getElementById('btnPomoStart').addEventListener('click', () => {
   if (state.session.state !== State.IDLE) return;
   state.session.remainingSeconds = parseInt(document.getElementById('pomoWork').value) * 60;
@@ -377,12 +444,12 @@ document.getElementById('btnPomoResetFloat').addEventListener('click', async () 
   transition(State.IDLE); actualizarTodo();
 });
 
-// Resumen
 document.getElementById('btnGuardarResumen').addEventListener('click', async () => {
   const frustracion = parseInt(document.getElementById('resumenFrustracion').value) || 0;
   const energia = parseInt(document.getElementById('resumenEnergia').value) || 3;
   const problemas = await db.sessions.where('tipo').equals('problema').and(s => s.sesion_id === state.session.tempId).toArray();
-  const total = problemas.length, tiempoTotal = problemas.reduce((a, p) => a + (p.tiempo_s || 0), 0);
+  const total = problemas.length;
+  const tiempoTotal = problemas.reduce((a, p) => a + (p.tiempo_s || 0), 0);
   const conjs = (await db.conjeturas.where('sesion_id').equals(state.session.tempId).toArray()).length;
   const idSesion = await guardarLocalYOutbox('study_sessions', 'sessions', {
     tipo: 'pomodoro', fecha: new Date().toISOString().split('T')[0], timestamp: Date.now(),
@@ -410,7 +477,6 @@ document.getElementById('btnCancelarResumen').addEventListener('click', async ()
   actualizarTodo();
 });
 
-// Distracción y lectura
 document.getElementById('btnDistraje').addEventListener('click', () => {
   if (state.session.state !== State.FOCUS_RUNNING && state.session.state !== State.BREAK_RUNNING) return;
   state.session.distracciones++; showToast('registrado ✅', 1500);
@@ -445,13 +511,13 @@ document.getElementById('btnLecturaStart').addEventListener('click', () => { if 
 document.getElementById('btnLecturaStop').addEventListener('click', () => { if (state.session.lecturaRunning) stopLecturaInterval(); });
 document.getElementById('btnLecturaToggleFloat').addEventListener('click', toggleLectura);
 
-// Otros botones
 document.getElementById('btnAgregarMateria').addEventListener('click', async () => {
   const nombre = document.getElementById('nuevaMateria').value.trim(); if (!nombre) return;
   await guardarLocalYOutbox('materias', 'materias', { nombre }, 'user_id,nombre');
   await poblarMaterias();
   document.getElementById('selMateria').value = nombre;
-  document.getElementById('nuevaMateria').value = ''; document.getElementById('agregarMateriaRow').style.display = 'none';
+  document.getElementById('nuevaMateria').value = '';
+  document.getElementById('agregarMateriaRow').style.display = 'none';
   document.getElementById('selMateria').dispatchEvent(new Event('change'));
   await poblarSelectoresDominio();
 });
@@ -462,8 +528,10 @@ document.getElementById('btnAgregarSubtema').addEventListener('click', async () 
   const id = await guardarLocalYOutbox('subtemas_extra', 'subtemas_extra', { materia, nombre, etapa: 'Personalizado' });
   await poblarSubtemas(materia);
   document.getElementById('selSubtema').value = 'extra_' + id;
-  document.getElementById('nuevoSubtema').value = ''; document.getElementById('agregarSubtemaRow').style.display = 'none';
-  state.currentProblemaNum = 1; document.getElementById('numProblema').value = 1;
+  document.getElementById('nuevoSubtema').value = '';
+  document.getElementById('agregarSubtemaRow').style.display = 'none';
+  state.currentProblemaNum = 1;
+  document.getElementById('numProblema').value = 1;
   await poblarSelectoresDominio();
 });
 document.getElementById('btnGuardarSueno').addEventListener('click', async () => {
@@ -475,20 +543,48 @@ document.getElementById('btnGuardarSueno').addEventListener('click', async () =>
   if (!fecha || isNaN(calidad)) return;
   await guardarLocalYOutbox('sueno', 'sueno', {
     fecha, horas, calidad,
-    timestamp: new Date().toISOString(), acostar: acostar + ':00', despertar: despertar + ':00'
+    timestamp: new Date().toISOString(),
+    acostar: acostar + ':00',
+    despertar: despertar + ':00'
   }, 'user_id,fecha');
   document.getElementById('calidadSueno').value = '';
   document.getElementById('acostarSueno').value = '';
   document.getElementById('despertarSueno').value = '';
   document.getElementById('horasCalculadas').textContent = '--';
   showToast('Sueño registrado ✅');
-  actualizarSleepHistorial(); actualizarGraficoSueno();
+  actualizarSleepHistorial();
+  actualizarGraficoSueno();
 });
 document.getElementById('btnGuardarMetas').addEventListener('click', async () => {
   await guardarLocalYOutbox('metas', 'metas', { key: 'metaDiaria', value: parseFloat(document.getElementById('metaDiaria').value) || 3 }, 'key,user_id');
   await guardarLocalYOutbox('metas', 'metas', { key: 'metaSemanal', value: parseFloat(document.getElementById('metaSemanal').value) || 15 }, 'key,user_id');
+  await guardarLocalYOutbox('metas', 'metas', { key: 'diasActivosMeta', value: state.diasActivosMeta }, 'key,user_id');
   actualizarMetas();
+  showToast('Metas guardadas ✅');
 });
+
+document.getElementById('diasActivosMeta').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-dia]');
+  if (!btn) return;
+  const dia = parseInt(btn.dataset.dia);
+  if (state.diasActivosMeta.includes(dia)) {
+    state.diasActivosMeta = state.diasActivosMeta.filter(d => d !== dia);
+    btn.classList.remove('active');
+  } else {
+    state.diasActivosMeta.push(dia);
+    btn.classList.add('active');
+  }
+  db.metas.put({ key: 'diasActivosMeta', value: state.diasActivosMeta, updated_at: new Date().toISOString() });
+});
+
+function marcarDiasActivos() {
+  document.querySelectorAll('#diasActivosMeta button[data-dia]').forEach(btn => {
+    const dia = parseInt(btn.dataset.dia);
+    if (state.diasActivosMeta.includes(dia)) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+}
+
 document.getElementById('btnExport').addEventListener('click', async () => {
   const data = {
     sessions: await db.sessions.toArray(),
@@ -497,14 +593,25 @@ document.getElementById('btnExport').addEventListener('click', async () => {
     materias: await db.materias.toArray(),
     subtemas_extra: await db.subtemas_extra.toArray(),
     checklist: await db.checklist.toArray(),
-    metas: await db.metas.toArray()
+    metas: await db.metas.toArray(),
+    errores: await db.errores.toArray(),
+    repasos: await db.repasos.toArray(),
+    fsrs_pesos_congelados: await db.fsrs_pesos_congelados.toArray(),
+    dominio_temas: await db.dominio_temas.toArray(),
+    temario: await db.temario.toArray(),
+    outbox: await db.outbox.toArray(),
+    sync_metadata: await db.sync_metadata.toArray()
   };
   const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'estudio_v28_backup.json'; a.click();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'estudio_backup_completo.json';
+  a.click();
 });
 document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change', async function() {
-  const file = this.files[0]; if (!file) return;
+  const file = this.files[0];
+  if (!file) return;
   try {
     const data = JSON.parse(await file.text());
     if (data.sessions) { await db.sessions.clear(); await db.sessions.bulkPut(data.sessions); }
@@ -514,26 +621,42 @@ document.getElementById('importFile').addEventListener('change', async function(
     if (data.subtemas_extra) { await db.subtemas_extra.clear(); await db.subtemas_extra.bulkPut(data.subtemas_extra); }
     if (data.checklist) { await db.checklist.clear(); await db.checklist.bulkPut(data.checklist); }
     if (data.metas) { await db.metas.clear(); await db.metas.bulkPut(data.metas); }
-    await syncAll(); actualizarTodo(); showToast('Datos importados.');
-  } catch (e) { showToast('Error al importar.'); }
+    if (data.errores) { await db.errores.clear(); await db.errores.bulkPut(data.errores); }
+    if (data.repasos) { await db.repasos.clear(); await db.repasos.bulkPut(data.repasos); }
+    if (data.fsrs_pesos_congelados) { await db.fsrs_pesos_congelados.clear(); await db.fsrs_pesos_congelados.bulkPut(data.fsrs_pesos_congelados); }
+    if (data.dominio_temas) { await db.dominio_temas.clear(); await db.dominio_temas.bulkPut(data.dominio_temas); }
+    if (data.temario) { await db.temario.clear(); await db.temario.bulkPut(data.temario); }
+    if (data.sync_metadata) { await db.sync_metadata.clear(); await db.sync_metadata.bulkPut(data.sync_metadata); }
+    await syncAll();
+    actualizarTodo();
+    showToast('Datos importados.');
+  } catch (e) {
+    showToast('Error al importar.');
+  }
   this.value = '';
 });
 document.getElementById('btnLoadTemario').addEventListener('click', () => document.getElementById('temarioFile').click());
 document.getElementById('temarioFile').addEventListener('change', async function() {
-  const file = this.files[0]; if (!file) return;
+  const file = this.files[0];
+  if (!file) return;
   try {
     const data = JSON.parse(await file.text());
     if (!Array.isArray(data) || !data.every(t => t.materia && t.nombre)) {
       showToast('Formato de temario inválido (se esperaba una lista con materia y nombre).');
-      this.value = ''; return;
+      this.value = '';
+      return;
     }
-    state.currentTemario.length = 0; state.currentTemario.push(...data);
+    state.currentTemario.length = 0;
+    state.currentTemario.push(...data);
     await db.temario.put({ key: 'activo', contenido: data, updated_at: new Date().toISOString() });
     await poblarMaterias();
     document.getElementById('selMateria').dispatchEvent(new Event('change'));
-    await actualizarChecklist(); await poblarSelectoresDominio();
+    await actualizarChecklist();
+    await poblarSelectoresDominio();
     showToast('Temario cargado ✅');
-  } catch (e) { showToast('Error al cargar el temario.'); }
+  } catch (e) {
+    showToast('Error al cargar el temario.');
+  }
   this.value = '';
 });
 document.getElementById('btnSyncNow').addEventListener('click', async () => {
@@ -557,14 +680,18 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
   }
   if (errores.length > 0) alert('Errores:\n' + JSON.stringify(errores, null, 2));
   else alert('Enviados: ' + enviados);
-  await pullChanges(); actualizarTodo();
+  await pullChanges();
+  actualizarTodo();
 });
 
-// Cambios en selectores de materia/subtema
 document.getElementById('selMateria').addEventListener('change', async function() {
-  if (this.value === '__agregar__') { document.getElementById('agregarMateriaRow').style.display = 'flex'; return; }
+  if (this.value === '__agregar__') {
+    document.getElementById('agregarMateriaRow').style.display = 'flex';
+    return;
+  }
   document.getElementById('agregarMateriaRow').style.display = 'none';
-  state.currentProblemaNum = 1; document.getElementById('numProblema').value = 1;
+  state.currentProblemaNum = 1;
+  document.getElementById('numProblema').value = 1;
   try {
     await poblarSubtemas(this.value);
     poblarLibros(document.getElementById('selSubtema').value);
@@ -572,13 +699,18 @@ document.getElementById('selMateria').addEventListener('change', async function(
       await actualizarHistorialSubtema();
       document.getElementById('nombreSubtemaHistorial').textContent = this.selectedOptions[0]?.textContent || '';
     }
-  } catch (e) { console.error('Error en change materia:', e); }
+  } catch (e) {
+    console.error('Error en change materia:', e);
+  }
 });
 document.getElementById('selSubtema').addEventListener('change', async function() {
   verificarAgregarSubtema();
   poblarLibros(this.value);
   actualizarCapitulos(document.getElementById('selLibro').value, this.value);
-  if (this.value !== '__agregar__') { state.currentProblemaNum = 1; document.getElementById('numProblema').value = 1; }
+  if (this.value !== '__agregar__') {
+    state.currentProblemaNum = 1;
+    document.getElementById('numProblema').value = 1;
+  }
   if (document.getElementById('active-view').classList.contains('active')) {
     actualizarHistorialSubtema();
     const libro = document.getElementById('selLibro').value;
@@ -597,7 +729,6 @@ document.getElementById('selLibro').addEventListener('change', function() {
   actualizarCapitulos(this.value, document.getElementById('selSubtema').value);
 });
 
-// Sueño horas calculadas
 document.getElementById('acostarSueno').addEventListener('change', actualizarHorasCalculadas);
 document.getElementById('despertarSueno').addEventListener('change', actualizarHorasCalculadas);
 function actualizarHorasCalculadas() {
@@ -607,7 +738,6 @@ function actualizarHorasCalculadas() {
   document.getElementById('horasCalculadas').textContent = horas ? horas + ' h' : '--';
 }
 
-// Dominio
 async function poblarSelectoresDominio() {
   const selMat = document.getElementById('domMateria');
   if (!selMat) return;
@@ -638,7 +768,10 @@ async function actualizarDominioHistorial() {
   const wrap = document.getElementById('dominioHistorialTable');
   if (!wrap) return;
   const filas = await db.dominio_temas.toArray();
-  if (!filas.length) { wrap.innerHTML = '<p style="color:var(--text2);">Sin registros.</p>'; return; }
+  if (!filas.length) {
+    wrap.innerHTML = '<p style="color:var(--text2);">Sin registros.</p>';
+    return;
+  }
   let html = '<table><tr><th>Materia</th><th>Subtema</th><th>Cond.</th><th>Intento</th><th>Inmediata</th><th>Diferida</th><th>Estado</th></tr>';
   filas.forEach(f => {
     const estado = f.dominio_alcanzado ? 'Dominado ✅' : (f.censurado ? 'Censurado ⚠️' : 'En curso');
@@ -653,7 +786,10 @@ document.getElementById('btnGuardarDominio').addEventListener('click', async () 
   const condicion = document.getElementById('domCondicion').value;
   const tipoEval = document.getElementById('domTipoEval').value;
   const aciertos = parseInt(document.getElementById('domAciertos').value);
-  if (!materia || !subtemaId || isNaN(aciertos)) { showToast('Completa materia, subtema y aciertos.'); return; }
+  if (!materia || !subtemaId || isNaN(aciertos)) {
+    showToast('Completa materia, subtema y aciertos.');
+    return;
+  }
   const existente = await buscarDominioTema(materia, subtemaId);
   const hoy = new Date().toISOString().split('T')[0];
   const cambios = {};
@@ -690,7 +826,6 @@ document.getElementById('btnGuardarDominio').addEventListener('click', async () 
   actualizarDominioHistorial();
 });
 
-// Service worker
 function registerSW() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW no pudo registrarse', err));

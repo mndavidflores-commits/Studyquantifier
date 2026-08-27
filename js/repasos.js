@@ -49,31 +49,71 @@ export async function actualizarUIPorModo() {
   if (esModoB) await mostrarColaErrores();
 }
 
-// ===================== HISTORIAL DEL SUBTEMA =====================
+// ===================== HISTORIAL DEL SUBTEMA (ACORDEÓN) =====================
 export async function actualizarHistorialSubtema() {
   const subtemaId = document.getElementById('selSubtema').value;
   if (!subtemaId || subtemaId === '__agregar__') return;
 
-    const modoActual = state.session.modo;
+  const modoActual = state.session.modo;
   const problemas = await db.sessions.where('tipo').equals('problema')
     .and(p => p.subtema_id === subtemaId && p.modo === modoActual)
     .toArray();
-  
-  problemas.sort((a, b) => (b.problema_num || 0) - (a.problema_num || 0) || new Date(b.timestamp) - new Date(a.timestamp));
-  const wrap = document.getElementById('historialSubtemaTableWrap');
-  let html = '<table><tr><th>#</th><th>Tiempo</th><th>Resultado</th></tr>';
+
+  const gruposMap = {};
   problemas.forEach(p => {
-    const res = p.resultado === 'bien' ? 'B' : (p.resultado === 'mal' ? 'M' : 'NR');
-    const badgeClass = `result-${p.resultado === 'bien' ? 'b' : (p.resultado === 'mal' ? 'm' : 'nr')}`;
-    html += `<tr data-sesionid="${p.id}">
-      <td>${p.problema_num || '-'}</td>
-      <td>${formatTime(p.tiempo_s)}</td>
-      <td><span class="${badgeClass}">${res}</span></td>
-    </tr>`;
+    const sid = p.sesion_id || 'sin-sesion';
+    if (!gruposMap[sid]) gruposMap[sid] = [];
+    gruposMap[sid].push(p);
   });
-  html += '</table>';
+
+  const gruposArray = Object.entries(gruposMap).map(([sid, probs]) => {
+    const minTime = Math.min(...probs.map(p => new Date(p.timestamp || p.fecha).getTime()));
+    return { sid, probs, minTime };
+  }).sort((a, b) => a.minTime - b.minTime);
+
+  let html = '';
+
+  gruposArray.forEach((grupo, index) => {
+    const fecha = grupo.probs[0].fecha || new Date(grupo.probs[0].timestamp).toISOString().split('T')[0];
+    const numProblemas = grupo.probs.length;
+    const openClass = (index === gruposArray.length - 1) ? ' open' : '';
+
+    html += `
+      <div class="sesion-group${openClass}">
+        <div class="sesion-header">
+          <span>Sesión ${index + 1} · ${fecha}</span>
+          <span class="arrow">▶</span>
+        </div>
+        <div class="sesion-content">
+          <table>
+            <tr><th>#</th><th>Tiempo</th><th>Resultado</th></tr>
+            ${grupo.probs.map(p => {
+              const res = p.resultado === 'bien' ? 'B' : (p.resultado === 'mal' ? 'M' : 'NR');
+              const badgeClass = `result-${p.resultado === 'bien' ? 'b' : (p.resultado === 'mal' ? 'm' : 'nr')}`;
+              return `
+                <tr data-sesionid="${p.id}">
+                  <td>${p.problema_num || '-'}</td>
+                  <td>${formatTime(p.tiempo_s)}</td>
+                  <td><span class="${badgeClass}">${res}</span></td>
+                </tr>
+              `;
+            }).join('')}
+          </table>
+        </div>
+      </div>
+    `;
+  });
+
+  const wrap = document.getElementById('historialSubtemaTableWrap');
   wrap.innerHTML = html;
-  wrap.querySelectorAll('tr').forEach(row => {
+
+  wrap.querySelectorAll('.sesion-header').forEach(header => {
+    header.addEventListener('click', () => {
+      header.parentElement.classList.toggle('open');
+    });
+  });
+
+  wrap.querySelectorAll('tr[data-sesionid]').forEach(row => {
     row.addEventListener('click', async () => {
       const sid = row.dataset.sesionid;
       if (!sid) return;
