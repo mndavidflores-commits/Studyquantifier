@@ -28,7 +28,7 @@ export async function pushChanges() {
       await db.outbox.delete(op.localId);
       enviados++;
     } else {
-      console.error('Error al sincronizar registro:', error);
+      console.error('Error al sincronizar registro:', error, 'Detalle:', error?.message, error?.details, error?.hint);
       fallidos++;
     }
   }

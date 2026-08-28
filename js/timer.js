@@ -175,7 +175,8 @@ document.getElementById('btnSiguienteProblema').addEventListener('click', async 
   document.getElementById('left-panel').classList.remove('hidden');
   document.getElementById('conjeturas-sesion-wrap').style.display = 'block';
   actualizarConjeturasSesion();
-  const { actualizarMetricas, actualizarTodo } = await import('./app.js');
+  const { actualizarMetricas } = await import('./metricas.js');
+  const { actualizarTodo } = await import('./app.js'); 
   actualizarMetricas();
   actualizarTodo();
   actualizarHistorialSubtema();

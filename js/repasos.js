@@ -278,7 +278,8 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
   document.getElementById('chkConsultoSolucion').checked = false;
   state.errorSeleccionado = null;
   await mostrarColaErrores();
-  const { actualizarMetricas, actualizarTodo } = await import('./app.js');
+  const { actualizarMetricas } = await import('./metricas.js');
+  const { actualizarTodo } = await import('./app.js');
   actualizarMetricas();
   actualizarTodo();
   actualizarHistorialSubtema();
