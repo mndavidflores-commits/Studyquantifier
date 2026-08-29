@@ -83,7 +83,7 @@ export async function actualizarHistorialSubtema() {
     html += `
       <div class="sesion-group${openClass}">
         <div class="sesion-header">
-          <span>Sesión ${index + 1} · ${fecha}</span>
+          <span>Sesión ${gruposArray.length - index} · ${fecha}</span>
           <span class="arrow">▶</span>
         </div>
         <div class="sesion-content">

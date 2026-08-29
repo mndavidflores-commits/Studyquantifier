@@ -11,10 +11,35 @@ export function setConfigEnabled(enabled) {
 }
 
 export function updatePomoDisplay() {
-  const m = Math.floor(state.session.remainingSeconds / 60), s = state.session.remainingSeconds % 60;
-  const time = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  let time;
+  if (state.session.pomodoroMode === 'timer') {
+    const m = Math.floor(state.session.elapsedTotal / 60);
+    const s = state.session.elapsedTotal % 60;
+    time = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  } else {
+    const m = Math.floor(state.session.remainingSeconds / 60);
+    const s = state.session.remainingSeconds % 60;
+    time = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
   document.getElementById('pomoCircle').textContent = time;
   document.getElementById('pomoFloatTime').textContent = time;
+}
+
+export function actualizarBotonModoPomodoro() {
+  const btn = document.getElementById('btnTogglePomodoroMode');
+  if (!btn) return;
+  if (state.session.pomodoroMode === 'countdown') {
+    btn.textContent = 'Modo: Cuenta regresiva';
+    btn.classList.remove('active');
+  } else {
+    btn.textContent = 'Modo: Cronómetro libre';
+    btn.classList.add('active');
+  }
+  const timeInputs = ['pomoWork', 'pomoBreak'];
+  timeInputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = (state.session.pomodoroMode === 'timer');
+  });
 }
 
 export function updatePomoStatusText() {
@@ -81,7 +106,6 @@ export function detenerTemporizadorCiego() {
   state.blindTimer.pendingResult = false;
   document.getElementById('cardResultado').style.display = 'none';
   document.getElementById('timerLabel').textContent = 'En pausa';
-  // Ya no reseteamos seconds aquí
   updateBlindDisplay();
   document.getElementById('active-view').classList.remove('cronometro-corriendo');
 }

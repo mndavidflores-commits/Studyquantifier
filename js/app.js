@@ -9,7 +9,7 @@ import {
 import {
   updatePomoDisplay, updatePomoStatusText, updatePomoButtons,
   setConfigEnabled, stopLecturaInterval, detenerTemporizadorCiego,
-  updateBlindDisplay
+  updateBlindDisplay, actualizarBotonModoPomodoro
 } from './ui.js';
 import { transition } from './pomodoro.js';
 import { actualizarGraficoSueno } from './graficos.js';
@@ -55,6 +55,7 @@ export async function initApp() {
   document.getElementById('selMateria').dispatchEvent(new Event('change'));
   document.getElementById('fechaSueno').value = hoyLocal();
   updatePomoDisplay(); updatePomoStatusText(); updatePomoButtons();
+  actualizarBotonModoPomodoro();
   setConfigEnabled(true);
   document.getElementById('btnDistraje').disabled = true;
   document.getElementById('btnLecturaStart').disabled = true;
@@ -446,6 +447,21 @@ document.getElementById('btnPomoResetFloat').addEventListener('click', async () 
   transition(State.IDLE); actualizarTodo();
 });
 
+// Botón para alternar modo Pomodoro
+document.getElementById('btnTogglePomodoroMode').addEventListener('click', () => {
+  if (state.session.state !== State.IDLE) {
+    showToast('Cambia de modo cuando la sesión esté detenida');
+    return;
+  }
+  state.session.pomodoroMode = (state.session.pomodoroMode === 'countdown') ? 'timer' : 'countdown';
+  actualizarBotonModoPomodoro();
+});
+
+// Cerrar modal de detalle de problema
+document.getElementById('btnCerrarDetalle').addEventListener('click', () => {
+  document.getElementById('modalDetalleProblema').style.display = 'none';
+});
+
 document.getElementById('btnGuardarResumen').addEventListener('click', async () => {
   const frustracion = parseInt(document.getElementById('resumenFrustracion').value) || 0;
   const energia = parseInt(document.getElementById('resumenEnergia').value) || 3;
@@ -826,10 +842,6 @@ document.getElementById('btnGuardarDominio').addEventListener('click', async () 
   showToast('Resultado guardado ✅');
   document.getElementById('domAciertos').value = 0;
   actualizarDominioHistorial();
-});
-
-document.getElementById('btnCerrarDetalle').addEventListener('click', () => {
-  document.getElementById('modalDetalleProblema').style.display = 'none';
 });
 
 function registerSW() {
