@@ -828,6 +828,10 @@ document.getElementById('btnGuardarDominio').addEventListener('click', async () 
   actualizarDominioHistorial();
 });
 
+document.getElementById('btnCerrarDetalle').addEventListener('click', () => {
+  document.getElementById('modalDetalleProblema').style.display = 'none';
+});
+
 function registerSW() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW no pudo registrarse', err));

@@ -69,14 +69,16 @@ export async function actualizarHistorialSubtema() {
   const gruposArray = Object.entries(gruposMap).map(([sid, probs]) => {
     const minTime = Math.min(...probs.map(p => new Date(p.timestamp || p.fecha).getTime()));
     return { sid, probs, minTime };
-  }).sort((a, b) => a.minTime - b.minTime);
+    }).sort((a, b) => b.minTime - a.minTime);
 
   let html = '';
 
   gruposArray.forEach((grupo, index) => {
+        grupo.probs.sort((a, b) => new Date(b.timestamp || b.fecha).getTime() - new Date(a.timestamp || a.fecha).getTime());
     const fecha = grupo.probs[0].fecha || new Date(grupo.probs[0].timestamp).toLocaleDateString('en-CA');
     const numProblemas = grupo.probs.length;
-    const openClass = (index === gruposArray.length - 1) ? ' open' : '';
+        const openClass = (index === 0) ? ' open' : '';
+
 
     html += `
       <div class="sesion-group${openClass}">
@@ -286,6 +288,10 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
   document.getElementById('conjeturas-sesion-wrap').style.display = 'block';
   document.getElementById('left-panel').classList.remove('hidden');
   actualizarConjeturasSesion();
+    if (state.session.pendingSessionEnd) {
+    state.session.pendingSessionEnd = false;
+    transition(State.SESSION_ENDING);
+  } 
 });
 
 document.getElementById('btnDescartarRepaso').addEventListener('click', () => {
@@ -299,4 +305,8 @@ document.getElementById('btnDescartarRepaso').addEventListener('click', () => {
   document.getElementById('chkConsultoSolucion').checked = false;
   document.getElementById('left-panel').classList.remove('hidden');
   actualizarHistorialSubtema();
+  if (state.session.pendingSessionEnd) {
+    state.session.pendingSessionEnd = false;
+    transition(State.SESSION_ENDING);
+  }
 });
