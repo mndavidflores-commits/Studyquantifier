@@ -27,19 +27,22 @@ export function updatePomoDisplay() {
 
 export function actualizarBotonModoPomodoro() {
   const btn = document.getElementById('btnTogglePomodoroMode');
+  const timeInputsContainer = document.getElementById('pomoTimeInputs');
+  
   if (!btn) return;
+
   if (state.session.pomodoroMode === 'countdown') {
     btn.textContent = 'Modo: Cuenta regresiva';
     btn.classList.remove('active');
+    if (timeInputsContainer) timeInputsContainer.style.display = 'grid';
   } else {
     btn.textContent = 'Modo: Cronómetro libre';
     btn.classList.add('active');
+    if (timeInputsContainer) timeInputsContainer.style.display = 'none';
   }
-  const timeInputs = ['pomoWork', 'pomoBreak'];
-  timeInputs.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.disabled = (state.session.pomodoroMode === 'timer');
-  });
+
+  // Actualizar display por si cambió la visualización
+  updatePomoDisplay();
 }
 
 export function updatePomoStatusText() {

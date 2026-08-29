@@ -1,7 +1,8 @@
+import { stopBlindTimerAndShowResult } from './timer.js';
 import { db, state, State } from './config.js';
 import { formatTime, showToast } from './utils.js';
 import { guardarLocalYOutbox, corregirSesionId, syncAll } from './sync.js';
-import { setConfigEnabled, updatePomoDisplay, updatePomoStatusText, updatePomoButtons, stopPomoInterval, stopLecturaInterval, detenerTemporizadorCiego } from './ui.js';
+import { setConfigEnabled, updatePomoDisplay, updatePomoStatusText, updatePomoButtons, stopPomoInterval, stopLecturaInterval, detenerTemporizadorCiego, actualizarBotonModoPomodoro } from './ui.js';
 import { actualizarUIPorModo, actualizarHistorialSubtema } from './repasos.js';
 
 export async function transition(newState) {
@@ -10,10 +11,13 @@ export async function transition(newState) {
   if (prev === State.SESSION_ENDING && newState !== State.IDLE) return;
 
   if (newState === State.IDLE) {
+    state.session.pendingSessionEnd = false;
     stopPomoInterval(); stopLecturaInterval(); detenerTemporizadorCiego();
     state.session.tempId = null; state.session.distracciones = 0; state.session.lecturaSeconds = 0;
     state.session.elapsedTotal = 0; state.session.lecturaRunning = false;
     state.session.remainingSeconds = parseInt(document.getElementById('pomoWork').value) * 60;
+    state.session.pomodoroMode = 'countdown';
+    actualizarBotonModoPomodoro();
     updatePomoDisplay();
     document.getElementById('pomoCircle').classList.remove('break');
     setConfigEnabled(true);
@@ -49,19 +53,16 @@ export async function transition(newState) {
       const idleView = document.getElementById('idle-view');
       const activeView = document.getElementById('active-view');
 
-      // Iniciar desvanecimiento de idle
       idleView.classList.add('fade-out');
 
-      // Después de la animación, ocultar idle y mostrar active con fade
       setTimeout(() => {
         idleView.classList.add('hidden');
         idleView.classList.remove('fade-out');
 
         activeView.classList.add('active');
-        // Forzar reflow para que la transición se active
         void activeView.offsetWidth;
         activeView.classList.add('fade-in');
-      }, 400); // coincide con la duración de la transición
+      }, 400);
       
       document.getElementById('pomo-float').classList.remove('hidden');
       document.getElementById('left-panel').classList.remove('hidden');
@@ -84,17 +85,28 @@ export async function transition(newState) {
     state.session.state = newState;
     stopPomoInterval();
     state.session.pomoInterval = setInterval(() => {
-      state.session.remainingSeconds--; state.session.elapsedTotal++; updatePomoDisplay();
-      if (state.session.remainingSeconds <= 0) {
+      if (state.session.pomodoroMode === 'countdown') {
+        state.session.remainingSeconds--;
+      }
+      state.session.elapsedTotal++;
+      updatePomoDisplay();
+
+      if (state.session.pomodoroMode === 'countdown' && state.session.remainingSeconds <= 0) {
         stopPomoInterval();
         if (state.session.state === State.FOCUS_RUNNING) {
-          transition(State.SESSION_ENDING);
+          if (state.blindTimer.running) {
+            stopBlindTimerAndShowResult();
+            state.session.pendingSessionEnd = true;
+          } else {
+            transition(State.SESSION_ENDING);
+          }
         } else if (state.session.state === State.BREAK_RUNNING) {
           state.session.remainingSeconds = parseInt(document.getElementById('pomoWork').value) * 60;
           transition(State.FOCUS_RUNNING);
         }
       }
     }, 1000);
+    actualizarBotonModoPomodoro();
     updatePomoStatusText(); updatePomoButtons();
     return;
   }

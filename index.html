@@ -82,8 +82,10 @@
             <div id="agregarMateriaRow" style="display:none; margin-top:6px;"><input type="text" id="nuevaMateria" placeholder="Nueva materia"><button id="btnAgregarMateria">Agregar</button></div>
             <div id="agregarSubtemaRow" style="display:none; margin-top:6px;"><input type="text" id="nuevoSubtema" placeholder="Nuevo subtema"><button id="btnAgregarSubtema">Agregar</button></div>
           </div>
+
           <div class="card pomo-card">
             <h3>Pomodoro</h3>
+            <button id="btnTogglePomodoroMode" class="toggle-btn" style="margin-bottom:8px;">Modo: Cuenta regresiva</button>
             <div class="pomo-circle" id="pomoCircle">90:00</div>
             <div id="pomoStatus">Foco</div>
             <div class="btn-row" id="pomoControls">
@@ -92,13 +94,20 @@
               <button id="btnPomoResume" style="display:none;">Reanudar</button>
               <button id="btnPomoStop" class="danger" style="display:none;">Detener</button>
               <button id="btnPomoReset" style="display:none;">Reiniciar</button>
-              <button id="btnTogglePomodoroMode" class="toggle-btn" style="margin-top:8px;">Modo: Cuenta regresiva</button>
             </div>
-            <div class="grid-2">
+
+            <div id="pomoTimeInputs" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
               <div><label>Foco (min)</label><input type="number" id="pomoWork" value="90" min="1"></div>
               <div><label>Descanso (min)</label><input type="number" id="pomoBreak" value="20" min="1"></div>
-              <div><label>Lectura</label><div class="btn-row"><button id="btnLecturaStart">▶</button><button id="btnLecturaStop">⏹</button><span id="lecturaAcumulado" class="mono">0:00</span></div></div>
             </div>
+
+            <div class="btn-row" style="margin-top:10px;">
+              <label style="margin:0;">Lectura</label>
+              <button id="btnLecturaStart">▶</button>
+              <button id="btnLecturaStop">⏹</button>
+              <span id="lecturaAcumulado" class="mono">0:00</span>
+            </div>
+
             <button id="btnDistraje" class="action-btn" style="margin-top:8px;">Me distraje</button>
           </div>
         </div>
