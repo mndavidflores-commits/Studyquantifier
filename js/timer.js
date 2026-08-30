@@ -89,7 +89,14 @@ document.addEventListener('keyup', e => {
 // ===================== EVENTOS TÁCTILES =====================
 const activeViewElement = document.getElementById('active-view');
 
+function esElementoInteractivo(target) {
+  if (!target) return false;
+  const tag = target.tagName?.toLowerCase();
+  return ['button', 'select', 'input', 'textarea', 'a', 'label'].includes(tag) || target.closest('button, select, input, textarea, a, label');
+}
+
 activeViewElement.addEventListener('touchstart', (e) => {
+  if (esElementoInteractivo(e.target)) return;
   if (!state.blindTimer.running && !state.blindTimer.pendingResult) {
     activeViewElement.classList.add('touch-pressed');
   }
@@ -97,6 +104,7 @@ activeViewElement.addEventListener('touchstart', (e) => {
 
 activeViewElement.addEventListener('touchend', (e) => {
   activeViewElement.classList.remove('touch-pressed');
+  if (esElementoInteractivo(e.target)) return;
   if (state.blindTimer.running) {
     e.preventDefault();
     stopBlindTimerAndShowResult();
@@ -107,6 +115,7 @@ activeViewElement.addEventListener('touchend', (e) => {
 }, { passive: false });
 
 activeViewElement.addEventListener('click', (e) => {
+  if (esElementoInteractivo(e.target)) return;
   if (state.blindTimer.running) {
     stopBlindTimerAndShowResult();
   }
@@ -139,6 +148,7 @@ document.getElementById('btnSiguienteProblema').addEventListener('click', async 
   const confianza = (resultado === 'no_resuelto') ? null : parseInt(document.getElementById('selConfianza').value);
   const nota = (resultado === 'mal' || resultado === 'no_resuelto') ? document.getElementById('notaProblema').value.trim() : null;
   const subtemaNombreProblema = document.getElementById('selSubtema').selectedOptions[0]?.textContent || '';
+  const seccion = document.getElementById('selSeccion')?.value || null;
   const idProblema = await guardarLocalYOutbox('study_sessions', 'sessions', {
     tipo: 'problema',
     fecha: hoyLocal(),
@@ -146,6 +156,7 @@ document.getElementById('btnSiguienteProblema').addEventListener('click', async 
     modo, fase, materia, subtema_id: subtema, subtema_nombre: subtemaNombreProblema,
     libro: document.getElementById('selLibro').value,
     capitulo: document.getElementById('selCapitulo').value,
+    seccion,
     problema_num: state.blindTimer.previousProblemaNum,
     tiempo_s: Math.round(state.blindTimer.seconds * 10) / 10,
     resultado, codigo_error: codError, nota,
@@ -154,16 +165,19 @@ document.getElementById('btnSiguienteProblema').addEventListener('click', async 
     nivel_bloom: parseInt(document.getElementById('selBloom').value),
     sesion_id: state.session.tempId
   });
+
   if (modo === 'A' && (resultado === 'mal' || resultado === 'no_resuelto')) {
     await crearErrorDesdeProblema({
       materia, subtemaId: subtema, subtemaNombre: subtemaNombreProblema,
       etiqueta: codError, fase, idProblema
     });
   }
+
   if (modo !== 'B') {
     document.getElementById('numProblema').value = state.blindTimer.previousProblemaNum + 1;
     state.currentProblemaNum = state.blindTimer.previousProblemaNum + 1;
   }
+
   document.getElementById('cardResultado').style.display = 'none';
   document.getElementById('timerDisplay').style.display = 'block';
   document.getElementById('conjetura-inline').classList.remove('hidden');
@@ -176,10 +190,15 @@ document.getElementById('btnSiguienteProblema').addEventListener('click', async 
   document.getElementById('conjeturas-sesion-wrap').style.display = 'block';
   actualizarConjeturasSesion();
   const { actualizarMetricas } = await import('./metricas.js');
-  const { actualizarTodo } = await import('./app.js'); 
+  const { actualizarTodo } = await import('./app.js');
   actualizarMetricas();
   actualizarTodo();
   actualizarHistorialSubtema();
+
+  if (state.session.pendingSessionEnd) {
+    state.session.pendingSessionEnd = false;
+    transition(State.SESSION_ENDING);
+  }
 });
 
 // ===================== DESCARTAR PROBLEMA =====================
@@ -197,6 +216,11 @@ document.getElementById('btnDescartarProblema').addEventListener('click', () => 
   document.getElementById('active-view').classList.remove('cronometro-corriendo');
   document.getElementById('left-panel').classList.remove('hidden');
   actualizarHistorialSubtema();
+
+  if (state.session.pendingSessionEnd) {
+    state.session.pendingSessionEnd = false;
+    transition(State.SESSION_ENDING);
+  }
 });
 
 // ===================== GUARDAR CONJETURA =====================

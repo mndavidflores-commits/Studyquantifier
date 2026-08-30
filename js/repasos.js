@@ -1,7 +1,8 @@
 import { showToast, formatTime, hoyLocal } from './utils.js';
-import { db, state } from './config.js';
+import { db, state, State } from './config.js';
 import { guardarLocalYOutbox, syncAll } from './sync.js';
 import { updateBlindDisplay } from './ui.js';
+import { transition } from './pomodoro.js';
 import { fsrs, generatorParameters, createEmptyCard, State as EstadoFSRS } from 'https://cdn.jsdelivr.net/npm/ts-fsrs@5.4.1/+esm';
 
 // ===================== MODO B: SELECTOR DE ERRORES =====================
@@ -69,16 +70,15 @@ export async function actualizarHistorialSubtema() {
   const gruposArray = Object.entries(gruposMap).map(([sid, probs]) => {
     const minTime = Math.min(...probs.map(p => new Date(p.timestamp || p.fecha).getTime()));
     return { sid, probs, minTime };
-    }).sort((a, b) => b.minTime - a.minTime);
+  }).sort((a, b) => b.minTime - a.minTime);
 
   let html = '';
 
   gruposArray.forEach((grupo, index) => {
-        grupo.probs.sort((a, b) => new Date(b.timestamp || b.fecha).getTime() - new Date(a.timestamp || a.fecha).getTime());
+    grupo.probs.sort((a, b) => new Date(b.timestamp || b.fecha).getTime() - new Date(a.timestamp || a.fecha).getTime());
     const fecha = grupo.probs[0].fecha || new Date(grupo.probs[0].timestamp).toLocaleDateString('en-CA');
     const numProblemas = grupo.probs.length;
-        const openClass = (index === 0) ? ' open' : '';
-
+    const openClass = (index === 0) ? ' open' : '';
 
     html += `
       <div class="sesion-group${openClass}">
@@ -88,7 +88,7 @@ export async function actualizarHistorialSubtema() {
         </div>
         <div class="sesion-content">
           <table>
-            <tr><th>#</th><th>Tiempo</th><th>Resultado</th></tr>
+            <tr><th>#</th><th>Tiempo</th><th>Resultado</th><th>Sección</th></tr>
             ${grupo.probs.map(p => {
               const res = p.resultado === 'bien' ? 'B' : (p.resultado === 'mal' ? 'M' : 'NR');
               const badgeClass = `result-${p.resultado === 'bien' ? 'b' : (p.resultado === 'mal' ? 'm' : 'nr')}`;
@@ -97,6 +97,7 @@ export async function actualizarHistorialSubtema() {
                   <td>${p.problema_num || '-'}</td>
                   <td>${formatTime(p.tiempo_s)}</td>
                   <td><span class="${badgeClass}">${res}</span></td>
+                  <td>${p.seccion || '-'}</td>
                 </tr>
               `;
             }).join('')}
@@ -131,6 +132,7 @@ export async function actualizarHistorialSubtema() {
         <p><strong>Dificultad:</strong> ${prob.dificultad_experimentada ?? '—'}</p>
         <p><strong>Intentos:</strong> ${prob.intentos ?? '—'}</p>
         <p><strong>Bloom:</strong> ${prob.nivel_bloom ?? '—'}</p>
+        <p><strong>Sección:</strong> ${prob.seccion || '—'}</p>
       `;
       document.getElementById('modalDetalleProblema').style.display = 'flex';
       document.getElementById('btnEliminarProblema').onclick = async () => {
@@ -236,6 +238,7 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
   const materia = document.getElementById('selMateria').value;
   const subtema = document.getElementById('selSubtema').value;
   const subtemaNombre = document.getElementById('selSubtema').selectedOptions[0]?.textContent || '';
+  const seccion = document.getElementById('selSeccion')?.value || null;
   const pesos = await getPesosCongelados(materia);
   const f = crearInstanciaFSRS(pesos);
   const ultimaRevision = await obtenerUltimaRevision(state.errorSeleccionado.id, state.errorSeleccionado.fecha_creacion);
@@ -266,6 +269,7 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
     subtema_nombre: subtemaNombre,
     libro: document.getElementById('selLibro').value,
     capitulo: document.getElementById('selCapitulo').value,
+    seccion,
     tiempo_s: Math.round(state.blindTimer.seconds * 10) / 10,
     resultado: calificacion >= 3 ? 'bien' : 'mal',
     sesion_id: state.session.tempId
@@ -288,10 +292,11 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
   document.getElementById('conjeturas-sesion-wrap').style.display = 'block';
   document.getElementById('left-panel').classList.remove('hidden');
   actualizarConjeturasSesion();
-    if (state.session.pendingSessionEnd) {
+
+  if (state.session.pendingSessionEnd) {
     state.session.pendingSessionEnd = false;
     transition(State.SESSION_ENDING);
-  } 
+  }
 });
 
 document.getElementById('btnDescartarRepaso').addEventListener('click', () => {
@@ -305,6 +310,7 @@ document.getElementById('btnDescartarRepaso').addEventListener('click', () => {
   document.getElementById('chkConsultoSolucion').checked = false;
   document.getElementById('left-panel').classList.remove('hidden');
   actualizarHistorialSubtema();
+
   if (state.session.pendingSessionEnd) {
     state.session.pendingSessionEnd = false;
     transition(State.SESSION_ENDING);

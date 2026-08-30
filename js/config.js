@@ -31,6 +31,9 @@ db.version(4).stores({
 db.version(5).stores({
   temario: 'key'
 });
+db.version(6).stores({
+  secciones_libro: 'id, materia, libro, nombre, updated_at'
+});
 
 export const State = {
   IDLE: 'IDLE', FOCUS_RUNNING: 'FOCUS_RUNNING', FOCUS_PAUSED: 'FOCUS_PAUSED',
@@ -48,7 +51,9 @@ export const state = {
     lecturaSeconds: 0,
     lecturaRunning: false,
     lecturaInterval: null,
-    pomoInterval: null
+    pomoInterval: null,
+    pendingSessionEnd: false,
+    pomodoroMode: 'countdown'
   },
   blindTimer: {
     running: false,

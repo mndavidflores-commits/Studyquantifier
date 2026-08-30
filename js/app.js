@@ -311,7 +311,7 @@ async function actualizarNotas() {
   wrap.innerHTML = html;
 }
 
-// ===================== SELECTORES MATERIA/SUBTEMA =====================
+// ===================== SELECTORES MATERIA/SUBTEMA/SECCIÓN =====================
 async function poblarMaterias() {
   const sel = document.getElementById('selMateria');
   const matsDB = await db.materias.toArray();
@@ -357,6 +357,7 @@ function poblarLibros(subtemaId) {
   if (!subtemaId || subtemaId === '__agregar__') {
     selLibro.innerHTML = '<option value="">—</option>';
     selCapitulo.innerHTML = '<option value="">—</option>';
+    poblarSecciones(null, null);
     return;
   }
   const tema = state.currentTemario.find(t => t.id.toString() === subtemaId);
@@ -364,10 +365,12 @@ function poblarLibros(subtemaId) {
   if (!libros.length) {
     selLibro.innerHTML = '<option value="">Sin libro</option>';
     selCapitulo.innerHTML = '<option value="">Sin capítulo</option>';
+    poblarSecciones(null, null);
     return;
   }
   selLibro.innerHTML = libros.map(l => `<option value="${l.nombre}">${l.nombre}</option>`).join('');
   actualizarCapitulos(libros[0].nombre, subtemaId);
+  poblarSecciones(document.getElementById('selMateria').value, libros[0].nombre);
 }
 
 function actualizarCapitulos(libroSeleccionado, subtemaId) {
@@ -383,6 +386,58 @@ function actualizarCapitulos(libroSeleccionado, subtemaId) {
     selCapitulo.innerHTML = libro.capitulos.map(c => `<option value="${c}">${c}</option>`).join('');
   } else {
     selCapitulo.innerHTML = '<option value="">Sin capítulo</option>';
+  }
+}
+
+async function poblarSecciones(materia, libro) {
+  const sel = document.getElementById('selSeccion');
+  const rowAgregar = document.getElementById('agregarSeccionRow');
+  if (!sel) return;
+
+  sel.innerHTML = '';
+  if (!materia || !libro) {
+    sel.innerHTML = '<option value="">—</option>';
+    if (rowAgregar) rowAgregar.style.display = 'none';
+    return;
+  }
+
+  // Secciones predeterminadas
+  const seccionesBase = ['Problemas resueltos', 'Problemas propuestos'];
+  seccionesBase.forEach(nombre => {
+    const opt = document.createElement('option');
+    opt.value = nombre;
+    opt.textContent = nombre;
+    sel.appendChild(opt);
+  });
+
+  // Secciones personalizadas desde Dexie
+  const personalizadas = await db.secciones_libro
+    .where('materia').equals(materia)
+    .and(s => s.libro === libro)
+    .toArray();
+
+  personalizadas.forEach(sec => {
+    const opt = document.createElement('option');
+    opt.value = sec.nombre;
+    opt.textContent = sec.nombre;
+    sel.appendChild(opt);
+  });
+
+  // Opción para agregar nueva sección
+  const optAgregar = document.createElement('option');
+  optAgregar.value = '__agregar__';
+  optAgregar.textContent = '+ Agregar nueva sección...';
+  sel.appendChild(optAgregar);
+
+  sel.value = seccionesBase[0]; // por defecto Problemas resueltos
+  if (rowAgregar) rowAgregar.style.display = 'none';
+}
+
+function verificarAgregarSeccion() {
+  const sel = document.getElementById('selSeccion');
+  const row = document.getElementById('agregarSeccionRow');
+  if (sel && row) {
+    row.style.display = (sel.value === '__agregar__') ? 'flex' : 'none';
   }
 }
 
@@ -474,6 +529,7 @@ document.getElementById('btnGuardarResumen').addEventListener('click', async () 
     modo: document.getElementById('selModo').value, fase: document.getElementById('selFase').value,
     materia: document.getElementById('selMateria').value, subtema_id: document.getElementById('selSubtema').value,
     libro: document.getElementById('selLibro').value, capitulo: document.getElementById('selCapitulo').value,
+    seccion: document.getElementById('selSeccion').value,
     subtema_nombre: document.getElementById('selSubtema').selectedOptions[0]?.textContent || '',
     tiempo_pomodoro: state.session.elapsedTotal, tiempo_lectura: state.session.lecturaSeconds, frustracion, energia,
     resumen_ejercicios: total, resumen_correctos: problemas.filter(p => p.resultado === 'bien').length,
@@ -552,6 +608,18 @@ document.getElementById('btnAgregarSubtema').addEventListener('click', async () 
   document.getElementById('numProblema').value = 1;
   await poblarSelectoresDominio();
 });
+document.getElementById('btnAgregarSeccion').addEventListener('click', async () => {
+  const materia = document.getElementById('selMateria').value;
+  const libro = document.getElementById('selLibro').value;
+  const nombre = document.getElementById('nuevaSeccion').value.trim();
+  if (!materia || !libro || !nombre) return;
+  await guardarLocalYOutbox('secciones_libro', 'secciones_libro', { materia, libro, nombre }, 'id');
+  document.getElementById('nuevaSeccion').value = '';
+  await poblarSecciones(materia, libro);
+  document.getElementById('agregarSeccionRow').style.display = 'none';
+  document.getElementById('selSeccion').value = nombre;
+});
+
 document.getElementById('btnGuardarSueno').addEventListener('click', async () => {
   const fecha = document.getElementById('fechaSueno').value;
   const acostar = document.getElementById('acostarSueno').value;
@@ -617,6 +685,7 @@ document.getElementById('btnExport').addEventListener('click', async () => {
     fsrs_pesos_congelados: await db.fsrs_pesos_congelados.toArray(),
     dominio_temas: await db.dominio_temas.toArray(),
     temario: await db.temario.toArray(),
+    secciones_libro: await db.secciones_libro.toArray(),
     outbox: await db.outbox.toArray(),
     sync_metadata: await db.sync_metadata.toArray()
   };
@@ -644,6 +713,7 @@ document.getElementById('importFile').addEventListener('change', async function(
     if (data.fsrs_pesos_congelados) { await db.fsrs_pesos_congelados.clear(); await db.fsrs_pesos_congelados.bulkPut(data.fsrs_pesos_congelados); }
     if (data.dominio_temas) { await db.dominio_temas.clear(); await db.dominio_temas.bulkPut(data.dominio_temas); }
     if (data.temario) { await db.temario.clear(); await db.temario.bulkPut(data.temario); }
+    if (data.secciones_libro) { await db.secciones_libro.clear(); await db.secciones_libro.bulkPut(data.secciones_libro); }
     if (data.sync_metadata) { await db.sync_metadata.clear(); await db.sync_metadata.bulkPut(data.sync_metadata); }
     await syncAll();
     actualizarTodo();
@@ -745,7 +815,10 @@ document.getElementById('selSubtema').addEventListener('change', async function(
 });
 document.getElementById('selLibro').addEventListener('change', function() {
   actualizarCapitulos(this.value, document.getElementById('selSubtema').value);
+  poblarSecciones(document.getElementById('selMateria').value, this.value);
+  document.getElementById('agregarSeccionRow').style.display = 'none';
 });
+document.getElementById('selSeccion').addEventListener('change', verificarAgregarSeccion);
 
 document.getElementById('acostarSueno').addEventListener('change', actualizarHorasCalculadas);
 document.getElementById('despertarSueno').addEventListener('change', actualizarHorasCalculadas);
