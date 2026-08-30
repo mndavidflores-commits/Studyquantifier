@@ -62,7 +62,6 @@ export async function actualizarHistorialSubtema() {
     .and(p => p.subtema_id === subtemaId && p.modo === modoActual)
     .toArray();
 
-  // Filtrar por sección si hay una seleccionada y no es "agregar"
   if (seccionActual && seccionActual !== '__agregar__') {
     problemas = problemas.filter(p => p.seccion === seccionActual);
   }
@@ -131,7 +130,7 @@ export async function actualizarHistorialSubtema() {
   });
 }
 
-// ===================== EDITAR PROBLEMA =====================
+// ===================== EDITAR PROBLEMA (CON SELECTS) =====================
 export async function editarProblema(id) {
   const problema = await db.sessions.get(id);
   if (!problema) return;
@@ -139,6 +138,43 @@ export async function editarProblema(id) {
   const modal = document.getElementById('modalDetalleProblema');
   const contenido = document.getElementById('detalleContenido');
   modal.style.display = 'flex';
+
+  // Obtener opciones para selects
+  const materia = problema.materia;
+  const subtemaId = problema.subtema_id;
+
+  // Secciones: predeterminadas + personalizadas
+  let secciones = ['Problemas resueltos', 'Problemas propuestos'];
+  const seccionesPersonalizadas = await db.secciones_libro
+    .where('materia').equals(materia)
+    .and(s => s.libro === problema.libro)
+    .toArray();
+  secciones = secciones.concat(seccionesPersonalizadas.map(s => s.nombre));
+  // Asegurar que la sección actual esté incluida
+  if (problema.seccion && !secciones.includes(problema.seccion)) {
+    secciones.push(problema.seccion);
+  }
+
+  // Libros: desde el temario (currentTemario) para el subtema
+  const tem = state.currentTemario.find(t => t.id.toString() === subtemaId);
+  const libros = (tem && Array.isArray(tem.libros)) ? tem.libros.map(l => l.nombre) : [];
+  // Asegurar que el libro actual esté incluido
+  if (problema.libro && !libros.includes(problema.libro)) {
+    libros.push(problema.libro);
+  }
+
+  // Capítulos: para el libro actual
+  let capitulos = [];
+  const libroActual = problema.libro;
+  if (tem && libroActual) {
+    const libroObj = tem.libros?.find(l => l.nombre === libroActual);
+    if (libroObj && Array.isArray(libroObj.capitulos)) {
+      capitulos = libroObj.capitulos;
+    }
+  }
+  if (problema.capitulo && !capitulos.includes(problema.capitulo)) {
+    capitulos.push(problema.capitulo);
+  }
 
   contenido.innerHTML = `
     <div class="grid-2">
@@ -157,13 +193,25 @@ export async function editarProblema(id) {
       <div><label>Intentos</label><input type="number" id="editIntentos" min="1" value="${problema.intentos || 1}"></div>
       <div><label>Bloom</label><input type="number" id="editBloom" min="1" max="6" value="${problema.nivel_bloom || ''}"></div>
       <div><label>Nota</label><input type="text" id="editNota" value="${problema.nota || ''}"></div>
-      <div><label>Sección</label><input type="text" id="editSeccion" value="${problema.seccion || ''}"></div>
-      <div><label>Libro</label><input type="text" id="editLibro" value="${problema.libro || ''}"></div>
-      <div><label>Capítulo</label><input type="text" id="editCapitulo" value="${problema.capitulo || ''}"></div>
+      <div><label>Sección</label>
+        <select id="editSeccion">
+          ${secciones.map(s => `<option value="${s}" ${problema.seccion === s ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div><label>Libro</label>
+        <select id="editLibro">
+          ${libros.map(l => `<option value="${l}" ${problema.libro === l ? 'selected' : ''}>${l}</option>`).join('')}
+        </select>
+      </div>
+      <div><label>Capítulo</label>
+        <select id="editCapitulo">
+          ${capitulos.map(c => `<option value="${c}" ${problema.capitulo === c ? 'selected' : ''}>${c}</option>`).join('')}
+        </select>
+      </div>
     </div>
   `;
 
-  // Reemplazar botones existentes por botones de guardar/eliminar/cerrar
+  // Configurar botón eliminar
   document.getElementById('btnEliminarProblema').style.display = 'inline-block';
   document.getElementById('btnEliminarProblema').onclick = async () => {
     if (!confirm('¿Eliminar este problema?')) return;
@@ -176,10 +224,12 @@ export async function editarProblema(id) {
     actualizarTodo();
   };
 
-  // Agregar botón guardar si no existe
+  // Configurar botón guardar
+  const btnRow = document.querySelector('#modalDetalleProblema .btn-row');
   const btnGuardar = document.createElement('button');
   btnGuardar.textContent = 'Guardar cambios';
   btnGuardar.className = 'primary';
+  btnGuardar.id = 'btnGuardarEdicion';
   btnGuardar.onclick = async () => {
     const cambios = {
       problema_num: parseInt(document.getElementById('editProblemaNum').value) || 1,
@@ -203,13 +253,12 @@ export async function editarProblema(id) {
     showToast('Problema actualizado ✅');
   };
 
-  const btnRow = document.querySelector('#modalDetalleProblema .btn-row');
-  if (btnRow && !document.getElementById('btnGuardarEdicion')) {
-    btnGuardar.id = 'btnGuardarEdicion';
-    btnRow.insertBefore(btnGuardar, btnRow.firstChild);
+  // Reemplazar o insertar botón guardar
+  const existingBtn = document.getElementById('btnGuardarEdicion');
+  if (existingBtn) {
+    btnRow.replaceChild(btnGuardar, existingBtn);
   } else {
-    const existingBtn = document.getElementById('btnGuardarEdicion');
-    if (existingBtn) btnRow.replaceChild(btnGuardar, existingBtn);
+    btnRow.insertBefore(btnGuardar, btnRow.firstChild);
   }
 }
 
