@@ -150,15 +150,13 @@ export async function editarProblema(id) {
     .and(s => s.libro === problema.libro)
     .toArray();
   secciones = secciones.concat(seccionesPersonalizadas.map(s => s.nombre));
-  // Asegurar que la sección actual esté incluida
   if (problema.seccion && !secciones.includes(problema.seccion)) {
     secciones.push(problema.seccion);
   }
 
-  // Libros: desde el temario (currentTemario) para el subtema
+  // Libros: desde el temario para el subtema
   const tem = state.currentTemario.find(t => t.id.toString() === subtemaId);
   const libros = (tem && Array.isArray(tem.libros)) ? tem.libros.map(l => l.nombre) : [];
-  // Asegurar que el libro actual esté incluido
   if (problema.libro && !libros.includes(problema.libro)) {
     libros.push(problema.libro);
   }
