@@ -56,9 +56,16 @@ export async function actualizarHistorialSubtema() {
   if (!subtemaId || subtemaId === '__agregar__') return;
 
   const modoActual = state.session.modo;
-  const problemas = await db.sessions.where('tipo').equals('problema')
+  const seccionActual = document.getElementById('selSeccion')?.value;
+
+  let problemas = await db.sessions.where('tipo').equals('problema')
     .and(p => p.subtema_id === subtemaId && p.modo === modoActual)
     .toArray();
+
+  // Filtrar por sección si hay una seleccionada y no es "agregar"
+  if (seccionActual && seccionActual !== '__agregar__') {
+    problemas = problemas.filter(p => p.seccion === seccionActual);
+  }
 
   const gruposMap = {};
   problemas.forEach(p => {
@@ -93,7 +100,7 @@ export async function actualizarHistorialSubtema() {
               const res = p.resultado === 'bien' ? 'B' : (p.resultado === 'mal' ? 'M' : 'NR');
               const badgeClass = `result-${p.resultado === 'bien' ? 'b' : (p.resultado === 'mal' ? 'm' : 'nr')}`;
               return `
-                <tr data-sesionid="${p.id}">
+                <tr class="editable-problem" data-problem-id="${p.id}" style="cursor:pointer;">
                   <td>${p.problema_num || '-'}</td>
                   <td>${formatTime(p.tiempo_s)}</td>
                   <td><span class="${badgeClass}">${res}</span></td>
@@ -116,38 +123,97 @@ export async function actualizarHistorialSubtema() {
     });
   });
 
-  wrap.querySelectorAll('tr[data-sesionid]').forEach(row => {
-    row.addEventListener('click', async () => {
-      const sid = row.dataset.sesionid;
-      if (!sid) return;
-      const prob = await db.sessions.get(sid);
-      if (!prob) return;
-      document.getElementById('detalleContenido').innerHTML = `
-        <p><strong>Problema #</strong> ${prob.problema_num}</p>
-        <p><strong>Fecha:</strong> ${prob.fecha}</p>
-        <p><strong>Tiempo:</strong> ${formatTime(prob.tiempo_s)}</p>
-        <p><strong>Resultado:</strong> ${prob.resultado}</p>
-        <p><strong>Error:</strong> ${prob.codigo_error || '—'}</p>
-        <p><strong>Confianza:</strong> ${prob.confianza ?? '—'}</p>
-        <p><strong>Dificultad:</strong> ${prob.dificultad_experimentada ?? '—'}</p>
-        <p><strong>Intentos:</strong> ${prob.intentos ?? '—'}</p>
-        <p><strong>Bloom:</strong> ${prob.nivel_bloom ?? '—'}</p>
-        <p><strong>Sección:</strong> ${prob.seccion || '—'}</p>
-      `;
-      document.getElementById('modalDetalleProblema').style.display = 'flex';
-      document.getElementById('btnEliminarProblema').onclick = async () => {
-        await db.sessions.delete(sid);
-        await db.outbox.put({ table: 'study_sessions', record_id: sid, operation: 'delete', data: { id: sid, user_id: state.sessionActual.user.id, deleted_at: new Date().toISOString() }, onConflict: 'id', created_at: new Date().toISOString() });
-        await syncAll();
-        document.getElementById('modalDetalleProblema').style.display = 'none';
-        actualizarHistorialSubtema();
-        const { actualizarTodo } = await import('./app.js');
-        actualizarTodo();
-      };
+  wrap.querySelectorAll('.editable-problem').forEach(tr => {
+    tr.addEventListener('click', (e) => {
+      e.stopPropagation();
+      editarProblema(tr.dataset.problemId);
     });
   });
 }
 
+// ===================== EDITAR PROBLEMA =====================
+export async function editarProblema(id) {
+  const problema = await db.sessions.get(id);
+  if (!problema) return;
+
+  const modal = document.getElementById('modalDetalleProblema');
+  const contenido = document.getElementById('detalleContenido');
+  modal.style.display = 'flex';
+
+  contenido.innerHTML = `
+    <div class="grid-2">
+      <div><label>Problema #</label><input type="number" id="editProblemaNum" value="${problema.problema_num || ''}"></div>
+      <div><label>Resultado</label>
+        <select id="editResultado">
+          <option value="bien" ${problema.resultado === 'bien' ? 'selected' : ''}>Bien</option>
+          <option value="mal" ${problema.resultado === 'mal' ? 'selected' : ''}>Mal</option>
+          <option value="no_resuelto" ${problema.resultado === 'no_resuelto' ? 'selected' : ''}>No resuelto</option>
+        </select>
+      </div>
+      <div><label>Tiempo (s)</label><input type="number" step="0.1" id="editTiempo" value="${problema.tiempo_s || 0}"></div>
+      <div><label>Error</label><input type="text" id="editCodigoError" value="${problema.codigo_error || ''}"></div>
+      <div><label>Confianza</label><input type="number" id="editConfianza" min="1" max="5" value="${problema.confianza || ''}"></div>
+      <div><label>Dificultad</label><input type="number" id="editDificultad" min="1" max="5" value="${problema.dificultad_experimentada || ''}"></div>
+      <div><label>Intentos</label><input type="number" id="editIntentos" min="1" value="${problema.intentos || 1}"></div>
+      <div><label>Bloom</label><input type="number" id="editBloom" min="1" max="6" value="${problema.nivel_bloom || ''}"></div>
+      <div><label>Nota</label><input type="text" id="editNota" value="${problema.nota || ''}"></div>
+      <div><label>Sección</label><input type="text" id="editSeccion" value="${problema.seccion || ''}"></div>
+      <div><label>Libro</label><input type="text" id="editLibro" value="${problema.libro || ''}"></div>
+      <div><label>Capítulo</label><input type="text" id="editCapitulo" value="${problema.capitulo || ''}"></div>
+    </div>
+  `;
+
+  // Reemplazar botones existentes por botones de guardar/eliminar/cerrar
+  document.getElementById('btnEliminarProblema').style.display = 'inline-block';
+  document.getElementById('btnEliminarProblema').onclick = async () => {
+    if (!confirm('¿Eliminar este problema?')) return;
+    await db.sessions.delete(id);
+    await db.outbox.put({ table: 'study_sessions', record_id: id, operation: 'delete', data: { id, user_id: state.sessionActual.user.id, deleted_at: new Date().toISOString() }, onConflict: 'id', created_at: new Date().toISOString() });
+    await syncAll();
+    modal.style.display = 'none';
+    actualizarHistorialSubtema();
+    const { actualizarTodo } = await import('./app.js');
+    actualizarTodo();
+  };
+
+  // Agregar botón guardar si no existe
+  const btnGuardar = document.createElement('button');
+  btnGuardar.textContent = 'Guardar cambios';
+  btnGuardar.className = 'primary';
+  btnGuardar.onclick = async () => {
+    const cambios = {
+      problema_num: parseInt(document.getElementById('editProblemaNum').value) || 1,
+      resultado: document.getElementById('editResultado').value,
+      tiempo_s: parseFloat(document.getElementById('editTiempo').value) || 0,
+      codigo_error: document.getElementById('editCodigoError').value,
+      confianza: parseInt(document.getElementById('editConfianza').value) || null,
+      dificultad_experimentada: parseInt(document.getElementById('editDificultad').value) || null,
+      intentos: parseInt(document.getElementById('editIntentos').value) || 1,
+      nivel_bloom: parseInt(document.getElementById('editBloom').value) || null,
+      nota: document.getElementById('editNota').value,
+      seccion: document.getElementById('editSeccion').value,
+      libro: document.getElementById('editLibro').value,
+      capitulo: document.getElementById('editCapitulo').value
+    };
+    await guardarLocalYOutbox('study_sessions', 'sessions', { ...problema, ...cambios }, 'id');
+    modal.style.display = 'none';
+    actualizarHistorialSubtema();
+    const { actualizarTodo } = await import('./app.js');
+    actualizarTodo();
+    showToast('Problema actualizado ✅');
+  };
+
+  const btnRow = document.querySelector('#modalDetalleProblema .btn-row');
+  if (btnRow && !document.getElementById('btnGuardarEdicion')) {
+    btnGuardar.id = 'btnGuardarEdicion';
+    btnRow.insertBefore(btnGuardar, btnRow.firstChild);
+  } else {
+    const existingBtn = document.getElementById('btnGuardarEdicion');
+    if (existingBtn) btnRow.replaceChild(btnGuardar, existingBtn);
+  }
+}
+
+// ===================== CONJETURAS DE SESIÓN =====================
 export async function actualizarConjeturasSesion() {
   const conjs = await db.conjeturas.orderBy('timestamp').reverse().limit(20).toArray();
   const wrap = document.getElementById('listaConjeturasSesion');

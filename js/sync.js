@@ -22,7 +22,12 @@ export async function pushChanges() {
       keys.forEach(k => { query = query.eq(k, op.data[k]); });
       ({ error } = await query);
     } else {
-      ({ error } = await supabase.from(op.table).upsert(op.data, { onConflict: op.onConflict || 'id' }));
+      const data = { ...op.data };
+      // Si la tabla no tiene columna 'id', la quitamos
+      if (op.table === 'checklist' || op.table === 'metas') {
+        delete data.id;
+      }
+      ({ error } = await supabase.from(op.table).upsert(data, { onConflict: op.onConflict || 'id' }));
     }
     if (!error) {
       await db.outbox.delete(op.localId);
@@ -36,7 +41,7 @@ export async function pushChanges() {
 }
 
 export async function pullChanges() {
-  const tablas = ['study_sessions','conjeturas','sueno','materias','subtemas_extra','checklist','metas','errores','repasos','fsrs_pesos_congelados','dominio_temas'];
+  const tablas = ['study_sessions','conjeturas','sueno','materias','subtemas_extra','checklist','metas','errores','repasos','fsrs_pesos_congelados','dominio_temas','secciones_libro'];
   for (const tabla of tablas) {
     const lastSync = await db.sync_metadata.get(`last_pull_${tabla}`);
     const lastPullTime = lastSync?.value || new Date(0).toISOString();
@@ -73,7 +78,14 @@ export async function guardarLocalYOutbox(tablaSupabase, coleccionDexie, datos, 
     updated_at: new Date().toISOString(),
     deleted_at: null
   };
+
   await db[coleccionDexie].put(registro);
+
+  // Para tablas sin columna id, no lo enviamos a Supabase
+  if (tablaSupabase === 'checklist' || tablaSupabase === 'metas') {
+    delete registro.id;
+  }
+
   await db.outbox.put({
     table: tablaSupabase,
     record_id: id,

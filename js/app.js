@@ -4,7 +4,7 @@ import { syncAll, guardarLocalYOutbox, corregirSesionId, pullChanges } from './s
 import { actualizarPanelMetricas, actualizarMetricas } from './metricas.js';
 import {
   actualizarHistorialSubtema, actualizarConjeturasSesion,
-  actualizarUIPorModo, mostrarColaErrores
+  actualizarUIPorModo, mostrarColaErrores, editarProblema
 } from './repasos.js';
 import {
   updatePomoDisplay, updatePomoStatusText, updatePomoButtons,
@@ -41,6 +41,7 @@ export function actualizarUI(s) {
 // ===================== INICIALIZACIÓN =====================
 export async function initApp() {
   await syncAll();
+  await migrarSeccionesAntiguas();
   const storedTemario = await db.temario.get('activo');
   if (storedTemario?.contenido) {
     state.currentTemario.length = 0;
@@ -61,6 +62,25 @@ export async function initApp() {
   document.getElementById('btnLecturaStart').disabled = true;
   document.getElementById('btnLecturaStop').disabled = true;
   actualizarTodo();
+}
+
+// ===================== MIGRACIÓN DE SECCIÓN ANTIGUA =====================
+async function migrarSeccionesAntiguas() {
+  try {
+    const problemasSinSeccion = await db.sessions
+      .where('tipo').equals('problema')
+      .and(p => !p.seccion)
+      .toArray();
+
+    if (problemasSinSeccion.length > 0) {
+      await db.sessions.bulkPut(
+        problemasSinSeccion.map(p => ({ ...p, seccion: 'Problemas resueltos' }))
+      );
+      console.log(`Migrados ${problemasSinSeccion.length} problemas antiguos a "Problemas resueltos"`);
+    }
+  } catch (e) {
+    console.warn('No se pudo migrar secciones antiguas:', e);
+  }
 }
 
 // ===================== ACTUALIZACIÓN GLOBAL =====================
@@ -103,7 +123,9 @@ async function actualizarHistorial() {
           <p>Fase: ${pomo.fase || '-'} | Modo: ${pomo.modo || '-'} | Materia: ${pomo.materia || '-'} | Subtema: ${pomo.subtema_nombre || pomo.subtema_id || '-'}</p>
           <p>Ejercicios: ${problemas.length} (${problemas.filter(p => p.resultado === 'bien').length} bien, ${problemas.filter(p => p.resultado === 'mal').length} mal, ${problemas.filter(p => p.resultado === 'no_resuelto').length} no resuelto)</p>
           <p>Conjeturas: ${conjs} | Ej/min: ${(problemas.length / (duracion / 60)).toFixed(1)} | Conj/min: ${(conjs / (duracion / 60)).toFixed(1)} | Lectura: ${Math.floor(pomo.tiempo_lectura / 60)}:${String(pomo.tiempo_lectura % 60).padStart(2, '0')}</p>
-          <table><tr><th>#</th><th>Resultado</th><th>Tiempo</th><th>Error</th></tr>${problemas.map(p => `<tr><td>${p.problema_num}</td><td>${p.resultado}</td><td>${formatTime(p.tiempo_s)}</td><td>${p.codigo_error || ''}</td></tr>`).join('')}</table>
+          <table><tr><th>#</th><th>Resultado</th><th>Tiempo</th><th>Error</th></tr>
+            ${problemas.map(p => `<tr class="editable-problem" data-problem-id="${p.id}" style="cursor:pointer;"><td>${p.problema_num}</td><td>${p.resultado}</td><td>${formatTime(p.tiempo_s)}</td><td>${p.codigo_error || ''}</td></tr>`).join('')}
+          </table>
         </div>
       </div>`;
     }
@@ -113,8 +135,17 @@ async function actualizarHistorial() {
   if (lastPomo) lastPomo.classList.add('expanded');
   container.onclick = (e) => {
     const row = e.target.closest('.pomo-row');
-    if (row) row.classList.toggle('expanded');
+    if (row && !e.target.closest('.editable-problem')) {
+      row.classList.toggle('expanded');
+    }
   };
+  container.querySelectorAll('.editable-problem').forEach(tr => {
+    tr.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = tr.dataset.problemId;
+      editarProblema(id);
+    });
+  });
 }
 
 async function actualizarConjeturasFull() {
@@ -206,7 +237,7 @@ async function actualizarChecklist() {
   container.querySelectorAll('.checklist-cb').forEach(cb => cb.addEventListener('change', async function() {
     const stid = this.dataset.stid;
     if (this.checked) {
-      await guardarLocalYOutbox('checklist', 'checklist', { id: stid, subtema_id: stid, fecha_completado: hoyLocal() }, 'subtema_id,user_id');
+      await guardarLocalYOutbox('checklist', 'checklist', { subtema_id: stid, fecha_completado: hoyLocal() }, 'subtema_id,user_id');
     } else {
       await db.checklist.where('subtema_id').equals(stid).delete();
       await db.outbox.put({ table: 'checklist', record_id: stid, operation: 'delete', data: { subtema_id: stid, user_id: state.sessionActual.user.id, deleted_at: new Date().toISOString() }, onConflict: 'subtema_id,user_id', created_at: new Date().toISOString() });
@@ -401,7 +432,6 @@ async function poblarSecciones(materia, libro) {
     return;
   }
 
-  // Secciones predeterminadas
   const seccionesBase = ['Problemas resueltos', 'Problemas propuestos'];
   seccionesBase.forEach(nombre => {
     const opt = document.createElement('option');
@@ -410,7 +440,6 @@ async function poblarSecciones(materia, libro) {
     sel.appendChild(opt);
   });
 
-  // Secciones personalizadas desde Dexie
   const personalizadas = await db.secciones_libro
     .where('materia').equals(materia)
     .and(s => s.libro === libro)
@@ -423,14 +452,17 @@ async function poblarSecciones(materia, libro) {
     sel.appendChild(opt);
   });
 
-  // Opción para agregar nueva sección
   const optAgregar = document.createElement('option');
   optAgregar.value = '__agregar__';
   optAgregar.textContent = '+ Agregar nueva sección...';
   sel.appendChild(optAgregar);
 
-  sel.value = seccionesBase[0]; // por defecto Problemas resueltos
+  sel.value = seccionesBase[0];
   if (rowAgregar) rowAgregar.style.display = 'none';
+
+  if (document.getElementById('active-view').classList.contains('active')) {
+    actualizarHistorialSubtema();
+  }
 }
 
 function verificarAgregarSeccion() {
@@ -455,7 +487,6 @@ document.getElementById('tabNav').addEventListener('click', e => {
   if (e.target.dataset.panel === 'panelNotas') actualizarNotas();
   if (e.target.dataset.panel === 'panelChecklist') actualizarChecklist();
   if (e.target.dataset.panel === 'panelMetas') actualizarMetas();
-  if (e.target.dataset.panel === 'panelDominio') { poblarSelectoresDominio(); actualizarDominioHistorial(); }
 });
 
 document.getElementById('btn-login').addEventListener('click', async () => {
@@ -593,7 +624,6 @@ document.getElementById('btnAgregarMateria').addEventListener('click', async () 
   document.getElementById('nuevaMateria').value = '';
   document.getElementById('agregarMateriaRow').style.display = 'none';
   document.getElementById('selMateria').dispatchEvent(new Event('change'));
-  await poblarSelectoresDominio();
 });
 document.getElementById('btnAgregarSubtema').addEventListener('click', async () => {
   const materia = document.getElementById('selMateria').value;
@@ -606,7 +636,6 @@ document.getElementById('btnAgregarSubtema').addEventListener('click', async () 
   document.getElementById('agregarSubtemaRow').style.display = 'none';
   state.currentProblemaNum = 1;
   document.getElementById('numProblema').value = 1;
-  await poblarSelectoresDominio();
 });
 document.getElementById('btnAgregarSeccion').addEventListener('click', async () => {
   const materia = document.getElementById('selMateria').value;
@@ -740,7 +769,6 @@ document.getElementById('temarioFile').addEventListener('change', async function
     await poblarMaterias();
     document.getElementById('selMateria').dispatchEvent(new Event('change'));
     await actualizarChecklist();
-    await poblarSelectoresDominio();
     showToast('Temario cargado ✅');
   } catch (e) {
     showToast('Error al cargar el temario.');
@@ -761,7 +789,9 @@ document.getElementById('btnSyncNow').addEventListener('click', async () => {
       keys.forEach(k => { query = query.eq(k, op.data[k]); });
       ({ error } = await query);
     } else {
-      ({ error } = await supabase.from(op.table).upsert(op.data, { onConflict: op.onConflict || 'id' }));
+      const data = { ...op.data };
+      if (op.table === 'checklist' || op.table === 'metas') delete data.id;
+      ({ error } = await supabase.from(op.table).upsert(data, { onConflict: op.onConflict || 'id' }));
     }
     if (!error) { await db.outbox.delete(op.localId); enviados++; }
     else { errores.push({ table: op.table, id: op.record_id, mensaje: error?.message, detalles: error }); console.error('Error al sincronizar:', error); }
@@ -818,7 +848,12 @@ document.getElementById('selLibro').addEventListener('change', function() {
   poblarSecciones(document.getElementById('selMateria').value, this.value);
   document.getElementById('agregarSeccionRow').style.display = 'none';
 });
-document.getElementById('selSeccion').addEventListener('change', verificarAgregarSeccion);
+document.getElementById('selSeccion').addEventListener('change', function() {
+  verificarAgregarSeccion();
+  if (document.getElementById('active-view').classList.contains('active')) {
+    actualizarHistorialSubtema();
+  }
+});
 
 document.getElementById('acostarSueno').addEventListener('change', actualizarHorasCalculadas);
 document.getElementById('despertarSueno').addEventListener('change', actualizarHorasCalculadas);
@@ -828,94 +863,6 @@ function actualizarHorasCalculadas() {
   const horas = calcularHoras(acostar, despertar);
   document.getElementById('horasCalculadas').textContent = horas ? horas + ' h' : '--';
 }
-
-async function poblarSelectoresDominio() {
-  const selMat = document.getElementById('domMateria');
-  if (!selMat) return;
-  const matsTem = [...new Set(state.currentTemario.map(t => t.materia))];
-  const matsDB = await db.materias.toArray();
-  const todas = [...new Set([...matsTem, ...matsDB.map(m => m.nombre)])];
-  selMat.innerHTML = todas.map(m => `<option value="${m}">${m}</option>`).join('');
-  await poblarSubtemasDominio(selMat.value);
-}
-async function poblarSubtemasDominio(materia) {
-  const selSub = document.getElementById('domSubtema');
-  if (!selSub) return;
-  const tem = state.currentTemario.filter(t => t.materia === materia);
-  const extras = materia ? await db.subtemas_extra.where('materia').equals(materia).toArray() : [];
-  const subs = [...tem.map(t => ({ id: t.id.toString(), nombre: t.nombre })), ...extras.map(e => ({ id: 'extra_' + e.id, nombre: e.nombre }))];
-  selSub.innerHTML = subs.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
-}
-document.getElementById('domMateria').addEventListener('change', function() { poblarSubtemasDominio(this.value); });
-async function buscarDominioTema(materia, subtemaId) {
-  const filas = await db.dominio_temas.where('subtema_id').equals(subtemaId).toArray();
-  return filas.find(f => f.materia === materia) || null;
-}
-async function guardarDominioTema(existente, cambios) {
-  const base = existente || {};
-  return await guardarLocalYOutbox('dominio_temas', 'dominio_temas', { ...base, ...cambios });
-}
-async function actualizarDominioHistorial() {
-  const wrap = document.getElementById('dominioHistorialTable');
-  if (!wrap) return;
-  const filas = await db.dominio_temas.toArray();
-  if (!filas.length) {
-    wrap.innerHTML = '<p style="color:var(--text2);">Sin registros.</p>';
-    return;
-  }
-  let html = '<table><tr><th>Materia</th><th>Subtema</th><th>Cond.</th><th>Intento</th><th>Inmediata</th><th>Diferida</th><th>Estado</th></tr>';
-  filas.forEach(f => {
-    const estado = f.dominio_alcanzado ? 'Dominado ✅' : (f.censurado ? 'Censurado ⚠️' : 'En curso');
-    html += `<tr><td>${f.materia}</td><td>${f.subtema_id}</td><td>${f.condicion_origen || ''}</td><td>${f.intento_num}</td><td>${f.resultado_inmediata ?? '-'}</td><td>${f.resultado_diferida ?? '-'}</td><td>${estado}</td></tr>`;
-  });
-  html += '</table>';
-  wrap.innerHTML = html;
-}
-document.getElementById('btnGuardarDominio').addEventListener('click', async () => {
-  const materia = document.getElementById('domMateria').value;
-  const subtemaId = document.getElementById('domSubtema').value;
-  const condicion = document.getElementById('domCondicion').value;
-  const tipoEval = document.getElementById('domTipoEval').value;
-  const aciertos = parseInt(document.getElementById('domAciertos').value);
-  if (!materia || !subtemaId || isNaN(aciertos)) {
-    showToast('Completa materia, subtema y aciertos.');
-    return;
-  }
-  const existente = await buscarDominioTema(materia, subtemaId);
-  const hoy = hoyLocal();
-  const cambios = {};
-  const aprobado = aciertos >= 9;
-  if (tipoEval === 'inmediata') {
-    cambios.fecha_evaluacion_inmediata = hoy;
-    cambios.resultado_inmediata = aciertos;
-  } else {
-    cambios.fecha_evaluacion_diferida = hoy;
-    cambios.resultado_diferida = aciertos;
-  }
-  if (!aprobado) {
-    const intentoActual = existente?.intento_num || 1;
-    if (intentoActual >= 2) cambios.censurado = true;
-    else cambios.intento_num = 2;
-  } else if (tipoEval === 'diferida') {
-    const inmediataAprobada = (existente?.resultado_inmediata ?? -1) >= 9;
-    if (inmediataAprobada) {
-      cambios.dominio_alcanzado = true;
-      cambios.fecha_dominio = hoy;
-    }
-  }
-  if (!existente) {
-    cambios.materia = materia;
-    cambios.subtema_id = subtemaId;
-    cambios.condicion_origen = condicion;
-    cambios.intento_num = cambios.intento_num || 1;
-    cambios.dominio_alcanzado = cambios.dominio_alcanzado || false;
-    cambios.censurado = cambios.censurado || false;
-  }
-  await guardarDominioTema(existente, cambios);
-  showToast('Resultado guardado ✅');
-  document.getElementById('domAciertos').value = 0;
-  actualizarDominioHistorial();
-});
 
 function registerSW() {
   if ('serviceWorker' in navigator) {

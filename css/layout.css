@@ -179,7 +179,6 @@
 #left-panel {
   width: 250px;
   flex-shrink: 0;
-  overflow-y: auto;
   background: var(--surface);
   border-right: 1px solid var(--border);
   padding: 15px;
@@ -187,6 +186,12 @@
   align-self: stretch;
   margin-left: 20px;
   margin-top: 20px;
+
+  /* Límite de altura y scroll interno */
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 #left-panel.hidden {
@@ -221,6 +226,13 @@
 
 #left-panel tr:hover {
   background: rgba(202, 71, 84, 0.2);
+}
+
+/* La tabla interna también puede hacer scroll si es más alta */
+#historialSubtemaTableWrap {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 /* ========== ZONA CENTRAL ========== */
