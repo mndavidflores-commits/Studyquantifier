@@ -58,7 +58,12 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
-  if (isExternal(url)) return; // No interceptar APIs externas
+
+  // Ignorar protocolos no soportados (chrome-extension, etc.)
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+
+  // No interceptar peticiones externas
+  if (isExternal(url)) return;
 
   // Navegación: network-first con fallback a caché
   if (request.mode === 'navigate') {
