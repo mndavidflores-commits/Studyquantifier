@@ -17,6 +17,7 @@ export async function transition(newState) {
     state.session.elapsedTotal = 0; state.session.lecturaRunning = false;
     state.session.remainingSeconds = parseInt(document.getElementById('pomoWork').value) * 60;
     state.session.pomodoroMode = 'countdown';
+    state.session.pomoStartTime = null;
     actualizarBotonModoPomodoro();
     updatePomoDisplay();
     document.getElementById('pomoCircle').classList.remove('break');
@@ -82,13 +83,21 @@ export async function transition(newState) {
       document.getElementById('btnDistraje').disabled = false;
       document.getElementById('btnLecturaStart').disabled = false; document.getElementById('btnLecturaStop').disabled = false;
     }
+
+    // Configurar el inicio real del temporizador
+    state.session.pomoStartTime = Date.now() - state.session.elapsedTotal * 1000;
     state.session.state = newState;
     stopPomoInterval();
     state.session.pomoInterval = setInterval(() => {
+      const now = Date.now();
+      const elapsedSeconds = Math.floor((now - state.session.pomoStartTime) / 1000);
+      state.session.elapsedTotal = elapsedSeconds;
+
       if (state.session.pomodoroMode === 'countdown') {
-        state.session.remainingSeconds--;
+        const totalWorkSeconds = parseInt(document.getElementById('pomoWork').value) * 60;
+        state.session.remainingSeconds = Math.max(0, totalWorkSeconds - elapsedSeconds);
       }
-      state.session.elapsedTotal++;
+
       updatePomoDisplay();
 
       if (state.session.pomodoroMode === 'countdown' && state.session.remainingSeconds <= 0) {
@@ -102,6 +111,8 @@ export async function transition(newState) {
           }
         } else if (state.session.state === State.BREAK_RUNNING) {
           state.session.remainingSeconds = parseInt(document.getElementById('pomoWork').value) * 60;
+          state.session.elapsedTotal = 0;
+          state.session.pomoStartTime = Date.now();
           transition(State.FOCUS_RUNNING);
         }
       }
@@ -113,6 +124,7 @@ export async function transition(newState) {
 
   if (newState === State.FOCUS_PAUSED || newState === State.BREAK_PAUSED) {
     stopPomoInterval(); stopLecturaInterval(); detenerTemporizadorCiego();
+    // Al pausar no se resetea pomoStartTime; el elapsedTotal ya está actualizado
     state.session.state = newState;
     updatePomoStatusText(); updatePomoButtons();
     return;

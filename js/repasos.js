@@ -50,8 +50,14 @@ export async function actualizarUIPorModo() {
   if (esModoB) await mostrarColaErrores();
 }
 
-// ===================== HISTORIAL DEL SUBTEMA (ACORDEÓN) =====================
-export async function actualizarHistorialSubtema() {
+// ===================== HISTORIAL DEL SUBTEMA (ACORDEÓN CON PAGINACIÓN) =====================
+const LIMITE_SESIONES = 20;
+let offsetSesiones = 0;
+let totalSesionesDisponibles = 0;
+
+export async function actualizarHistorialSubtema(reset = true) {
+  if (reset) offsetSesiones = 0;
+
   const subtemaId = document.getElementById('selSubtema').value;
   if (!subtemaId || subtemaId === '__agregar__') return;
 
@@ -78,56 +84,61 @@ export async function actualizarHistorialSubtema() {
     return { sid, probs, minTime };
   }).sort((a, b) => b.minTime - a.minTime);
 
-  let html = '';
-
-  gruposArray.forEach((grupo, index) => {
-    grupo.probs.sort((a, b) => new Date(b.timestamp || b.fecha).getTime() - new Date(a.timestamp || a.fecha).getTime());
-    const fecha = grupo.probs[0].fecha || new Date(grupo.probs[0].timestamp).toLocaleDateString('en-CA');
-    const numProblemas = grupo.probs.length;
-    const openClass = (index === 0) ? ' open' : '';
-
-    html += `
-      <div class="sesion-group${openClass}">
-        <div class="sesion-header">
-          <span>Sesión ${gruposArray.length - index} · ${fecha}</span>
-          <span class="arrow">▶</span>
-        </div>
-        <div class="sesion-content">
-          <table>
-            <tr><th>#</th><th>Tiempo</th><th>Resultado</th><th>Sección</th></tr>
-            ${grupo.probs.map(p => {
-              const res = p.resultado === 'bien' ? 'B' : (p.resultado === 'mal' ? 'M' : 'NR');
-              const badgeClass = `result-${p.resultado === 'bien' ? 'b' : (p.resultado === 'mal' ? 'm' : 'nr')}`;
-              return `
-                <tr class="editable-problem" data-problem-id="${p.id}" style="cursor:pointer;">
-                  <td>${p.problema_num || '-'}</td>
-                  <td>${formatTime(p.tiempo_s)}</td>
-                  <td><span class="${badgeClass}">${res}</span></td>
-                  <td>${p.seccion || '-'}</td>
-                </tr>
-              `;
-            }).join('')}
-          </table>
-        </div>
-      </div>
-    `;
-  });
+  totalSesionesDisponibles = gruposArray.length;
+  const gruposVisibles = gruposArray.slice(offsetSesiones, offsetSesiones + LIMITE_SESIONES);
 
   const wrap = document.getElementById('historialSubtemaTableWrap');
-  wrap.innerHTML = html;
+  wrap.innerHTML = '';
 
-  wrap.querySelectorAll('.sesion-header').forEach(header => {
-    header.addEventListener('click', () => {
-      header.parentElement.classList.toggle('open');
-    });
+  const fragment = document.createDocumentFragment();
+
+  gruposVisibles.forEach((grupo, index) => {
+    grupo.probs.sort((a, b) => new Date(b.timestamp || b.fecha).getTime() - new Date(a.timestamp || a.fecha).getTime());
+    const fecha = grupo.probs[0].fecha || new Date(grupo.probs[0].timestamp).toLocaleDateString('en-CA');
+    const openClass = (offsetSesiones === 0 && index === 0) ? ' open' : '';
+
+    const div = document.createElement('div');
+    div.className = `sesion-group${openClass}`;
+    div.innerHTML = `
+      <div class="sesion-header">
+        <span>Sesión ${totalSesionesDisponibles - (offsetSesiones + index)} · ${fecha}</span>
+        <span class="arrow">▶</span>
+      </div>
+      <div class="sesion-content">
+        <table>
+          <tr><th>#</th><th>Tiempo</th><th>Resultado</th><th>Sección</th></tr>
+          ${grupo.probs.map(p => {
+            const res = p.resultado === 'bien' ? 'B' : (p.resultado === 'mal' ? 'M' : 'NR');
+            const badgeClass = `result-${p.resultado === 'bien' ? 'b' : (p.resultado === 'mal' ? 'm' : 'nr')}`;
+            return `
+              <tr class="editable-problem" data-problem-id="${p.id}" style="cursor:pointer;">
+                <td>${p.problema_num || '-'}</td>
+                <td>${formatTime(p.tiempo_s)}</td>
+                <td><span class="${badgeClass}">${res}</span></td>
+                <td>${p.seccion || '-'}</td>
+              </tr>
+            `;
+          }).join('')}
+        </table>
+      </div>
+    `;
+    fragment.appendChild(div);
   });
 
-  wrap.querySelectorAll('.editable-problem').forEach(tr => {
-    tr.addEventListener('click', (e) => {
-      e.stopPropagation();
-      editarProblema(tr.dataset.problemId);
+  // Botón "Cargar más"
+  if (offsetSesiones + LIMITE_SESIONES < totalSesionesDisponibles) {
+    const btn = document.createElement('button');
+    btn.textContent = 'Cargar más sesiones';
+    btn.className = 'small';
+    btn.style.margin = '10px auto';
+    btn.addEventListener('click', () => {
+      offsetSesiones += LIMITE_SESIONES;
+      actualizarHistorialSubtema(false);
     });
-  });
+    fragment.appendChild(btn);
+  }
+
+  wrap.appendChild(fragment);
 }
 
 // ===================== EDITAR PROBLEMA (CON SELECTS) =====================
@@ -139,40 +150,28 @@ export async function editarProblema(id) {
   const contenido = document.getElementById('detalleContenido');
   modal.style.display = 'flex';
 
-  // Obtener opciones para selects
   const materia = problema.materia;
   const subtemaId = problema.subtema_id;
 
-  // Secciones: predeterminadas + personalizadas
   let secciones = ['Problemas resueltos', 'Problemas propuestos'];
   const seccionesPersonalizadas = await db.secciones_libro
     .where('materia').equals(materia)
     .and(s => s.libro === problema.libro)
     .toArray();
   secciones = secciones.concat(seccionesPersonalizadas.map(s => s.nombre));
-  if (problema.seccion && !secciones.includes(problema.seccion)) {
-    secciones.push(problema.seccion);
-  }
+  if (problema.seccion && !secciones.includes(problema.seccion)) secciones.push(problema.seccion);
 
-  // Libros: desde el temario para el subtema
   const tem = state.currentTemario.find(t => t.id.toString() === subtemaId);
   const libros = (tem && Array.isArray(tem.libros)) ? tem.libros.map(l => l.nombre) : [];
-  if (problema.libro && !libros.includes(problema.libro)) {
-    libros.push(problema.libro);
-  }
+  if (problema.libro && !libros.includes(problema.libro)) libros.push(problema.libro);
 
-  // Capítulos: para el libro actual
   let capitulos = [];
   const libroActual = problema.libro;
   if (tem && libroActual) {
     const libroObj = tem.libros?.find(l => l.nombre === libroActual);
-    if (libroObj && Array.isArray(libroObj.capitulos)) {
-      capitulos = libroObj.capitulos;
-    }
+    if (libroObj && Array.isArray(libroObj.capitulos)) capitulos = libroObj.capitulos;
   }
-  if (problema.capitulo && !capitulos.includes(problema.capitulo)) {
-    capitulos.push(problema.capitulo);
-  }
+  if (problema.capitulo && !capitulos.includes(problema.capitulo)) capitulos.push(problema.capitulo);
 
   contenido.innerHTML = `
     <div class="grid-2">
@@ -209,7 +208,6 @@ export async function editarProblema(id) {
     </div>
   `;
 
-  // Configurar botón eliminar
   document.getElementById('btnEliminarProblema').style.display = 'inline-block';
   document.getElementById('btnEliminarProblema').onclick = async () => {
     if (!confirm('¿Eliminar este problema?')) return;
@@ -222,7 +220,6 @@ export async function editarProblema(id) {
     actualizarTodo();
   };
 
-  // Configurar botón guardar
   const btnRow = document.querySelector('#modalDetalleProblema .btn-row');
   const btnGuardar = document.createElement('button');
   btnGuardar.textContent = 'Guardar cambios';
@@ -251,7 +248,6 @@ export async function editarProblema(id) {
     showToast('Problema actualizado ✅');
   };
 
-  // Reemplazar o insertar botón guardar
   const existingBtn = document.getElementById('btnGuardarEdicion');
   if (existingBtn) {
     btnRow.replaceChild(btnGuardar, existingBtn);
@@ -259,6 +255,20 @@ export async function editarProblema(id) {
     btnRow.insertBefore(btnGuardar, btnRow.firstChild);
   }
 }
+
+// Delegación de eventos para historial del subtema
+document.getElementById('historialSubtemaTableWrap').addEventListener('click', (e) => {
+  const header = e.target.closest('.sesion-header');
+  if (header) {
+    header.parentElement.classList.toggle('open');
+    return;
+  }
+
+  const tr = e.target.closest('.editable-problem');
+  if (tr) {
+    editarProblema(tr.dataset.problemId);
+  }
+});
 
 // ===================== CONJETURAS DE SESIÓN =====================
 export async function actualizarConjeturasSesion() {
@@ -346,7 +356,7 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
   if (!state.errorSeleccionado) return;
   const calBtn = document.querySelector('#toggleCalificacion .toggle-btn.active');
   if (!calBtn) { showToast('Selecciona una calificación.'); return; }
-  const calificacion = calBtn.dataset.val === 'bien' ? 3 : 1; // Good=3, Again=1
+  const calificacion = calBtn.dataset.val === 'bien' ? 3 : 1;
   const consultoSolucion = document.getElementById('chkConsultoSolucion').checked;
   const materia = document.getElementById('selMateria').value;
   const subtema = document.getElementById('selSubtema').value;

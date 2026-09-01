@@ -1,13 +1,17 @@
 import { db, state } from './config.js';
 import { fechaLocale } from './utils.js';
 
+// Instancias para reutilizar
+let chartProblemasInst = null;
+let chartFSRSInst = null;
+let chartBarrasDiariasInst = null;
+let chartHorasSemanaInst = null;
+let chartSuenoInst = null;
+
 // ===================== GRÁFICO DE PROBLEMAS (SCATTER) =====================
 export async function generarGraficoProblemas() {
   const ctx = document.getElementById('chartProblemas')?.getContext('2d');
   if (!ctx) return;
-
-  const chartExistente = Chart.getChart(ctx);
-  if (chartExistente) chartExistente.destroy();
 
   const problemas = await db.sessions.where('tipo').equals('problema').toArray();
   const filtrados = problemas.filter(p => p.materia === state.materiaGraficoSeleccionada);
@@ -35,6 +39,7 @@ export async function generarGraficoProblemas() {
   }));
 
   const datasets = [];
+
   if (state.mostrarPuntosA) {
     datasets.push({
       label: 'Sesión A',
@@ -87,58 +92,64 @@ export async function generarGraficoProblemas() {
     });
   }
 
-  state.chartProblemas = new Chart(ctx, {
-    type: 'scatter',
-    data: { datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        tooltip: {
-          backgroundColor: '#2c2e31',
-          titleColor: '#d1d0c5',
-          bodyColor: '#d1d0c5',
-          borderColor: '#646669',
-          borderWidth: 1,
-          callbacks: {
-            title: (items) => {
-              if (!items.length) return '';
-              const p = items[0].raw?.problema;
-              return p ? `Problema #${p.problema_num || '?'}` : '';
-            },
-            label: (context) => {
-              const p = context.raw?.problema;
-              if (!p) return context.dataset.label === 'Avg 10' ? `Promedio: ${context.parsed.y.toFixed(1)} min` : `Tiempo: ${context.parsed.y.toFixed(1)} min`;
-              const lineas = [`Tiempo: ${((p.tiempo_s || 0) / 60).toFixed(1)} min`, `Resultado: ${p.resultado}`];
-              if (p.confianza) lineas.push(`Confianza: ${p.confianza}`);
-              if (p.codigo_error) lineas.push(`Error: ${p.codigo_error}`);
-              return lineas;
+  if (chartProblemasInst) {
+    chartProblemasInst.data.datasets = datasets;
+    chartProblemasInst.update();
+  } else {
+    chartProblemasInst = new Chart(ctx, {
+      type: 'scatter',
+      data: { datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          tooltip: {
+            backgroundColor: '#2c2e31',
+            titleColor: '#d1d0c5',
+            bodyColor: '#d1d0c5',
+            borderColor: '#646669',
+            borderWidth: 1,
+            callbacks: {
+              title: (items) => {
+                if (!items.length) return '';
+                const p = items[0].raw?.problema;
+                return p ? `Problema #${p.problema_num || '?'}` : '';
+              },
+              label: (context) => {
+                const p = context.raw?.problema;
+                if (!p) return context.dataset.label === 'Avg 10' ? `Promedio: ${context.parsed.y.toFixed(1)} min` : `Tiempo: ${context.parsed.y.toFixed(1)} min`;
+                const lineas = [`Tiempo: ${((p.tiempo_s || 0) / 60).toFixed(1)} min`, `Resultado: ${p.resultado}`];
+                if (p.confianza) lineas.push(`Confianza: ${p.confianza}`);
+                if (p.codigo_error) lineas.push(`Error: ${p.codigo_error}`);
+                return lineas;
+              }
             }
-          }
-        },
-        legend: { display: false }
-      },
-      scales: {
-        x: {
-          type: 'linear',
-          title: { display: true, text: 'N.º de problema (secuencial)', color: '#646669' },
-          ticks: {
-            color: '#646669',
-            stepSize: 1,
-            callback: function(value) { return Number.isInteger(value) ? value : ''; }
           },
-          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+          legend: { display: false }
         },
-        y: {
-          title: { display: true, text: 'Minutos', color: '#646669' },
-          beginAtZero: true,
-          grace: '5%',
-          ticks: { color: '#646669' },
-          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+        scales: {
+          x: {
+            type: 'linear',
+            title: { display: true, text: 'N.º de problema (secuencial)', color: '#646669' },
+            ticks: {
+              color: '#646669',
+              stepSize: 1,
+              callback: function(value) { return Number.isInteger(value) ? value : ''; }
+            },
+            grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+          },
+          y: {
+            title: { display: true, text: 'Minutos', color: '#646669' },
+            beginAtZero: true,
+            grace: '5%',
+            ticks: { color: '#646669' },
+            grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+          }
         }
       }
-    }
-  });
+    });
+  }
 }
 
 // ===================== GRÁFICO FSRS (EVOLUCIÓN DE MEMORIA) =====================
@@ -146,10 +157,14 @@ export async function generarGraficoFSRS() {
   const ctx = document.getElementById('chartFSRS')?.getContext('2d');
   if (!ctx) return;
 
-  if (state.chartFSRS) state.chartFSRS.destroy();
-
   const repasos = await db.repasos.orderBy('fecha').toArray();
-  if (repasos.length === 0) return;
+  if (repasos.length === 0) {
+    if (chartFSRSInst) {
+      chartFSRSInst.destroy();
+      chartFSRSInst = null;
+    }
+    return;
+  }
 
   const porDia = {};
   repasos.forEach(r => {
@@ -164,62 +179,74 @@ export async function generarGraficoFSRS() {
   const estabilidadPromedio = dias.map(d => porDia[d].estabilidadTotal / porDia[d].count);
   const dificultadPromedio = dias.map(d => porDia[d].dificultadTotal / porDia[d].count);
 
-  state.chartFSRS = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: dias,
-      datasets: [
-        {
-          label: 'Estabilidad promedio',
-          data: estabilidadPromedio,
-          borderColor: '#ca4754',
-          backgroundColor: 'transparent',
-          borderWidth: 2,
-          pointRadius: 3,
-          tension: 0.3
+  const labels = dias;
+  const data1 = estabilidadPromedio;
+  const data2 = dificultadPromedio;
+
+  if (chartFSRSInst) {
+    chartFSRSInst.data.labels = labels;
+    chartFSRSInst.data.datasets[0].data = data1;
+    chartFSRSInst.data.datasets[1].data = data2;
+    chartFSRSInst.update();
+  } else {
+    chartFSRSInst = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Estabilidad promedio',
+            data: data1,
+            borderColor: '#ca4754',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            pointRadius: 3,
+            tension: 0.3
+          },
+          {
+            label: 'Dificultad promedio',
+            data: data2,
+            borderColor: '#646669',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            pointRadius: 3,
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          tooltip: {
+            backgroundColor: '#2c2e31',
+            titleColor: '#d1d0c5',
+            bodyColor: '#d1d0c5',
+            borderColor: '#646669',
+            borderWidth: 1
+          },
+          legend: {
+            display: true,
+            labels: {
+              color: '#d1d0c5',
+              font: { family: 'Roboto Mono' }
+            }
+          }
         },
-        {
-          label: 'Dificultad promedio',
-          data: dificultadPromedio,
-          borderColor: '#646669',
-          backgroundColor: 'transparent',
-          borderWidth: 2,
-          pointRadius: 3,
-          tension: 0.3
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        tooltip: {
-          backgroundColor: '#2c2e31',
-          titleColor: '#d1d0c5',
-          bodyColor: '#d1d0c5',
-          borderColor: '#646669',
-          borderWidth: 1
-        },
-        legend: {
-          display: true,
-          labels: {
-            color: '#d1d0c5',
-            font: { family: 'Roboto Mono' }
+        scales: {
+          x: {
+            ticks: { color: '#646669' },
+            grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+          },
+          y: {
+            ticks: { color: '#646669' },
+            grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
           }
         }
-      },
-      scales: {
-        x: {
-          ticks: { color: '#646669' },
-          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
-        },
-        y: {
-          ticks: { color: '#646669' },
-          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
-        }
       }
-    }
-  });
+    });
+  }
 }
 
 // ===================== HEATMAP =====================
@@ -239,7 +266,7 @@ export async function generarHeatmap(sesiones) {
     diasMap.set(fecha, (diasMap.get(fecha) || 0) + horas);
   });
 
-  container.innerHTML = '';
+  const fragment = document.createDocumentFragment();
   let fecha = new Date(inicio);
   while (fecha <= hoy) {
     const fechaStr = fechaLocale(fecha);
@@ -249,9 +276,11 @@ export async function generarHeatmap(sesiones) {
     div.className = 'heatmap-day';
     div.dataset.level = nivel;
     div.title = `${fechaStr}: ${horas.toFixed(1)}h`;
-    container.appendChild(div);
+    fragment.appendChild(div);
     fecha.setDate(fecha.getDate() + 1);
   }
+  container.innerHTML = '';
+  container.appendChild(fragment);
 }
 
 // ===================== GRÁFICO DE SUEÑO =====================
@@ -259,12 +288,14 @@ export async function actualizarGraficoSueno() {
   const ctx = document.getElementById('chartSueno')?.getContext('2d');
   if (!ctx) return;
 
-  // Destruye cualquier gráfico existente en este canvas
-  const chartExistente = Chart.getChart(ctx);
-  if (chartExistente) chartExistente.destroy();
-
   const registros = await db.sueno.orderBy('fecha').toArray();
-  if (registros.length === 0) return;
+  if (registros.length === 0) {
+    if (chartSuenoInst) {
+      chartSuenoInst.destroy();
+      chartSuenoInst = null;
+    }
+    return;
+  }
 
   const labels = registros.map(r => r.fecha);
   const calidadData = registros.map(r => r.calidad);
@@ -279,72 +310,78 @@ export async function actualizarGraficoSueno() {
     return h * 60 + m;
   });
 
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Calidad (0-10)', data: calidadData, borderColor: '#ca4754', backgroundColor: 'transparent', yAxisID: 'y', tension: 0.3, pointRadius: 4 },
-        { label: 'Hora acostarse', data: acostarMin, borderColor: '#646669', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 },
-        { label: 'Hora despertar', data: despertarMin, borderColor: '#3dd6c8', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 }
-      ]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: { type: 'linear', display: true, position: 'left', min: 0, max: 10, title: { display: true, text: 'Calidad (0-10)', color: '#646669' } },
-        y1: {
-          type: 'linear', display: true, position: 'right', min: 0, max: 1440, title: { display: true, text: 'Minutos desde medianoche', color: '#646669' },
-          ticks: {
-            stepSize: 60,
-            callback: function(value) {
-              const totalMin = value;
-              const h24 = Math.floor(totalMin / 60);
-              const m = totalMin % 60;
-              const ampm = h24 >= 12 ? 'PM' : 'AM';
-              let h12 = h24 % 12;
-              if (h12 === 0) h12 = 12;
-              return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
-            }
-          }
-        }
+  if (chartSuenoInst) {
+    chartSuenoInst.data.labels = labels;
+    chartSuenoInst.data.datasets[0].data = calidadData;
+    chartSuenoInst.data.datasets[1].data = acostarMin;
+    chartSuenoInst.data.datasets[2].data = despertarMin;
+    chartSuenoInst.update();
+  } else {
+    chartSuenoInst = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Calidad (0-10)', data: calidadData, borderColor: '#ca4754', backgroundColor: 'transparent', yAxisID: 'y', tension: 0.3, pointRadius: 4 },
+          { label: 'Hora acostarse', data: acostarMin, borderColor: '#646669', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 },
+          { label: 'Hora despertar', data: despertarMin, borderColor: '#3dd6c8', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3, pointRadius: 4 }
+        ]
       },
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              let label = context.dataset.label || '';
-              if (label) label += ': ';
-              if (context.dataset.yAxisID === 'y1') {
-                const mins = context.parsed.y;
-                const h24 = Math.floor(mins / 60);
-                const m = mins % 60;
+      options: {
+        responsive: true,
+        animation: false,
+        scales: {
+          y: { type: 'linear', display: true, position: 'left', min: 0, max: 10, title: { display: true, text: 'Calidad (0-10)', color: '#646669' } },
+          y1: {
+            type: 'linear', display: true, position: 'right', min: 0, max: 1440, title: { display: true, text: 'Minutos desde medianoche', color: '#646669' },
+            ticks: {
+              stepSize: 60,
+              callback: function(value) {
+                const totalMin = value;
+                const h24 = Math.floor(totalMin / 60);
+                const m = totalMin % 60;
                 const ampm = h24 >= 12 ? 'PM' : 'AM';
                 let h12 = h24 % 12;
                 if (h12 === 0) h12 = 12;
-                label += `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
-              } else {
-                label += context.parsed.y;
+                return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
               }
-              return label;
+            }
+          }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) label += ': ';
+                if (context.dataset.yAxisID === 'y1') {
+                  const mins = context.parsed.y;
+                  const h24 = Math.floor(mins / 60);
+                  const m = mins % 60;
+                  const ampm = h24 >= 12 ? 'PM' : 'AM';
+                  let h12 = h24 % 12;
+                  if (h12 === 0) h12 = 12;
+                  label += `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+                } else {
+                  label += context.parsed.y;
+                }
+                return label;
+              }
             }
           }
         }
       }
-    }
-  });
+    });
+  }
 }
 
 // ===================== GRÁFICO DE BARRAS DIARIAS =====================
-let chartBarrasDiarias = null;
 let filtroMateriaDiaria = 'Todos';
 let filtroTipoSesionDiaria = 'Todos';
 
 export async function generarGraficoBarrasDiarias() {
   const ctx = document.getElementById('chartBarrasDiarias')?.getContext('2d');
   if (!ctx) return;
-
-  if (chartBarrasDiarias) chartBarrasDiarias.destroy();
 
   const sesiones = await db.sessions.toArray();
   const filtradas = sesiones.filter(s => {
@@ -376,64 +413,73 @@ export async function generarGraficoBarrasDiarias() {
   const horas = labels.map(d => diasMap.get(d).horas);
   const problemasCount = labels.map(d => diasMap.get(d).problemas);
 
-  chartBarrasDiarias = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Horas',
-        data: horas,
-        backgroundColor: '#ca4754',
-        hoverBackgroundColor: '#e06c78',
-        borderColor: '#ca4754',
-        borderWidth: 1,
-        borderRadius: 2,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        tooltip: {
-          backgroundColor: '#2c2e31',
-          titleColor: '#d1d0c5',
-          bodyColor: '#d1d0c5',
-          borderColor: '#646669',
+  if (chartBarrasDiariasInst) {
+    chartBarrasDiariasInst.data.labels = labels;
+    chartBarrasDiariasInst.data.datasets[0].data = horas;
+    // Guardamos problemasCount para tooltip
+    chartBarrasDiariasInst.options.plugins.tooltip.callbacks.label = (context) => {
+      const index = context.dataIndex;
+      return [`Horas: ${horas[index].toFixed(2)} h`, `Problemas: ${problemasCount[index]}`];
+    };
+    chartBarrasDiariasInst.update();
+  } else {
+    chartBarrasDiariasInst = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Horas',
+          data: horas,
+          backgroundColor: '#ca4754',
+          hoverBackgroundColor: '#e06c78',
+          borderColor: '#ca4754',
           borderWidth: 1,
-          callbacks: {
-            title: (items) => items[0]?.label || '',
-            label: (context) => {
-              const index = context.dataIndex;
-              return [`Horas: ${horas[index].toFixed(2)} h`, `Problemas: ${problemasCount[index]}`];
-            }
-          }
-        },
-        legend: { display: false }
+          borderRadius: 2,
+        }]
       },
-      scales: {
-        x: {
-          ticks: { color: '#646669', maxRotation: 0, autoSkip: true, maxTicksLimit: 15 },
-          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          tooltip: {
+            backgroundColor: '#2c2e31',
+            titleColor: '#d1d0c5',
+            bodyColor: '#d1d0c5',
+            borderColor: '#646669',
+            borderWidth: 1,
+            callbacks: {
+              title: (items) => items[0]?.label || '',
+              label: (context) => {
+                const index = context.dataIndex;
+                return [`Horas: ${horas[index].toFixed(2)} h`, `Problemas: ${problemasCount[index]}`];
+              }
+            }
+          },
+          legend: { display: false }
         },
-        y: {
-          title: { display: true, text: 'Horas', color: '#646669' },
-          ticks: { color: '#646669' },
-          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+        scales: {
+          x: {
+            ticks: { color: '#646669', maxRotation: 0, autoSkip: true, maxTicksLimit: 15 },
+            grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+          },
+          y: {
+            title: { display: true, text: 'Horas', color: '#646669' },
+            ticks: { color: '#646669' },
+            grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+          }
         }
       }
-    }
-  });
+    });
+  }
 }
 
 // ===================== GRÁFICO SEMANAL =====================
-let chartHorasSemana = null;
 let semanaOffset = 0;
 
 export async function generarGraficoHorasSemana() {
   const ctx = document.getElementById('chartHorasSemana')?.getContext('2d');
   if (!ctx) return;
-
-  if (chartHorasSemana) chartHorasSemana.destroy();
 
   const hoy = new Date();
   const lunesActual = new Date(hoy);
@@ -462,52 +508,59 @@ export async function generarGraficoHorasSemana() {
     data.push(horas);
   }
 
-  chartHorasSemana = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: etiquetas,
-      datasets: [{
-        label: 'Horas',
-        data,
-        backgroundColor: '#ca4754',
-        hoverBackgroundColor: '#e06c78',
-        borderColor: '#ca4754',
-        borderWidth: 1,
-        borderRadius: 2,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        tooltip: {
-          backgroundColor: '#2c2e31',
-          titleColor: '#d1d0c5',
-          bodyColor: '#d1d0c5',
-          borderColor: '#646669',
+  if (chartHorasSemanaInst) {
+    chartHorasSemanaInst.data.labels = etiquetas;
+    chartHorasSemanaInst.data.datasets[0].data = data;
+    chartHorasSemanaInst.update();
+  } else {
+    chartHorasSemanaInst = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: etiquetas,
+        datasets: [{
+          label: 'Horas',
+          data,
+          backgroundColor: '#ca4754',
+          hoverBackgroundColor: '#e06c78',
+          borderColor: '#ca4754',
           borderWidth: 1,
-          callbacks: {
-            label: (context) => `Horas: ${context.parsed.y.toFixed(2)} h`
-          }
-        },
-        legend: { display: false }
+          borderRadius: 2,
+        }]
       },
-      scales: {
-        x: {
-          ticks: { color: '#646669' },
-          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          tooltip: {
+            backgroundColor: '#2c2e31',
+            titleColor: '#d1d0c5',
+            bodyColor: '#d1d0c5',
+            borderColor: '#646669',
+            borderWidth: 1,
+            callbacks: {
+              label: (context) => `Horas: ${context.parsed.y.toFixed(2)} h`
+            }
+          },
+          legend: { display: false }
         },
-        y: {
-          title: { display: true, text: 'Horas', color: '#646669' },
-          ticks: { color: '#646669' },
-          grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+        scales: {
+          x: {
+            ticks: { color: '#646669' },
+            grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+          },
+          y: {
+            title: { display: true, text: 'Horas', color: '#646669' },
+            ticks: { color: '#646669' },
+            grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
+          }
         }
       }
-    }
-  });
+    });
+  }
 }
 
-// ===================== DELEGACIÓN DE EVENTOS PARA GRÁFICOS =====================
+// ===================== DELEGACIÓN DE EVENTOS =====================
 document.addEventListener('click', (e) => {
   const filtroBtn = e.target.closest('.chart-filter-btn');
   if (filtroBtn) {

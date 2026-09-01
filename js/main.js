@@ -7,3 +7,6 @@ const { data: { session: s } } = await supabase.auth.getSession();
 actualizarUI(s);
 
 supabase.auth.onAuthStateChange((event, s) => actualizarUI(s));
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}

@@ -53,7 +53,8 @@ export const state = {
     lecturaInterval: null,
     pomoInterval: null,
     pendingSessionEnd: false,
-    pomodoroMode: 'countdown'
+    pomodoroMode: 'countdown',
+    pomoStartTime: null
   },
   blindTimer: {
     running: false,
