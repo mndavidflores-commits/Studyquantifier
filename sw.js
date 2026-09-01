@@ -1,28 +1,38 @@
-const CACHE = 'estudio-v33';
+const CACHE = 'estudio-v34';
+
+const STATIC_ASSETS = [
+  './',
+  './index.html',
+  './css/base.css',
+  './css/componentes.css',
+  './css/layout.css',
+  './css/metricas.css',
+  './css/responsive.css',
+  './js/main.js',
+  './js/config.js',
+  './js/utils.js',
+  './js/sync.js',
+  './js/ui.js',
+  './js/pomodoro.js',
+  './js/timer.js',
+  './js/repasos.js',
+  './js/graficos.js',
+  './js/metricas.js',
+  './js/auth.js',
+  './js/panels.js',
+  './js/historial.js',
+  './js/suenoNotas.js',
+  './js/checklistMetas.js',
+  './js/conjeturas.js',
+  './js/selectores.js',
+  './js/eventos.js',
+  './js/app.js'
+];
 
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll([
-      './',
-      './index.html',
-      './css/base.css',
-      './css/componentes.css',
-      './css/layout.css',
-      './css/metricas.css',
-      './css/responsive.css',
-      './js/main.js',
-      './js/config.js',
-      './js/utils.js',
-      './js/sync.js',
-      './js/ui.js',
-      './js/pomodoro.js',
-      './js/timer.js',
-      './js/repasos.js',
-      './js/graficos.js',
-      './js/metricas.js',
-      './js/app.js'
-    ]))
+    caches.open(CACHE).then(cache => cache.addAll(STATIC_ASSETS))
   );
 });
 
@@ -35,34 +45,48 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-  const url = new URL(event.request.url);
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+function isExternal(url) {
+  return url.hostname === 'wrtmlucrxzewynnnikzh.supabase.co' ||
+         url.hostname === 'cdn.jsdelivr.net' ||
+         url.hostname === 'unpkg.com' ||
+         url.hostname === 'fonts.googleapis.com' ||
+         url.hostname === 'fonts.gstatic.com';
+}
 
-  // Para navegación: network-first
-  if (event.request.mode === 'navigate') {
+self.addEventListener('fetch', event => {
+  const { request } = event;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+  if (isExternal(url)) return; // No interceptar APIs externas
+
+  // Navegación: network-first con fallback a caché
+  if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
+      fetch(request)
         .then(response => {
           const clone = response.clone();
-          caches.open(CACHE).then(cache => cache.put(event.request, clone));
+          caches.open(CACHE).then(cache => cache.put(request, clone));
           return response;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => caches.match(request))
     );
-  } else {
-    // Para estáticos: network-first con fallback a caché
-    event.respondWith(
-      fetch(event.request)
+    return;
+  }
+
+  // Estáticos: stale-while-revalidate
+  event.respondWith(
+    caches.match(request).then(cached => {
+      const fetchPromise = fetch(request)
         .then(response => {
           if (response && response.status === 200) {
             const clone = response.clone();
-            caches.open(CACHE).then(cache => cache.put(event.request, clone));
+            caches.open(CACHE).then(cache => cache.put(request, clone));
           }
           return response;
         })
-        .catch(() => caches.match(event.request))
-    );
-  }
+        .catch(() => cached);
+      return cached || fetchPromise;
+    })
+  );
 });

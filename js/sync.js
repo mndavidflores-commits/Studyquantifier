@@ -1,10 +1,19 @@
 import { db, supabase, state } from './config.js';
 import { showToast } from './utils.js';
 
+let syncTimeout = null;
+
 function pkFieldFor(coleccion) {
   if (coleccion === 'checklist') return 'subtema_id';
   if (coleccion === 'metas') return 'key';
   return 'id';
+}
+
+function scheduleSync() {
+  if (syncTimeout) clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(() => {
+    syncAll();
+  }, 1500);
 }
 
 export async function pushChanges() {
@@ -94,7 +103,10 @@ export async function guardarLocalYOutbox(tablaSupabase, coleccionDexie, datos, 
     onConflict,
     created_at: new Date().toISOString()
   });
-  syncAll();
+
+  // Programar sincronización automática con debounce
+  scheduleSync();
+
   return id;
 }
 
@@ -123,5 +135,5 @@ export async function corregirSesionId(tempId, idSesionReal) {
       created_at: new Date().toISOString()
     });
   }
-  syncAll();
+  scheduleSync();
 }

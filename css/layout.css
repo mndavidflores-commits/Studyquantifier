@@ -76,6 +76,7 @@
   opacity: 1;
   transform: scale(1);
   transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+  will-change: transform, opacity;
 }
 
 #idle-view.hidden {
@@ -127,6 +128,7 @@
   display: none;
   opacity: 0;
   transition: opacity 0.4s ease-in-out;
+  will-change: transform, opacity;
 }
 
 #active-view.active {
@@ -187,7 +189,6 @@
   margin-left: 20px;
   margin-top: 20px;
 
-  /* Límite de altura y scroll interno */
   max-height: calc(100vh - 120px);
   overflow-y: auto;
   display: flex;
@@ -228,7 +229,6 @@
   background: rgba(202, 71, 84, 0.2);
 }
 
-/* La tabla interna también puede hacer scroll si es más alta */
 #historialSubtemaTableWrap {
   overflow-y: auto;
   flex: 1;
@@ -389,7 +389,6 @@
 #active-view.cronometro-corriendo .timer-display {
   font-size: 16rem;
 }
-
 
 /* Transición suave entre vistas */
 #idle-view.fade-out {

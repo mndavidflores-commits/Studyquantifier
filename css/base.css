@@ -69,6 +69,7 @@ body {
   animation: fadeIn 0.22s ease;
   overflow-y: auto;
   padding: 14px;
+  will-change: transform, opacity;
 }
 
 #panelSesion.active {
