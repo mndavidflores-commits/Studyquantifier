@@ -238,6 +238,7 @@ tr:hover {
   max-width: 500px;
   margin: 0 auto;
 }
+
 /* ========== CHECKLIST JERÁRQUICO ========== */
 .checklist-materia {
   margin-top: 12px;
@@ -248,15 +249,17 @@ tr:hover {
 .checklist-subtema,
 .checklist-libro,
 .checklist-capitulo {
-  display: block;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   margin-bottom: 4px;
   color: var(--text);
   font-family: var(--font);
   font-size: 0.9rem;
   line-height: 1.4;
-  white-space: normal;      /* ← permitir salto de línea */
-  overflow: visible;        /* ← no recortar texto */
-  text-overflow: clip;      /* ← no puntos suspensivos */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .checklist-subtema {

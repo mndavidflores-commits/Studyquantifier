@@ -15,6 +15,18 @@ export async function actualizarChecklist() {
       completadosMap.set(key, c);
     });
 
+    // Función para formatear el nombre del capítulo
+    function formatearCapitulo(capitulo) {
+      const texto = String(capitulo);
+      if (/^\d+$/.test(texto)) {
+        return `Capítulo ${texto}`;
+      }
+      if (/^\d+:\s*(.+)/.test(texto) || /^\d+\s+(.+)/.test(texto)) {
+        return `Capítulo ${texto}`;
+      }
+      return texto;
+    }
+
     let total = 0;
     let completadosCount = 0;
 
@@ -41,7 +53,6 @@ export async function actualizarChecklist() {
         // Checkbox de subtema
         const labelSubtema = document.createElement('label');
         labelSubtema.className = 'checklist-subtema';
-        labelSubtema.style.display = 'block';
         const inputSubtema = document.createElement('input');
         inputSubtema.type = 'checkbox';
         inputSubtema.className = 'checklist-cb-new';
@@ -55,7 +66,7 @@ export async function actualizarChecklist() {
         }
         total++;
         labelSubtema.appendChild(inputSubtema);
-        labelSubtema.appendChild(document.createTextNode(' ' + subtemaName));
+        labelSubtema.appendChild(document.createTextNode(subtemaName));
         fragment.appendChild(labelSubtema);
 
         // Libros y capítulos
@@ -66,8 +77,6 @@ export async function actualizarChecklist() {
 
           const labelLibro = document.createElement('label');
           labelLibro.className = 'checklist-libro';
-          labelLibro.style.display = 'block';
-          labelLibro.style.marginLeft = '20px';
           const inputLibro = document.createElement('input');
           inputLibro.type = 'checkbox';
           inputLibro.className = 'checklist-cb-new';
@@ -82,14 +91,13 @@ export async function actualizarChecklist() {
           }
           total++;
           labelLibro.appendChild(inputLibro);
-          labelLibro.appendChild(document.createTextNode(' 📖 ' + libroNombre));
+          labelLibro.appendChild(document.createTextNode('📖 ' + libroNombre));
           fragment.appendChild(labelLibro);
 
           for (const capitulo of capitulos) {
+            const capituloFormateado = formatearCapitulo(capitulo);
             const labelCapitulo = document.createElement('label');
             labelCapitulo.className = 'checklist-capitulo';
-            labelCapitulo.style.display = 'block';
-            labelCapitulo.style.marginLeft = '40px';
             const inputCapitulo = document.createElement('input');
             inputCapitulo.type = 'checkbox';
             inputCapitulo.className = 'checklist-cb-new';
@@ -105,7 +113,7 @@ export async function actualizarChecklist() {
             }
             total++;
             labelCapitulo.appendChild(inputCapitulo);
-            labelCapitulo.appendChild(document.createTextNode(' ' + capitulo));
+            labelCapitulo.appendChild(document.createTextNode(capituloFormateado));
             fragment.appendChild(labelCapitulo);
           }
         }
@@ -123,55 +131,6 @@ export async function actualizarChecklist() {
     container.innerHTML = '<p style="color:var(--text2);">Error al cargar el checklist.</p>';
   }
 }
-
-// Delegación de eventos para checkboxes del checklist
-document.getElementById('checklistContainer').addEventListener('change', async (e) => {
-  if (!e.target.classList.contains('checklist-cb-new')) return;
-  const tipo = e.target.dataset.tipo;
-  const materia = e.target.dataset.materia;
-  const subtemaId = e.target.dataset.subtema;
-  const libro = e.target.dataset.libro || null;
-  const capitulo = e.target.dataset.capitulo || null;
-
-  const registros = await db.checklist_completo.where('subtema_id').equals(subtemaId).toArray();
-  const existente = registros.find(r => {
-    return r.tipo === tipo &&
-           (r.libro || '') === (libro || '') &&
-           (r.capitulo || '') === (capitulo || '');
-  });
-
-  if (e.target.checked) {
-    if (!existente) {
-      await guardarLocalYOutbox('checklist_completo', 'checklist_completo', {
-        id: crypto.randomUUID(),
-        materia,
-        subtema_id: subtemaId,
-        libro,
-        capitulo,
-        tipo,
-        completado: true
-      }, 'id');
-    } else {
-      await guardarLocalYOutbox('checklist_completo', 'checklist_completo', { ...existente, completado: true, updated_at: new Date().toISOString() }, 'id');
-    }
-  } else {
-    if (existente) {
-      await db.checklist_completo.delete(existente.id);
-      await db.outbox.put({
-        table: 'checklist_completo',
-        record_id: existente.id,
-        operation: 'delete',
-        data: { id: existente.id, user_id: state.sessionActual.user.id, deleted_at: new Date().toISOString() },
-        onConflict: 'id',
-        created_at: new Date().toISOString()
-      });
-      await syncAll();
-    }
-  }
-
-  actualizarChecklist();
-});
-
 // ===================== METAS =====================
 export async function actualizarMetas() {
   const hoy = new Date();
