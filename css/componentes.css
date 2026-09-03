@@ -258,3 +258,26 @@ tr:hover {
   font-size: 0.9rem;
   line-height: 1.4;
 }
+
+#checklistContainer {
+  display: block !important;
+  text-align: left !important;
+}
+
+#checklistContainer label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+#checklistContainer input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
