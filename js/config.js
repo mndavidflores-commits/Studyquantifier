@@ -88,4 +88,7 @@ export const state = {
   appInitialized: false
 };
 
+// Exponer state global para depuración
+window.state = state;
+
 export const temarioEmbebido = [...state.currentTemario];
