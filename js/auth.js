@@ -36,6 +36,7 @@ export function actualizarUI(s) {
 export async function initApp() {
   await syncAll();
   await migrarSeccionesAntiguas();
+  await migrarChecklistAntiguo();
   const storedTemario = await db.temario.get('activo');
   if (storedTemario?.contenido) {
     state.currentTemario.length = 0;
@@ -83,5 +84,36 @@ async function migrarSeccionesAntiguas() {
     }
   } catch (e) {
     console.warn('No se pudo migrar secciones antiguas:', e);
+  }
+}
+
+// ===================== MIGRACIÓN DEL CHECKLIST ANTIGUO =====================
+async function migrarChecklistAntiguo() {
+  try {
+    const viejos = await db.checklist.toArray();
+    if (viejos.length === 0) return;
+
+    const nuevos = viejos
+      .filter(v => v.subtema_id)
+      .map(v => ({
+        id: crypto.randomUUID(),
+        user_id: state.sessionActual?.user?.id,
+        materia: null,
+        subtema_id: v.subtema_id,
+        libro: null,
+        capitulo: null,
+        tipo: 'subtema',
+        completado: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        deleted_at: null
+      }));
+
+    if (nuevos.length > 0) {
+      await db.checklist_completo.bulkPut(nuevos);
+      console.log(`Migrados ${nuevos.length} elementos de checklist antiguo a checklist_completo`);
+    }
+  } catch (e) {
+    console.warn('No se pudo migrar checklist antiguo:', e);
   }
 }

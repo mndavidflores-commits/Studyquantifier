@@ -238,3 +238,35 @@ tr:hover {
   max-width: 500px;
   margin: 0 auto;
 }
+
+/* ========== CHECKLIST JERÁRQUICO ========== */
+.checklist-materia {
+  margin-top: 10px;
+}
+
+.checklist-subtema {
+  display: block;
+  margin-left: 0;
+  margin-bottom: 2px;
+}
+
+.checklist-libro {
+  display: block;
+  margin-left: 20px;
+  margin-bottom: 2px;
+}
+
+.checklist-capitulo {
+  display: block;
+  margin-left: 40px;
+  margin-bottom: 2px;
+}
+
+/* Evitar desbordamiento en móviles */
+.checklist-capitulo,
+.checklist-libro,
+.checklist-subtema {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

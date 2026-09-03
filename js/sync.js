@@ -50,7 +50,22 @@ export async function pushChanges() {
 }
 
 export async function pullChanges() {
-  const tablas = ['study_sessions','conjeturas','sueno','materias','subtemas_extra','checklist','metas','errores','repasos','fsrs_pesos_congelados','dominio_temas','secciones_libro'];
+  const tablas = [
+    'study_sessions',
+    'conjeturas',
+    'sueno',
+    'materias',
+    'subtemas_extra',
+    'checklist',
+    'metas',
+    'errores',
+    'repasos',
+    'fsrs_pesos_congelados',
+    'dominio_temas',
+    'secciones_libro',
+    'checklist_completo'
+  ];
+
   for (const tabla of tablas) {
     const lastSync = await db.sync_metadata.get(`last_pull_${tabla}`);
     const lastPullTime = lastSync?.value || new Date(0).toISOString();
@@ -104,7 +119,6 @@ export async function guardarLocalYOutbox(tablaSupabase, coleccionDexie, datos, 
     created_at: new Date().toISOString()
   });
 
-  // Programar sincronización automática con debounce
   scheduleSync();
 
   return id;

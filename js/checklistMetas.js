@@ -2,54 +2,132 @@ import { db, state } from './config.js';
 import { guardarLocalYOutbox, syncAll } from './sync.js';
 import { hoyLocal, fechaLocale } from './utils.js';
 
-// ===================== CHECKLIST =====================
+// ===================== CHECKLIST JERÁRQUICO =====================
 export async function actualizarChecklist() {
   const container = document.getElementById('checklistContainer');
   if (!container) return;
-  const completados = await db.checklist.toArray();
-  const ids = new Map(completados.map(c => [c.subtema_id, c.fecha_completado]));
-  const subtemasExtra = await db.subtemas_extra.toArray();
-  const todasMaterias = [...new Set(state.currentTemario.map(t => t.materia))];
-  subtemasExtra.forEach(e => { if (!todasMaterias.includes(e.materia)) todasMaterias.push(e.materia); });
-  let totalSubtemas = 0;
-  let html = '';
-  for (const mat of todasMaterias) {
-    const tem = state.currentTemario.filter(t => t.materia === mat);
-    const extras = subtemasExtra.filter(e => e.materia === mat);
-    const subs = [...tem.map(t => ({ id: t.id.toString(), nombre: t.nombre, etapa: t.etapa })), ...extras.map(e => ({ id: 'extra_' + e.id, nombre: e.nombre, etapa: e.etapa || 'Personalizado' }))];
-    if (!subs.length) continue;
-    html += `<h4>${mat}</h4>`;
-    subs.forEach(st => {
-      const fechaComp = ids.has(st.id) ? ` (${ids.get(st.id)})` : '';
-      html += `<label><input type="checkbox" class="checklist-cb" data-stid="${st.id}" ${ids.has(st.id) ? 'checked' : ''}> ${st.nombre} (${st.etapa || ''})${fechaComp}</label><br>`;
-      totalSubtemas++;
-    });
+
+  const completados = await db.checklist_completo.toArray();
+  const completadosMap = new Map();
+  completados.forEach(c => {
+    const key = `${c.tipo}:${c.subtema_id || ''}:${c.libro || ''}:${c.capitulo || ''}`;
+    completadosMap.set(key, c);
+  });
+
+  let total = 0;
+  let completadosCount = 0;
+
+  const fragment = document.createDocumentFragment();
+  const materias = [...new Set(state.currentTemario.map(t => t.materia))];
+
+  for (const materia of materias) {
+    const tems = state.currentTemario.filter(t => t.materia === materia);
+    if (!tems.length) continue;
+
+    const materiaDiv = document.createElement('div');
+    materiaDiv.className = 'checklist-materia';
+    materiaDiv.innerHTML = `<h4>${materia}</h4>`;
+    fragment.appendChild(materiaDiv);
+
+    for (const tema of tems) {
+      const subtemaId = tema.id.toString();
+      const subtemaName = tema.nombre;
+
+      // Checkbox de subtema
+      const keySubtema = `subtema:${subtemaId}::`;
+      const isSubtemaDone = completadosMap.has(keySubtema);
+      total++;
+      if (isSubtemaDone) completadosCount++;
+
+      const labelSubtema = document.createElement('label');
+      labelSubtema.className = 'checklist-subtema';
+      labelSubtema.innerHTML = `<input type="checkbox" class="checklist-cb-new" data-tipo="subtema" data-materia="${materia}" data-subtema="${subtemaId}" ${isSubtemaDone ? 'checked' : ''}> ${subtemaName}`;
+      fragment.appendChild(labelSubtema);
+
+      // Libros y capítulos
+      const libros = (tema.libros && Array.isArray(tema.libros)) ? tema.libros : [];
+      for (const libro of libros) {
+        const libroNombre = libro.nombre || libro;
+        const capitulos = (libro.capitulos && Array.isArray(libro.capitulos)) ? libro.capitulos : [];
+
+        const keyLibro = `libro:${subtemaId}:${libroNombre}:`;
+        const isLibroDone = completadosMap.has(keyLibro);
+        total++;
+        if (isLibroDone) completadosCount++;
+
+        const labelLibro = document.createElement('label');
+        labelLibro.className = 'checklist-libro';
+        labelLibro.innerHTML = `<input type="checkbox" class="checklist-cb-new" data-tipo="libro" data-materia="${materia}" data-subtema="${subtemaId}" data-libro="${libroNombre}" ${isLibroDone ? 'checked' : ''}> 📖 ${libroNombre}`;
+        fragment.appendChild(labelLibro);
+
+        for (const capitulo of capitulos) {
+          const keyCapitulo = `capitulo:${subtemaId}:${libroNombre}:${capitulo}`;
+          const isCapituloDone = completadosMap.has(keyCapitulo);
+          total++;
+          if (isCapituloDone) completadosCount++;
+
+          const labelCapitulo = document.createElement('label');
+          labelCapitulo.className = 'checklist-capitulo';
+          labelCapitulo.innerHTML = `<input type="checkbox" class="checklist-cb-new" data-tipo="capitulo" data-materia="${materia}" data-subtema="${subtemaId}" data-libro="${libroNombre}" data-capitulo="${capitulo}" ${isCapituloDone ? 'checked' : ''}> ${capitulo}`;
+          fragment.appendChild(labelCapitulo);
+        }
+      }
+    }
   }
-  container.innerHTML = html;
-  const completado = completados.length;
-  const pct = totalSubtemas ? Math.round(completado / totalSubtemas * 100) : 0;
+
+  container.innerHTML = '';
+  container.appendChild(fragment);
+
+  const pct = total ? Math.round(completadosCount / total * 100) : 0;
   document.getElementById('progressChecklist').style.width = pct + '%';
-  document.getElementById('checklistPercent').textContent = pct + '% completado (' + completado + '/' + totalSubtemas + ')';
+  document.getElementById('checklistPercent').textContent = pct + '% completado (' + completadosCount + '/' + total + ')';
 }
 
 // Delegación de eventos para checkboxes del checklist
 document.getElementById('checklistContainer').addEventListener('change', async (e) => {
-  if (!e.target.classList.contains('checklist-cb')) return;
-  const stid = e.target.dataset.stid;
+  if (!e.target.classList.contains('checklist-cb-new')) return;
+  const tipo = e.target.dataset.tipo;
+  const materia = e.target.dataset.materia;
+  const subtemaId = e.target.dataset.subtema;
+  const libro = e.target.dataset.libro || null;
+  const capitulo = e.target.dataset.capitulo || null;
+
+  const registros = await db.checklist_completo.where('subtema_id').equals(subtemaId).toArray();
+  const existente = registros.find(r => {
+    return r.tipo === tipo &&
+           (r.libro || '') === (libro || '') &&
+           (r.capitulo || '') === (capitulo || '');
+  });
+
   if (e.target.checked) {
-    await guardarLocalYOutbox('checklist', 'checklist', { subtema_id: stid, fecha_completado: hoyLocal() }, 'subtema_id,user_id');
+    if (!existente) {
+      await guardarLocalYOutbox('checklist_completo', 'checklist_completo', {
+        id: crypto.randomUUID(),
+        materia,
+        subtema_id: subtemaId,
+        libro,
+        capitulo,
+        tipo,
+        completado: true
+      }, 'id');
+    } else {
+      await guardarLocalYOutbox('checklist_completo', 'checklist_completo', { ...existente, completado: true, updated_at: new Date().toISOString() }, 'id');
+    }
   } else {
-    await db.checklist.where('subtema_id').equals(stid).delete();
-    await db.outbox.put({
-      table: 'checklist',
-      record_id: stid,
-      operation: 'delete',
-      data: { subtema_id: stid, user_id: state.sessionActual.user.id, deleted_at: new Date().toISOString() },
-      onConflict: 'subtema_id,user_id',
-      created_at: new Date().toISOString()
-    });
-    await syncAll();
+    if (existente) {
+      await db.checklist_completo.delete(existente.id);
+      await db.outbox.put({
+        table: 'checklist_completo',
+        record_id: existente.id,
+        operation: 'delete',
+        data: { id: existente.id, user_id: state.sessionActual.user.id, deleted_at: new Date().toISOString() },
+        onConflict: 'id',
+        created_at: new Date().toISOString()
+      });
+      await syncAll();
+    }
   }
+
   actualizarChecklist();
 });
 

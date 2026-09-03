@@ -53,6 +53,15 @@ export function stopBlindTimerAndShowResult() {
   state.blindTimer.pendingResult = true;
 }
 
+// ===================== PROTECCIÓN TÁCTIL =====================
+let lastToggleTime = 0;
+function shouldToggle() {
+  const now = Date.now();
+  if (now - lastToggleTime < 300) return false;
+  lastToggleTime = now;
+  return true;
+}
+
 // ===================== EVENTOS DE TECLADO =====================
 document.addEventListener('keydown', e => {
   if (e.key === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -105,6 +114,7 @@ activeViewElement.addEventListener('touchstart', (e) => {
 activeViewElement.addEventListener('touchend', (e) => {
   activeViewElement.classList.remove('touch-pressed');
   if (esElementoInteractivo(e.target)) return;
+  if (!shouldToggle()) return;
   if (state.blindTimer.running) {
     e.preventDefault();
     stopBlindTimerAndShowResult();
@@ -116,6 +126,7 @@ activeViewElement.addEventListener('touchend', (e) => {
 
 activeViewElement.addEventListener('click', (e) => {
   if (esElementoInteractivo(e.target)) return;
+  if (!shouldToggle()) return;
   if (state.blindTimer.running) {
     stopBlindTimerAndShowResult();
   }

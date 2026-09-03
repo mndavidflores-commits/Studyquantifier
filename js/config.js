@@ -34,6 +34,9 @@ db.version(5).stores({
 db.version(6).stores({
   secciones_libro: 'id, materia, libro, nombre, updated_at'
 });
+db.version(7).stores({
+  checklist_completo: 'id, updated_at, user_id, materia, subtema_id, libro, capitulo, tipo, completado'
+});
 
 export const State = {
   IDLE: 'IDLE', FOCUS_RUNNING: 'FOCUS_RUNNING', FOCUS_PAUSED: 'FOCUS_PAUSED',
