@@ -239,11 +239,12 @@ tr:hover {
   margin: 0 auto;
 }
 
+
 /* ========== CHECKLIST JERÁRQUICO ========== */
 #checklistContainer {
   display: block !important;
   text-align: left !important;
-  color-scheme: dark; /* para que los controles nativos se vean oscuros */
+  color-scheme: dark;
 }
 
 .checklist-materia {
@@ -252,6 +253,7 @@ tr:hover {
   font-weight: bold;
   color: #fff;
   border-bottom: 1px solid var(--border);
+  font-size: 1.2rem;
 }
 
 .checklist-subtema,
@@ -265,7 +267,7 @@ tr:hover {
   border-bottom: 1px solid var(--border);
   color: var(--text);
   font-family: var(--font);
-  font-size: 0.9rem;
+  font-size: 1.35rem;      /* Letras más grandes */
   line-height: 1.4;
   white-space: normal;
   overflow: visible;
@@ -287,29 +289,10 @@ tr:hover {
 #checklistContainer input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
-  width: 24px;                  /* 1.5 veces el tamaño original (16px * 1.5 = 24px) */
-  height: 24px;
-  border: 2px solid var(--border);
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--accent);
   border-radius: 4px;
-  background-color: var(--bg);
-  cursor: pointer;
-  position: relative;
-  flex-shrink: 0;
-  margin: 0;
-}
-
-#checklistContainer input[type="checkbox"]:checked {
-  background-color: var(--accent);
-  border-color: var(--accent);
-}
-
-#checklistContainer input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 36px;                  /* mucho más grande y visible */
-  height: 36px;
-  border: 2px solid var(--accent);      /* borde color acento */
-  border-radius: 6px;
   background-color: transparent;
   cursor: pointer;
   position: relative;
@@ -325,11 +308,11 @@ tr:hover {
 #checklistContainer input[type="checkbox"]:checked::after {
   content: '';
   position: absolute;
-  left: 12px;
-  top: 5px;
-  width: 10px;
-  height: 18px;
+  left: 6px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
   border: solid white;
-  border-width: 0 3px 3px 0;
+  border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
