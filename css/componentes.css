@@ -239,11 +239,11 @@ tr:hover {
   margin: 0 auto;
 }
 
-
 /* ========== CHECKLIST JERÁRQUICO ========== */
 #checklistContainer {
   display: block !important;
   text-align: left !important;
+  color-scheme: dark; /* para que los controles nativos se vean oscuros */
 }
 
 .checklist-materia {
@@ -285,8 +285,32 @@ tr:hover {
 }
 
 #checklistContainer input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 24px;                  /* 1.5 veces el tamaño original (16px * 1.5 = 24px) */
+  height: 24px;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  background-color: var(--bg);
+  cursor: pointer;
+  position: relative;
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
   margin: 0;
+}
+
+#checklistContainer input[type="checkbox"]:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+#checklistContainer input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 2px;
+  width: 7px;
+  height: 12px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
