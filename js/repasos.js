@@ -64,8 +64,9 @@ export async function actualizarHistorialSubtema(reset = true) {
   const modoActual = state.session.modo;
   const seccionActual = document.getElementById('selSeccion')?.value;
 
+  const libroActual = document.getElementById('selLibro').value;
   let problemas = await db.sessions.where('tipo').equals('problema')
-    .and(p => p.subtema_id === subtemaId && p.modo === modoActual)
+    .and(p => p.subtema_id === subtemaId && p.modo === modoActual && p.libro === libroActual)
     .toArray();
 
   if (seccionActual && seccionActual !== '__agregar__') {

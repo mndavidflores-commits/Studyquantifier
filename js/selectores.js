@@ -64,6 +64,10 @@ export function poblarLibros(subtemaId) {
   selLibro.innerHTML = libros.map(l => `<option value="${l.nombre}">${l.nombre}</option>`).join('');
   actualizarCapitulos(libros[0].nombre, subtemaId);
   poblarSecciones(document.getElementById('selMateria').value, libros[0].nombre);
+    if (document.getElementById('active-view').classList.contains('active')) {
+    actualizarHistorialSubtema();
+  }
+
 }
 
 export function actualizarCapitulos(libroSeleccionado, subtemaId) {

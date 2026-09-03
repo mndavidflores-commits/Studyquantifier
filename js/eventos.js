@@ -395,10 +395,13 @@ export function initEventos() {
   });
 
   document.getElementById('selLibro').addEventListener('change', function() {
-    actualizarCapitulos(this.value, document.getElementById('selSubtema').value);
-    poblarSecciones(document.getElementById('selMateria').value, this.value);
-    document.getElementById('agregarSeccionRow').style.display = 'none';
-  });
+  actualizarCapitulos(this.value, document.getElementById('selSubtema').value);
+  poblarSecciones(document.getElementById('selMateria').value, this.value);
+  document.getElementById('agregarSeccionRow').style.display = 'none';
+  if (document.getElementById('active-view').classList.contains('active')) {
+    actualizarHistorialSubtema();
+  }
+});
 
   document.getElementById('selSeccion').addEventListener('change', function() {
     verificarAgregarSeccion();
