@@ -238,42 +238,10 @@ tr:hover {
   max-width: 500px;
   margin: 0 auto;
 }
-
 /* ========== CHECKLIST JERÁRQUICO ========== */
 .checklist-materia {
-  margin-top: 10px;
-}
-
-.checklist-subtema {
-  display: block;
-  margin-left: 0;
-  margin-bottom: 2px;
-}
-
-.checklist-libro {
-  display: block;
-  margin-left: 20px;
-  margin-bottom: 2px;
-}
-
-.checklist-capitulo {
-  display: block;
-  margin-left: 40px;
-  margin-bottom: 2px;
-}
-
-/* Evitar desbordamiento en móviles */
-.checklist-capitulo,
-.checklist-libro,
-.checklist-subtema {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.checklist-materia {
+  margin-top: 12px;
   font-weight: bold;
-  margin-top: 10px;
   color: #fff;
 }
 
@@ -283,4 +251,22 @@ tr:hover {
   display: block;
   margin-bottom: 4px;
   color: var(--text);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: normal;      /* ← permitir salto de línea */
+  overflow: visible;        /* ← no recortar texto */
+  text-overflow: clip;      /* ← no puntos suspensivos */
+}
+
+.checklist-subtema {
+  margin-left: 0;
+}
+
+.checklist-libro {
+  margin-left: 20px;
+}
+
+.checklist-capitulo {
+  margin-left: 40px;
 }
