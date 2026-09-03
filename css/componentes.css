@@ -270,3 +270,17 @@ tr:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.checklist-materia {
+  font-weight: bold;
+  margin-top: 10px;
+  color: #fff;
+}
+
+.checklist-subtema,
+.checklist-libro,
+.checklist-capitulo {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text);
+}

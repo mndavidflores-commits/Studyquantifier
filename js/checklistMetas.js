@@ -7,82 +7,93 @@ export async function actualizarChecklist() {
   const container = document.getElementById('checklistContainer');
   if (!container) return;
 
-  const completados = await db.checklist_completo.toArray();
-  const completadosMap = new Map();
-  completados.forEach(c => {
-    const key = `${c.tipo}:${c.subtema_id || ''}:${c.libro || ''}:${c.capitulo || ''}`;
-    completadosMap.set(key, c);
-  });
+  try {
+    const completados = await db.checklist_completo.toArray();
+    const completadosMap = new Map();
+    completados.forEach(c => {
+      const key = `${c.tipo}:${c.subtema_id || ''}:${c.libro || ''}:${c.capitulo || ''}`;
+      completadosMap.set(key, c);
+    });
 
-  let total = 0;
-  let completadosCount = 0;
+    let total = 0;
+    let completadosCount = 0;
 
-  const fragment = document.createDocumentFragment();
-  const materias = [...new Set(state.currentTemario.map(t => t.materia))];
+    const fragment = document.createDocumentFragment();
+    const materias = [...new Set(state.currentTemario.map(t => t.materia))];
 
-  for (const materia of materias) {
-    const tems = state.currentTemario.filter(t => t.materia === materia);
-    if (!tems.length) continue;
+    for (const materia of materias) {
+      const tems = state.currentTemario.filter(t => t.materia === materia);
+      if (!tems.length) continue;
 
-    const materiaDiv = document.createElement('div');
-    materiaDiv.className = 'checklist-materia';
-    materiaDiv.innerHTML = `<h4>${materia}</h4>`;
-    fragment.appendChild(materiaDiv);
+      const materiaDiv = document.createElement('div');
+      materiaDiv.className = 'checklist-materia';
+      materiaDiv.textContent = materia;
+      materiaDiv.style.fontWeight = 'bold';
+      materiaDiv.style.marginTop = '10px';
+      fragment.appendChild(materiaDiv);
 
-    for (const tema of tems) {
-      const subtemaId = tema.id.toString();
-      const subtemaName = tema.nombre;
+      for (const tema of tems) {
+        const subtemaId = (tema.id != null ? tema.id.toString() : 'sin-id');
+        const subtemaName = tema.nombre || `Subtema ${subtemaId}`;
 
-      // Checkbox de subtema
-      const keySubtema = `subtema:${subtemaId}::`;
-      const isSubtemaDone = completadosMap.has(keySubtema);
-      total++;
-      if (isSubtemaDone) completadosCount++;
-
-      const labelSubtema = document.createElement('label');
-      labelSubtema.className = 'checklist-subtema';
-      labelSubtema.innerHTML = `<input type="checkbox" class="checklist-cb-new" data-tipo="subtema" data-materia="${materia}" data-subtema="${subtemaId}" ${isSubtemaDone ? 'checked' : ''}> ${subtemaName}`;
-      fragment.appendChild(labelSubtema);
-
-      // Libros y capítulos
-      const libros = (tema.libros && Array.isArray(tema.libros)) ? tema.libros : [];
-      for (const libro of libros) {
-        const libroNombre = libro.nombre || libro;
-        const capitulos = (libro.capitulos && Array.isArray(libro.capitulos)) ? libro.capitulos : [];
-
-        const keyLibro = `libro:${subtemaId}:${libroNombre}:`;
-        const isLibroDone = completadosMap.has(keyLibro);
+        // Checkbox de subtema
+        const keySubtema = `subtema:${subtemaId}::`;
+        const isSubtemaDone = completadosMap.has(keySubtema);
         total++;
-        if (isLibroDone) completadosCount++;
+        if (isSubtemaDone) completadosCount++;
 
-        const labelLibro = document.createElement('label');
-        labelLibro.className = 'checklist-libro';
-        labelLibro.innerHTML = `<input type="checkbox" class="checklist-cb-new" data-tipo="libro" data-materia="${materia}" data-subtema="${subtemaId}" data-libro="${libroNombre}" ${isLibroDone ? 'checked' : ''}> 📖 ${libroNombre}`;
-        fragment.appendChild(labelLibro);
+        const labelSubtema = document.createElement('label');
+        labelSubtema.className = 'checklist-subtema';
+        labelSubtema.style.display = 'block';
+        labelSubtema.innerHTML = `<input type="checkbox" class="checklist-cb-new" data-tipo="subtema" data-materia="${materia}" data-subtema="${subtemaId}" ${isSubtemaDone ? 'checked' : ''}> ${subtemaName}`;
+        fragment.appendChild(labelSubtema);
 
-        for (const capitulo of capitulos) {
-          const keyCapitulo = `capitulo:${subtemaId}:${libroNombre}:${capitulo}`;
-          const isCapituloDone = completadosMap.has(keyCapitulo);
+        // Libros y capítulos
+        const libros = Array.isArray(tema.libros) ? tema.libros : [];
+        for (const libro of libros) {
+          const libroNombre = typeof libro === 'string' ? libro : (libro.nombre || 'Libro sin nombre');
+          const capitulos = (libro && Array.isArray(libro.capitulos)) ? libro.capitulos : [];
+
+          const keyLibro = `libro:${subtemaId}:${libroNombre}:`;
+          const isLibroDone = completadosMap.has(keyLibro);
           total++;
-          if (isCapituloDone) completadosCount++;
+          if (isLibroDone) completadosCount++;
 
-          const labelCapitulo = document.createElement('label');
-          labelCapitulo.className = 'checklist-capitulo';
-          labelCapitulo.innerHTML = `<input type="checkbox" class="checklist-cb-new" data-tipo="capitulo" data-materia="${materia}" data-subtema="${subtemaId}" data-libro="${libroNombre}" data-capitulo="${capitulo}" ${isCapituloDone ? 'checked' : ''}> ${capitulo}`;
-          fragment.appendChild(labelCapitulo);
+          const labelLibro = document.createElement('label');
+          labelLibro.className = 'checklist-libro';
+          labelLibro.style.display = 'block';
+          labelLibro.style.marginLeft = '20px';
+          labelLibro.innerHTML = `<input type="checkbox" class="checklist-cb-new" data-tipo="libro" data-materia="${materia}" data-subtema="${subtemaId}" data-libro="${libroNombre}" ${isLibroDone ? 'checked' : ''}> 📖 ${libroNombre}`;
+          fragment.appendChild(labelLibro);
+
+          for (const capitulo of capitulos) {
+            const keyCapitulo = `capitulo:${subtemaId}:${libroNombre}:${capitulo}`;
+            const isCapituloDone = completadosMap.has(keyCapitulo);
+            total++;
+            if (isCapituloDone) completadosCount++;
+
+            const labelCapitulo = document.createElement('label');
+            labelCapitulo.className = 'checklist-capitulo';
+            labelCapitulo.style.display = 'block';
+            labelCapitulo.style.marginLeft = '40px';
+            labelCapitulo.innerHTML = `<input type="checkbox" class="checklist-cb-new" data-tipo="capitulo" data-materia="${materia}" data-subtema="${subtemaId}" data-libro="${libroNombre}" data-capitulo="${capitulo}" ${isCapituloDone ? 'checked' : ''}> ${capitulo}`;
+            fragment.appendChild(labelCapitulo);
+          }
         }
       }
     }
+
+    container.innerHTML = '';
+    container.appendChild(fragment);
+
+    const pct = total ? Math.round(completadosCount / total * 100) : 0;
+    document.getElementById('progressChecklist').style.width = pct + '%';
+    document.getElementById('checklistPercent').textContent = pct + '% completado (' + completadosCount + '/' + total + ')';
+  } catch (error) {
+    console.error('Error en actualizarChecklist:', error);
+    container.innerHTML = '<p style="color:var(--text2);">Error al cargar el checklist.</p>';
   }
-
-  container.innerHTML = '';
-  container.appendChild(fragment);
-
-  const pct = total ? Math.round(completadosCount / total * 100) : 0;
-  document.getElementById('progressChecklist').style.width = pct + '%';
-  document.getElementById('checklistPercent').textContent = pct + '% completado (' + completadosCount + '/' + total + ')';
 }
-
 // Delegación de eventos para checkboxes del checklist
 document.getElementById('checklistContainer').addEventListener('change', async (e) => {
   if (!e.target.classList.contains('checklist-cb-new')) return;
