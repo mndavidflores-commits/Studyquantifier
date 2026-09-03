@@ -303,14 +303,33 @@ tr:hover {
   border-color: var(--accent);
 }
 
+#checklistContainer input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 36px;                  /* mucho más grande y visible */
+  height: 36px;
+  border: 2px solid var(--accent);      /* borde color acento */
+  border-radius: 6px;
+  background-color: transparent;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+#checklistContainer input[type="checkbox"]:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
 #checklistContainer input[type="checkbox"]:checked::after {
   content: '';
   position: absolute;
-  left: 7px;
-  top: 2px;
-  width: 7px;
-  height: 12px;
+  left: 12px;
+  top: 5px;
+  width: 10px;
+  height: 18px;
   border: solid white;
-  border-width: 0 2px 2px 0;
+  border-width: 0 3px 3px 0;
   transform: rotate(45deg);
 }
