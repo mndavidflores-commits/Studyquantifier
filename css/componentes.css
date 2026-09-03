@@ -281,3 +281,13 @@ tr:hover {
   height: 16px;
   margin: 0;
 }
+
+/* ========== CHECKLIST OCUPAR TODO EL ANCHO ========== */
+#panelChecklist.active {
+  display: block !important;
+}
+
+#panelChecklist.active .card {
+  max-width: 100%;
+  width: 100%;
+}
