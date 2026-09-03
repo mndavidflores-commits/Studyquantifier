@@ -239,40 +239,49 @@ tr:hover {
   margin: 0 auto;
 }
 
-/* ========== CHECKLIST JERÁRQUICO ========== */
-
 
 /* ========== CHECKLIST JERÁRQUICO ========== */
-.checklist-materia {
-  margin-top: 12px;
-  font-weight: bold;
-  color: #fff;
-}
-
-/* Estas clases ya no necesitan display flex, pues se aplica inline */
-.checklist-subtema,
-.checklist-libro,
-.checklist-capitulo {
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
-
 #checklistContainer {
   display: block !important;
   text-align: left !important;
 }
 
-#checklistContainer label {
+.checklist-materia {
+  margin: 0;
+  padding: 10px 0;
+  font-weight: bold;
+  color: #fff;
+  border-bottom: 1px solid var(--border);
+}
+
+.checklist-subtema,
+.checklist-libro,
+.checklist-capitulo {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
   color: var(--text);
   font-family: var(--font);
   font-size: 0.9rem;
   line-height: 1.4;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.checklist-subtema {
+  padding-left: 0;
+}
+
+.checklist-libro {
+  padding-left: 20px;
+}
+
+.checklist-capitulo {
+  padding-left: 40px;
 }
 
 #checklistContainer input[type="checkbox"] {
@@ -280,14 +289,4 @@ tr:hover {
   width: 16px;
   height: 16px;
   margin: 0;
-}
-
-/* ========== CHECKLIST OCUPAR TODO EL ANCHO ========== */
-#panelChecklist.active {
-  display: block !important;
-}
-
-#panelChecklist.active .card {
-  max-width: 100%;
-  width: 100%;
 }
