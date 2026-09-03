@@ -33,10 +33,12 @@ export async function actualizarChecklist() {
       if (!tems.length) continue;
 
       const materiaDiv = document.createElement('div');
-      materiaDiv.className = 'checklist-materia';
       materiaDiv.textContent = materia;
       materiaDiv.style.fontWeight = 'bold';
+      materiaDiv.style.fontSize = '1.3rem';
       materiaDiv.style.marginTop = '10px';
+      materiaDiv.style.paddingBottom = '4px';
+      materiaDiv.style.borderBottom = '1px solid var(--border)';
       materiaDiv.style.color = '#fff';
       fragment.appendChild(materiaDiv);
 
@@ -47,8 +49,12 @@ export async function actualizarChecklist() {
         const labelSubtema = document.createElement('label');
         labelSubtema.style.display = 'flex';
         labelSubtema.style.alignItems = 'center';
-        labelSubtema.style.gap = '6px';
-        labelSubtema.style.marginBottom = '4px';
+        labelSubtema.style.gap = '8px';
+        labelSubtema.style.padding = '8px 0';
+        labelSubtema.style.borderBottom = '1px solid var(--border)';
+        labelSubtema.style.fontSize = '1.2rem';
+        labelSubtema.style.fontFamily = 'var(--mono)';
+        labelSubtema.style.color = 'var(--text)';
 
         const inputSubtema = document.createElement('input');
         inputSubtema.type = 'checkbox';
@@ -56,6 +62,9 @@ export async function actualizarChecklist() {
         inputSubtema.dataset.tipo = 'subtema';
         inputSubtema.dataset.materia = materia;
         inputSubtema.dataset.subtema = subtemaId;
+        inputSubtema.style.width = '20px';
+        inputSubtema.style.height = '20px';
+        inputSubtema.style.accentColor = 'var(--accent)';
         const keySubtema = `subtema:${subtemaId}::`;
         if (completadosMap.has(keySubtema)) {
           inputSubtema.checked = true;
@@ -74,9 +83,13 @@ export async function actualizarChecklist() {
           const labelLibro = document.createElement('label');
           labelLibro.style.display = 'flex';
           labelLibro.style.alignItems = 'center';
-          labelLibro.style.gap = '6px';
-          labelLibro.style.marginLeft = '20px';
-          labelLibro.style.marginBottom = '4px';
+          labelLibro.style.gap = '8px';
+          labelLibro.style.padding = '8px 0';
+          labelLibro.style.paddingLeft = '20px';
+          labelLibro.style.borderBottom = '1px solid var(--border)';
+          labelLibro.style.fontSize = '1.2rem';
+          labelLibro.style.fontFamily = 'var(--mono)';
+          labelLibro.style.color = 'var(--text)';
 
           const inputLibro = document.createElement('input');
           inputLibro.type = 'checkbox';
@@ -85,6 +98,9 @@ export async function actualizarChecklist() {
           inputLibro.dataset.materia = materia;
           inputLibro.dataset.subtema = subtemaId;
           inputLibro.dataset.libro = libroNombre;
+          inputLibro.style.width = '20px';
+          inputLibro.style.height = '20px';
+          inputLibro.style.accentColor = 'var(--accent)';
           const keyLibro = `libro:${subtemaId}:${libroNombre}:`;
           if (completadosMap.has(keyLibro)) {
             inputLibro.checked = true;
@@ -100,9 +116,13 @@ export async function actualizarChecklist() {
             const labelCapitulo = document.createElement('label');
             labelCapitulo.style.display = 'flex';
             labelCapitulo.style.alignItems = 'center';
-            labelCapitulo.style.gap = '6px';
-            labelCapitulo.style.marginLeft = '40px';
-            labelCapitulo.style.marginBottom = '4px';
+            labelCapitulo.style.gap = '8px';
+            labelCapitulo.style.padding = '8px 0';
+            labelCapitulo.style.paddingLeft = '40px';
+            labelCapitulo.style.borderBottom = '1px solid var(--border)';
+            labelCapitulo.style.fontSize = '1.2rem';
+            labelCapitulo.style.fontFamily = 'var(--mono)';
+            labelCapitulo.style.color = 'var(--text)';
 
             const inputCapitulo = document.createElement('input');
             inputCapitulo.type = 'checkbox';
@@ -112,6 +132,9 @@ export async function actualizarChecklist() {
             inputCapitulo.dataset.subtema = subtemaId;
             inputCapitulo.dataset.libro = libroNombre;
             inputCapitulo.dataset.capitulo = capitulo;
+            inputCapitulo.style.width = '20px';
+            inputCapitulo.style.height = '20px';
+            inputCapitulo.style.accentColor = 'var(--accent)';
             const keyCapitulo = `capitulo:${subtemaId}:${libroNombre}:${capitulo}`;
             if (completadosMap.has(keyCapitulo)) {
               inputCapitulo.checked = true;
@@ -136,33 +159,4 @@ export async function actualizarChecklist() {
     console.error('Error en actualizarChecklist:', error);
     container.innerHTML = '<p style="color:var(--text2);">Error al cargar el checklist.</p>';
   }
-}
-
-// ===================== METAS =====================
-export async function actualizarMetas() {
-  const hoy = new Date();
-  const diaSemana = hoy.getDay();
-  const esDiaActivo = state.diasActivosMeta.includes(diaSemana);
-
-  const sessionsHoy = await db.sessions.where('fecha').equals(hoyLocal()).and(s => s.tipo === 'pomodoro').toArray();
-  const minHoy = sessionsHoy.reduce((a, s) => a + (s.tiempo_pomodoro || 0), 0) / 3600;
-  const metaDiaria = parseFloat(document.getElementById('metaDiaria').value) || 3;
-
-  if (esDiaActivo) {
-    document.getElementById('progresoDiario').textContent = `${minHoy.toFixed(1)}h / ${metaDiaria}h`;
-    document.getElementById('progressDiario').style.width = Math.min(100, (minHoy / metaDiaria) * 100) + '%';
-  } else {
-    document.getElementById('progresoDiario').textContent = `${minHoy.toFixed(1)}h (día no activo)`;
-    document.getElementById('progressDiario').style.width = '0%';
-  }
-
-  const inicioSemana = new Date(hoy);
-  inicioSemana.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
-  const inicioSemanaStr = fechaLocale(inicioSemana);
-  const fechaHoy = hoyLocal();
-  const sessionsSem = await db.sessions.where('fecha').between(inicioSemanaStr, fechaHoy, true, true).and(s => s.tipo === 'pomodoro').toArray();
-  const minSem = sessionsSem.reduce((a, s) => a + (s.tiempo_pomodoro || 0), 0) / 3600;
-  const metaSemanal = parseFloat(document.getElementById('metaSemanal').value) || 15;
-  document.getElementById('progresoSemanal').textContent = `${minSem.toFixed(1)}h / ${metaSemanal}h`;
-  document.getElementById('progressSemanal').style.width = Math.min(100, (minSem / metaSemanal) * 100) + '%';
 }
