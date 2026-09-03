@@ -3,6 +3,7 @@ import { guardarLocalYOutbox, syncAll } from './sync.js';
 import { hoyLocal, fechaLocale } from './utils.js';
 
 // ===================== CHECKLIST JERÁRQUICO =====================
+
 export async function actualizarChecklist() {
   const container = document.getElementById('checklistContainer');
   if (!container) return;
@@ -15,21 +16,15 @@ export async function actualizarChecklist() {
       completadosMap.set(key, c);
     });
 
-    // Función para formatear el nombre del capítulo
     function formatearCapitulo(capitulo) {
       const texto = String(capitulo);
-      if (/^\d+$/.test(texto)) {
-        return `Capítulo ${texto}`;
-      }
-      if (/^\d+:\s*(.+)/.test(texto) || /^\d+\s+(.+)/.test(texto)) {
-        return `Capítulo ${texto}`;
-      }
+      if (/^\d+$/.test(texto)) return `Capítulo ${texto}`;
+      if (/^\d+:\s*(.+)/.test(texto) || /^\d+\s+(.+)/.test(texto)) return `Capítulo ${texto}`;
       return texto;
     }
 
     let total = 0;
     let completadosCount = 0;
-
     const fragment = document.createDocumentFragment();
     const materias = [...new Set(state.currentTemario.map(t => t.materia))];
 
@@ -37,7 +32,6 @@ export async function actualizarChecklist() {
       const tems = state.currentTemario.filter(t => t.materia === materia);
       if (!tems.length) continue;
 
-      // Encabezado de materia
       const materiaDiv = document.createElement('div');
       materiaDiv.className = 'checklist-materia';
       materiaDiv.textContent = materia;
@@ -50,9 +44,12 @@ export async function actualizarChecklist() {
         const subtemaId = (tema.id != null ? tema.id.toString() : 'sin-id');
         const subtemaName = tema.nombre || `Subtema ${subtemaId}`;
 
-        // Checkbox de subtema
         const labelSubtema = document.createElement('label');
-        labelSubtema.className = 'checklist-subtema';
+        labelSubtema.style.display = 'flex';
+        labelSubtema.style.alignItems = 'center';
+        labelSubtema.style.gap = '6px';
+        labelSubtema.style.marginBottom = '4px';
+
         const inputSubtema = document.createElement('input');
         inputSubtema.type = 'checkbox';
         inputSubtema.className = 'checklist-cb-new';
@@ -69,14 +66,18 @@ export async function actualizarChecklist() {
         labelSubtema.appendChild(document.createTextNode(subtemaName));
         fragment.appendChild(labelSubtema);
 
-        // Libros y capítulos
         const libros = Array.isArray(tema.libros) ? tema.libros : [];
         for (const libro of libros) {
           const libroNombre = typeof libro === 'string' ? libro : (libro.nombre || 'Libro sin nombre');
           const capitulos = (libro && Array.isArray(libro.capitulos)) ? libro.capitulos : [];
 
           const labelLibro = document.createElement('label');
-          labelLibro.className = 'checklist-libro';
+          labelLibro.style.display = 'flex';
+          labelLibro.style.alignItems = 'center';
+          labelLibro.style.gap = '6px';
+          labelLibro.style.marginLeft = '20px';
+          labelLibro.style.marginBottom = '4px';
+
           const inputLibro = document.createElement('input');
           inputLibro.type = 'checkbox';
           inputLibro.className = 'checklist-cb-new';
@@ -97,7 +98,12 @@ export async function actualizarChecklist() {
           for (const capitulo of capitulos) {
             const capituloFormateado = formatearCapitulo(capitulo);
             const labelCapitulo = document.createElement('label');
-            labelCapitulo.className = 'checklist-capitulo';
+            labelCapitulo.style.display = 'flex';
+            labelCapitulo.style.alignItems = 'center';
+            labelCapitulo.style.gap = '6px';
+            labelCapitulo.style.marginLeft = '40px';
+            labelCapitulo.style.marginBottom = '4px';
+
             const inputCapitulo = document.createElement('input');
             inputCapitulo.type = 'checkbox';
             inputCapitulo.className = 'checklist-cb-new';
@@ -131,6 +137,7 @@ export async function actualizarChecklist() {
     container.innerHTML = '<p style="color:var(--text2);">Error al cargar el checklist.</p>';
   }
 }
+
 // ===================== METAS =====================
 export async function actualizarMetas() {
   const hoy = new Date();

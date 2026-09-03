@@ -240,36 +240,21 @@ tr:hover {
 }
 
 /* ========== CHECKLIST JERÁRQUICO ========== */
+
+
+/* ========== CHECKLIST JERÁRQUICO ========== */
 .checklist-materia {
   margin-top: 12px;
   font-weight: bold;
   color: #fff;
 }
 
+/* Estas clases ya no necesitan display flex, pues se aplica inline */
 .checklist-subtema,
 .checklist-libro,
 .checklist-capitulo {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 4px;
   color: var(--text);
   font-family: var(--font);
   font-size: 0.9rem;
   line-height: 1.4;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-}
-
-.checklist-subtema {
-  margin-left: 0;
-}
-
-.checklist-libro {
-  margin-left: 20px;
-}
-
-.checklist-capitulo {
-  margin-left: 40px;
 }
