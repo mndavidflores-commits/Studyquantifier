@@ -239,7 +239,6 @@ tr:hover {
   margin: 0 auto;
 }
 
-
 /* ========== CHECKLIST JERÁRQUICO ========== */
 #checklistContainer {
   display: block !important;
@@ -253,7 +252,9 @@ tr:hover {
   font-weight: bold;
   color: #fff;
   border-bottom: 1px solid var(--border);
-  font-size: 1.2rem;
+  font-size: 1.6rem !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
 }
 
 .checklist-subtema,
@@ -267,11 +268,13 @@ tr:hover {
   border-bottom: 1px solid var(--border);
   color: var(--text);
   font-family: var(--font);
-  font-size: 1.35rem;      /* Letras más grandes */
+  font-size: 1.6rem !important;      /* Letras mucho más grandes */
   line-height: 1.4;
   white-space: normal;
   overflow: visible;
   text-overflow: clip;
+  text-transform: none !important;   /* Evita mayúsculas automáticas */
+  letter-spacing: normal !important; /* Quita espaciado extra */
 }
 
 .checklist-subtema {
