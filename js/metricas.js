@@ -1,6 +1,6 @@
 import { db, state } from './config.js';
 import { formatTime, formatHMS, hoyLocal, fechaLocale } from './utils.js';
-import { generarHeatmap, generarGraficoProblemas, generarGraficoFSRS, generarGraficoBarrasDiarias, generarGraficoHorasSemana } from './graficos.js';
+import { generarHeatmap, generarGraficoProblemas, generarGraficoFSRS } from './graficos.js';
 
 // ===================== MÉTRICAS GENERALES =====================
 export async function actualizarMetricas() {
@@ -20,64 +20,6 @@ export async function actualizarMetricas() {
       <span>Conjeturas/min: ${conjPorMin}</span>
       <span>Total: ${total}</span>
     `;
-  }
-
-  if (document.getElementById('chartTiempoMateria')) {
-    if (state.chartTiempo) state.chartTiempo.destroy();
-    const ctxBar = document.getElementById('chartTiempoMateria').getContext('2d');
-    const mats = {};
-    problemas.forEach(s => {
-      if (!mats[s.materia]) mats[s.materia] = { total: 0, count: 0 };
-      mats[s.materia].total += (s.tiempo_s || 0);
-      mats[s.materia].count++;
-    });
-    const labels = Object.keys(mats);
-    const data = labels.map(m => mats[m].count ? Math.round(mats[m].total / mats[m].count) : 0);
-    state.chartTiempo = new Chart(ctxBar, {
-      type: 'bar',
-      data: { labels, datasets: [{ label: 'Tiempo prom (s)', data, backgroundColor: 'rgba(202,71,84,0.6)' }] },
-      options: { responsive: true, scales: { y: { beginAtZero: true } } }
-    });
-  }
-
-  if (document.getElementById('chartRadar')) {
-    if (state.chartRadar) state.chartRadar.destroy();
-    const ctxRadar = document.getElementById('chartRadar').getContext('2d');
-    const velocidad = total ? Math.min(100, Math.round((total / (tiempoTotal / 60)) * 10)) : 0;
-    const precision = bien + mal > 0 ? Math.round(bien / (bien + mal) * 100) : 0;
-    const retencion = problemas.filter(s => s.modo === 'B' && s.resultado === 'bien').length / (problemas.filter(s => s.modo === 'B').length || 1) * 100;
-    const consolidacion = total ? problemas.filter(s => s.modo === 'B').length / total * 100 : 0;
-    const generacionC = total ? problemas.filter(s => s.modo === 'C').length / total * 100 : 0;
-    state.chartRadar = new Chart(ctxRadar, {
-      type: 'radar',
-      data: {
-        labels: ['Velocidad', 'Precisión', 'Retención', 'Consolidación', 'Generación C'],
-        datasets: [{ data: [velocidad, precision, retencion, consolidacion, generacionC], backgroundColor: 'rgba(202,71,84,0.2)', borderColor: '#ca4754' }]
-      },
-      options: { scales: { r: { beginAtZero: true, max: 100 } } }
-    });
-  }
-
-  if (document.getElementById('chartEvolucion')) {
-    if (state.chartEvolucion) state.chartEvolucion.destroy();
-    const ctxLine = document.getElementById('chartEvolucion').getContext('2d');
-    const dias = {};
-    problemas.forEach(s => {
-      const dia = s.fecha || fechaLocale(s.timestamp);
-      if (!dias[dia]) dias[dia] = { bien: 0, mal: 0 };
-      if (s.resultado === 'bien') dias[dia].bien++;
-      else if (s.resultado === 'mal') dias[dia].mal++;
-    });
-    const sorted = Object.keys(dias).sort();
-    const data = sorted.map(d => {
-      const b = dias[d].bien, m = dias[d].mal;
-      return b + m > 0 ? Math.round(b / (b + m) * 100) : null;
-    });
-    state.chartEvolucion = new Chart(ctxLine, {
-      type: 'line',
-      data: { labels: sorted, datasets: [{ label: 'Tasa aciertos %', data, borderColor: '#ca4754' }] },
-      options: { responsive: true }
-    });
   }
 }
 
@@ -144,6 +86,4 @@ export async function actualizarPanelMetricas() {
 
   if (document.getElementById('chartProblemas')) await generarGraficoProblemas();
   if (document.getElementById('chartFSRS')) await generarGraficoFSRS();
-  if (document.getElementById('chartBarrasDiarias')) await generarGraficoBarrasDiarias();
-  if (document.getElementById('chartHorasSemana')) await generarGraficoHorasSemana();
 }

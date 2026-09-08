@@ -36,6 +36,7 @@
       <nav class="tab-nav" id="tabNav">
         <button class="tab-btn active" data-panel="panelSesion">Sesión</button>
         <button class="tab-btn" data-panel="panelMetricas">Métricas</button>
+        <button class="tab-btn" data-panel="panelComparativa">Comparativa</button>
         <button class="tab-btn" data-panel="panelMetas">Metas</button>
         <button class="tab-btn" data-panel="panelSueno">Sueño</button>
         <button class="tab-btn" data-panel="panelHistorial">Historial</button>
@@ -257,35 +258,46 @@
           <h3>Evolución de la memoria (FSRS)</h3>
           <div class="chart-wrapper"><canvas id="chartFSRS"></canvas></div>
         </div>
+      </div>
+    </div>
 
-        <div class="card chart-card">
-          <h3>Rendimiento diario</h3>
-          <div class="chart-filters" style="justify-content: flex-start; gap: 10px; flex-wrap: wrap;">
-            <select id="filtroMateriaBarras">
-              <option value="Todos">Todos</option>
-              <option value="Matemática">Matemática</option>
-              <option value="Física">Física</option>
-              <option value="Química">Química</option>
-            </select>
-            <select id="filtroTipoSesionBarras">
-              <option value="Todos">Todos</option>
-              <option value="A">A</option>
-              <option value="B">B</option>
-              <option value="C">C</option>
-              <option value="EXT-S">EXT-S</option>
-            </select>
+    <!-- Panel Comparativa -->
+    <div class="panel" id="panelComparativa">
+      <div class="metric-dashboard">
+        <div class="card">
+          <h3>Comparativa</h3>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:20px;">
+            <div>
+              <label>Fecha</label>
+              <input type="date" id="comparativaFecha">
+            </div>
+            <div>
+              <label>Materia</label>
+              <select id="comparativaMateria">
+                <option value="Todas">Todas</option>
+              </select>
+            </div>
+            <div>
+              <label>Semana</label>
+              <input type="week" id="comparativaSemana">
+            </div>
           </div>
-          <div class="chart-wrapper"><canvas id="chartBarrasDiarias"></canvas></div>
         </div>
 
-        <div class="card chart-card">
-          <h3>Horas por semana</h3>
-          <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
-            <button id="semanaAnterior" class="chart-toggle-btn">← Semana anterior</button>
-            <span id="rangoSemana" style="font-family:var(--mono); font-size:0.8rem;"></span>
-            <button id="semanaSiguiente" class="chart-toggle-btn">Semana siguiente →</button>
-          </div>
-          <div class="chart-wrapper"><canvas id="chartHorasSemana"></canvas></div>
+        <div class="card">
+          <h3>Hoy</h3>
+          <div id="comparativaHoy"></div>
+        </div>
+
+        <div class="card">
+          <h3>Día seleccionado</h3>
+          <div id="comparativaDia"></div>
+          <div class="chart-wrapper"><canvas id="comparativaChartDia"></canvas></div>
+        </div>
+
+        <div class="card">
+          <h3>Semana</h3>
+          <div id="comparativaSemanaResumen"></div>
         </div>
       </div>
     </div>
@@ -361,7 +373,7 @@
       <div class="card"><h3>Checklist de temas completados</h3>
         <div class="progress-bar"><div class="progress-fill" id="progressChecklist" style="width:0%;"></div></div>
         <p id="checklistPercent" style="font-size:0.8rem;color:var(--text2);">0% completado</p>
-        <div id="checklistContainer"></div>
+        <div id="checklistContainer" style="max-height:50vh;overflow-y:auto;margin-top:8px;"></div>
       </div>
     </div>
 

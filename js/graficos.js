@@ -1,11 +1,8 @@
 import { db, state } from './config.js';
 import { fechaLocale } from './utils.js';
 
-// Instancias para reutilizar
 let chartProblemasInst = null;
 let chartFSRSInst = null;
-let chartBarrasDiariasInst = null;
-let chartHorasSemanaInst = null;
 let chartSuenoInst = null;
 
 // ===================== GRÁFICO DE PROBLEMAS (SCATTER) =====================
@@ -32,6 +29,7 @@ export async function generarGraficoProblemas() {
     y: (p.tiempo_s || 0) / 60,
     problema: p
   }));
+
   const dataB = puntosB.map((p, index) => ({
     x: index + 1,
     y: (p.tiempo_s || 0) / 60,
@@ -152,7 +150,7 @@ export async function generarGraficoProblemas() {
   }
 }
 
-// ===================== GRÁFICO FSRS (EVOLUCIÓN DE MEMORIA) =====================
+// ===================== GRÁFICO FSRS =====================
 export async function generarGraficoFSRS() {
   const ctx = document.getElementById('chartFSRS')?.getContext('2d');
   if (!ctx) return;
@@ -179,24 +177,20 @@ export async function generarGraficoFSRS() {
   const estabilidadPromedio = dias.map(d => porDia[d].estabilidadTotal / porDia[d].count);
   const dificultadPromedio = dias.map(d => porDia[d].dificultadTotal / porDia[d].count);
 
-  const labels = dias;
-  const data1 = estabilidadPromedio;
-  const data2 = dificultadPromedio;
-
   if (chartFSRSInst) {
-    chartFSRSInst.data.labels = labels;
-    chartFSRSInst.data.datasets[0].data = data1;
-    chartFSRSInst.data.datasets[1].data = data2;
+    chartFSRSInst.data.labels = dias;
+    chartFSRSInst.data.datasets[0].data = estabilidadPromedio;
+    chartFSRSInst.data.datasets[1].data = dificultadPromedio;
     chartFSRSInst.update();
   } else {
     chartFSRSInst = new Chart(ctx, {
       type: 'line',
       data: {
-        labels,
+        labels: dias,
         datasets: [
           {
             label: 'Estabilidad promedio',
-            data: data1,
+            data: estabilidadPromedio,
             borderColor: '#ca4754',
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -205,7 +199,7 @@ export async function generarGraficoFSRS() {
           },
           {
             label: 'Dificultad promedio',
-            data: data2,
+            data: dificultadPromedio,
             borderColor: '#646669',
             backgroundColor: 'transparent',
             borderWidth: 2,
@@ -375,191 +369,6 @@ export async function actualizarGraficoSueno() {
   }
 }
 
-// ===================== GRÁFICO DE BARRAS DIARIAS =====================
-let filtroMateriaDiaria = 'Todos';
-let filtroTipoSesionDiaria = 'Todos';
-
-export async function generarGraficoBarrasDiarias() {
-  const ctx = document.getElementById('chartBarrasDiarias')?.getContext('2d');
-  if (!ctx) return;
-
-  const sesiones = await db.sessions.toArray();
-  const filtradas = sesiones.filter(s => {
-    if (filtroMateriaDiaria !== 'Todos' && s.materia !== filtroMateriaDiaria) return false;
-    if (filtroTipoSesionDiaria !== 'Todos' && s.modo !== filtroTipoSesionDiaria) return false;
-    return true;
-  });
-
-  const pomodoros = filtradas.filter(s => s.tipo === 'pomodoro');
-  const problemas = filtradas.filter(s => s.tipo === 'problema');
-
-  const diasMap = new Map();
-
-  pomodoros.forEach(s => {
-    const fecha = s.fecha || fechaLocale(s.timestamp);
-    const entrada = diasMap.get(fecha) || { horas: 0, problemas: 0 };
-    entrada.horas += (s.tiempo_pomodoro || 0) / 3600;
-    diasMap.set(fecha, entrada);
-  });
-
-  problemas.forEach(s => {
-    const fecha = s.fecha || fechaLocale(s.timestamp);
-    const entrada = diasMap.get(fecha) || { horas: 0, problemas: 0 };
-    entrada.problemas += 1;
-    diasMap.set(fecha, entrada);
-  });
-
-  const labels = [...diasMap.keys()].sort();
-  const horas = labels.map(d => diasMap.get(d).horas);
-  const problemasCount = labels.map(d => diasMap.get(d).problemas);
-
-  if (chartBarrasDiariasInst) {
-    chartBarrasDiariasInst.data.labels = labels;
-    chartBarrasDiariasInst.data.datasets[0].data = horas;
-    // Guardamos problemasCount para tooltip
-    chartBarrasDiariasInst.options.plugins.tooltip.callbacks.label = (context) => {
-      const index = context.dataIndex;
-      return [`Horas: ${horas[index].toFixed(2)} h`, `Problemas: ${problemasCount[index]}`];
-    };
-    chartBarrasDiariasInst.update();
-  } else {
-    chartBarrasDiariasInst = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Horas',
-          data: horas,
-          backgroundColor: '#ca4754',
-          hoverBackgroundColor: '#e06c78',
-          borderColor: '#ca4754',
-          borderWidth: 1,
-          borderRadius: 2,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        plugins: {
-          tooltip: {
-            backgroundColor: '#2c2e31',
-            titleColor: '#d1d0c5',
-            bodyColor: '#d1d0c5',
-            borderColor: '#646669',
-            borderWidth: 1,
-            callbacks: {
-              title: (items) => items[0]?.label || '',
-              label: (context) => {
-                const index = context.dataIndex;
-                return [`Horas: ${horas[index].toFixed(2)} h`, `Problemas: ${problemasCount[index]}`];
-              }
-            }
-          },
-          legend: { display: false }
-        },
-        scales: {
-          x: {
-            ticks: { color: '#646669', maxRotation: 0, autoSkip: true, maxTicksLimit: 15 },
-            grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
-          },
-          y: {
-            title: { display: true, text: 'Horas', color: '#646669' },
-            ticks: { color: '#646669' },
-            grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
-          }
-        }
-      }
-    });
-  }
-}
-
-// ===================== GRÁFICO SEMANAL =====================
-let semanaOffset = 0;
-
-export async function generarGraficoHorasSemana() {
-  const ctx = document.getElementById('chartHorasSemana')?.getContext('2d');
-  if (!ctx) return;
-
-  const hoy = new Date();
-  const lunesActual = new Date(hoy);
-  lunesActual.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
-  lunesActual.setHours(0, 0, 0, 0);
-
-  const lunesObjetivo = new Date(lunesActual);
-  lunesObjetivo.setDate(lunesActual.getDate() + semanaOffset * 7);
-
-  const domingoObjetivo = new Date(lunesObjetivo);
-  domingoObjetivo.setDate(lunesObjetivo.getDate() + 6);
-
-  const formatear = d => d.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
-  const rangoElem = document.getElementById('rangoSemana');
-  if (rangoElem) rangoElem.textContent = `${formatear(lunesObjetivo)} - ${formatear(domingoObjetivo)}`;
-
-  const etiquetas = [];
-  const data = [];
-  for (let i = 0; i < 7; i++) {
-    const dia = new Date(lunesObjetivo);
-    dia.setDate(lunesObjetivo.getDate() + i);
-    const fechaStr = fechaLocale(dia);
-    etiquetas.push(dia.toLocaleDateString('es-PE', { weekday: 'short', day: 'numeric' }));
-    const sesionesDia = await db.sessions.where('fecha').equals(fechaStr).and(s => s.tipo === 'pomodoro').toArray();
-    const horas = sesionesDia.reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0) / 3600;
-    data.push(horas);
-  }
-
-  if (chartHorasSemanaInst) {
-    chartHorasSemanaInst.data.labels = etiquetas;
-    chartHorasSemanaInst.data.datasets[0].data = data;
-    chartHorasSemanaInst.update();
-  } else {
-    chartHorasSemanaInst = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: etiquetas,
-        datasets: [{
-          label: 'Horas',
-          data,
-          backgroundColor: '#ca4754',
-          hoverBackgroundColor: '#e06c78',
-          borderColor: '#ca4754',
-          borderWidth: 1,
-          borderRadius: 2,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        plugins: {
-          tooltip: {
-            backgroundColor: '#2c2e31',
-            titleColor: '#d1d0c5',
-            bodyColor: '#d1d0c5',
-            borderColor: '#646669',
-            borderWidth: 1,
-            callbacks: {
-              label: (context) => `Horas: ${context.parsed.y.toFixed(2)} h`
-            }
-          },
-          legend: { display: false }
-        },
-        scales: {
-          x: {
-            ticks: { color: '#646669' },
-            grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
-          },
-          y: {
-            title: { display: true, text: 'Horas', color: '#646669' },
-            ticks: { color: '#646669' },
-            grid: { color: 'rgba(100,102,105,0.2)', borderDash: [2, 2] }
-          }
-        }
-      }
-    });
-  }
-}
-
 // ===================== DELEGACIÓN DE EVENTOS =====================
 document.addEventListener('click', (e) => {
   const filtroBtn = e.target.closest('.chart-filter-btn');
@@ -592,24 +401,5 @@ document.addEventListener('click', (e) => {
     state.mostrarPuntosB = !state.mostrarPuntosB;
     toggleMostrarB.classList.toggle('active', state.mostrarPuntosB);
     generarGraficoProblemas();
-    return;
-  }
-
-  if (e.target.closest('#semanaAnterior')) {
-    semanaOffset--;
-    generarGraficoHorasSemana();
-  } else if (e.target.closest('#semanaSiguiente')) {
-    semanaOffset++;
-    generarGraficoHorasSemana();
-  }
-});
-
-document.addEventListener('change', (e) => {
-  if (e.target.id === 'filtroMateriaBarras') {
-    filtroMateriaDiaria = e.target.value;
-    generarGraficoBarrasDiarias();
-  } else if (e.target.id === 'filtroTipoSesionBarras') {
-    filtroTipoSesionDiaria = e.target.value;
-    generarGraficoBarrasDiarias();
   }
 });

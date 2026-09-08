@@ -4,6 +4,7 @@ import { actualizarSleepHistorial, actualizarGraficoSueno, actualizarNotas } fro
 import { actualizarChecklist, actualizarMetas } from './checklistMetas.js';
 import { actualizarConjeturasFull } from './conjeturas.js';
 import { actualizarConjeturasSesion } from './repasos.js';
+import { actualizarComparativa } from './comparativa.js';
 
 // ===================== ACTUALIZACIÓN SELECTIVA =====================
 export function actualizarTodo() {
@@ -17,19 +18,40 @@ export function actualizarTodo() {
   actualizarMetas();
   actualizarPanelMetricas();
   actualizarNotas();
+  actualizarComparativa();
 }
 
 export function actualizarPanelesActivos() {
   const panelActivo = document.querySelector('.panel.active')?.id;
   if (!panelActivo) return;
   switch (panelActivo) {
-    case 'panelHistorial': actualizarHistorial(); break;
-    case 'panelMetricas': actualizarMetricas(); actualizarPanelMetricas(); break;
-    case 'panelSueno': actualizarSleepHistorial(); actualizarGraficoSueno(); break;
-    case 'panelConjeturas': actualizarConjeturasFull(); break;
-    case 'panelNotas': actualizarNotas(); break;
-    case 'panelChecklist': actualizarChecklist(); break;
-    case 'panelMetas': actualizarMetas(); break;
-    default: break;
+    case 'panelHistorial':
+      actualizarHistorial();
+      break;
+    case 'panelMetricas':
+      actualizarMetricas();
+      actualizarPanelMetricas();
+      break;
+    case 'panelComparativa':
+      actualizarComparativa();
+      break;
+    case 'panelSueno':
+      actualizarSleepHistorial();
+      actualizarGraficoSueno();
+      break;
+    case 'panelConjeturas':
+      actualizarConjeturasFull();
+      break;
+    case 'panelNotas':
+      actualizarNotas();
+      break;
+    case 'panelChecklist':
+      actualizarChecklist();
+      break;
+    case 'panelMetas':
+      actualizarMetas();
+      break;
+    default:
+      break;
   }
 }

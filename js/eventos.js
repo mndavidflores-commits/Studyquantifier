@@ -19,6 +19,7 @@ import { actualizarConjeturasFull } from './conjeturas.js';
 import { actualizarNotas } from './suenoNotas.js';
 import { actualizarChecklist } from './checklistMetas.js';
 import { actualizarMetricas, actualizarPanelMetricas } from './metricas.js';
+import { actualizarComparativa } from './comparativa.js';
 
 export function initEventos() {
   // ===================== EVENTOS DE NAVEGACIÓN =====================
@@ -260,6 +261,7 @@ export function initEventos() {
       dominio_temas: await db.dominio_temas.toArray(),
       temario: await db.temario.toArray(),
       secciones_libro: await db.secciones_libro.toArray(),
+      checklist_completo: await db.checklist_completo.toArray(),
       outbox: await db.outbox.toArray(),
       sync_metadata: await db.sync_metadata.toArray()
     };
@@ -289,6 +291,7 @@ export function initEventos() {
       if (data.dominio_temas) { await db.dominio_temas.clear(); await db.dominio_temas.bulkPut(data.dominio_temas); }
       if (data.temario) { await db.temario.clear(); await db.temario.bulkPut(data.temario); }
       if (data.secciones_libro) { await db.secciones_libro.clear(); await db.secciones_libro.bulkPut(data.secciones_libro); }
+      if (data.checklist_completo) { await db.checklist_completo.clear(); await db.checklist_completo.bulkPut(data.checklist_completo); }
       if (data.sync_metadata) { await db.sync_metadata.clear(); await db.sync_metadata.bulkPut(data.sync_metadata); }
       await syncAll();
       actualizarPanelesActivos();
@@ -316,6 +319,7 @@ export function initEventos() {
       await poblarMaterias();
       document.getElementById('selMateria').dispatchEvent(new Event('change'));
       await actualizarChecklist();
+      await actualizarComparativa();
       showToast('Temario cargado ✅');
     } catch (e) {
       showToast('Error al cargar el temario.');
@@ -350,7 +354,20 @@ export function initEventos() {
     actualizarPanelesActivos();
   });
 
-  // ===================== SELECTORES =====================
+  // ===================== SELECTORES COMPARATIVA =====================
+  document.getElementById('comparativaFecha').addEventListener('change', () => {
+    actualizarComparativa();
+  });
+
+  document.getElementById('comparativaMateria').addEventListener('change', () => {
+    actualizarComparativa();
+  });
+
+  document.getElementById('comparativaSemana').addEventListener('change', () => {
+    actualizarComparativa();
+  });
+
+  // ===================== SELECTORES MATERIA/SUBTEMA/LIBRO/SECCIÓN =====================
   document.getElementById('selMateria').addEventListener('change', async function() {
     if (this.value === '__agregar__') {
       document.getElementById('agregarMateriaRow').style.display = 'flex';
@@ -395,13 +412,10 @@ export function initEventos() {
   });
 
   document.getElementById('selLibro').addEventListener('change', function() {
-  actualizarCapitulos(this.value, document.getElementById('selSubtema').value);
-  poblarSecciones(document.getElementById('selMateria').value, this.value);
-  document.getElementById('agregarSeccionRow').style.display = 'none';
-  if (document.getElementById('active-view').classList.contains('active')) {
-    actualizarHistorialSubtema();
-  }
-});
+    actualizarCapitulos(this.value, document.getElementById('selSubtema').value);
+    poblarSecciones(document.getElementById('selMateria').value, this.value);
+    document.getElementById('agregarSeccionRow').style.display = 'none';
+  });
 
   document.getElementById('selSeccion').addEventListener('change', function() {
     verificarAgregarSeccion();
