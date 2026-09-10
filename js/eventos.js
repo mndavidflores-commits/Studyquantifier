@@ -10,14 +10,14 @@ import { guardarLocalYOutbox, corregirSesionId, syncAll, pullChanges } from './s
 import { actualizarPanelesActivos } from './panels.js';
 import {
   poblarMaterias, poblarSubtemas, poblarLibros, actualizarCapitulos,
-  poblarSecciones, verificarAgregarSubtema, verificarAgregarSeccion
+  poblarSecciones, verificarAgregarSubtema, verificarAgregarSeccion,
+  poblarGruposRecall, aplicarGrupoRecall
 } from './selectores.js';
 import { actualizarHistorialSubtema, mostrarColaErrores } from './repasos.js';
 import { actualizarSleepHistorial, actualizarGraficoSueno, calcularHoras } from './suenoNotas.js';
-import { actualizarMetas } from './checklistMetas.js';
+import { actualizarMetas, actualizarChecklist } from './checklistMetas.js';
 import { actualizarConjeturasFull } from './conjeturas.js';
 import { actualizarNotas } from './suenoNotas.js';
-import { actualizarChecklist } from './checklistMetas.js';
 import { actualizarMetricas, actualizarPanelMetricas } from './metricas.js';
 import { actualizarComparativa } from './comparativa.js';
 
@@ -358,16 +358,14 @@ export function initEventos() {
   document.getElementById('comparativaFecha').addEventListener('change', () => {
     actualizarComparativa();
   });
-
   document.getElementById('comparativaMateria').addEventListener('change', () => {
     actualizarComparativa();
   });
-
   document.getElementById('comparativaSemana').addEventListener('change', () => {
     actualizarComparativa();
   });
 
-  // ===================== SELECTORES MATERIA/SUBTEMA/LIBRO/SECCIÓN =====================
+  // ===================== SELECTOR MATERIA =====================
   document.getElementById('selMateria').addEventListener('change', async function() {
     if (this.value === '__agregar__') {
       document.getElementById('agregarMateriaRow').style.display = 'flex';
@@ -379,6 +377,12 @@ export function initEventos() {
     try {
       await poblarSubtemas(this.value);
       poblarLibros(document.getElementById('selSubtema').value);
+      if (state.session.modo === 'B') {
+        state.grupoRecallActual = null;
+        await poblarGruposRecall(this.value);
+        document.getElementById('selGrupoRecall').value = '';
+        document.getElementById('selProblemaPendiente').innerHTML = '<option value="">Selecciona un grupo primero</option>';
+      }
       if (document.getElementById('active-view').classList.contains('active')) {
         await actualizarHistorialSubtema();
         document.getElementById('nombreSubtemaHistorial').textContent = this.selectedOptions[0]?.textContent || '';
@@ -388,6 +392,7 @@ export function initEventos() {
     }
   });
 
+  // ===================== SELECTOR SUBTEMA =====================
   document.getElementById('selSubtema').addEventListener('change', async function() {
     verificarAgregarSubtema();
     poblarLibros(this.value);
@@ -411,12 +416,14 @@ export function initEventos() {
     }
   });
 
+  // ===================== SELECTOR LIBRO =====================
   document.getElementById('selLibro').addEventListener('change', function() {
     actualizarCapitulos(this.value, document.getElementById('selSubtema').value);
     poblarSecciones(document.getElementById('selMateria').value, this.value);
     document.getElementById('agregarSeccionRow').style.display = 'none';
   });
 
+  // ===================== SELECTOR SECCIÓN =====================
   document.getElementById('selSeccion').addEventListener('change', function() {
     verificarAgregarSeccion();
     if (document.getElementById('active-view').classList.contains('active')) {
@@ -424,6 +431,12 @@ export function initEventos() {
     }
   });
 
+  // ===================== SELECTOR GRUPO RECALL =====================
+  document.getElementById('selGrupoRecall').addEventListener('change', async function() {
+    await aplicarGrupoRecall(this.value);
+  });
+
+  // ===================== SUEÑO (horas calculadas) =====================
   document.getElementById('acostarSueno').addEventListener('change', actualizarHorasCalculadas);
   document.getElementById('despertarSueno').addEventListener('change', actualizarHorasCalculadas);
   function actualizarHorasCalculadas() {

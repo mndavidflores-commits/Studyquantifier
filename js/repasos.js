@@ -12,12 +12,27 @@ document.getElementById('selProblemaPendiente').addEventListener('change', funct
 });
 
 export async function mostrarColaErrores() {
-  const materia = document.getElementById('selMateria').value;
-  const subtema = document.getElementById('selSubtema').value;
   const finDeHoy = new Date(); finDeHoy.setHours(23, 59, 59, 999);
-  const errores = (await db.errores.where('estado').equals('activo').toArray())
-    .filter(e => e.materia === materia && e.subtema_id === subtema && new Date(e.proxima_revision) <= finDeHoy)
-    .sort((a, b) => new Date(a.proxima_revision) - new Date(b.proxima_revision));
+  let errores = (await db.errores.where('estado').equals('activo').toArray())
+    .filter(e => new Date(e.proxima_revision) <= finDeHoy);
+
+  if (state.session.modo === 'B' && state.grupoRecallActual) {
+    // Filtrar por grupo exacto
+    const g = state.grupoRecallActual;
+    errores = errores.filter(e =>
+      e.materia === g.materia &&
+      (e.libro || 'Sin libro') === g.libro &&
+      (e.subtema_id || 'sin-subtema') === g.subtema_id &&
+      (e.seccion || 'Sin sección') === g.seccion
+    );
+  } else {
+    // Comportamiento clásico: filtrar por materia y subtema seleccionados
+    const materia = document.getElementById('selMateria').value;
+    const subtema = document.getElementById('selSubtema').value;
+    errores = errores.filter(e => e.materia === materia && e.subtema_id === subtema);
+  }
+
+  errores.sort((a, b) => new Date(a.proxima_revision) - new Date(b.proxima_revision));
 
   state.erroresPendientes = errores;
   const select = document.getElementById('selProblemaPendiente');
@@ -43,28 +58,39 @@ export async function mostrarColaErrores() {
 
 export async function actualizarUIPorModo() {
   const esModoB = state.session.modo === 'B';
-  document.getElementById('input-num-problema').style.display = esModoB ? 'none' : 'block';
-  document.getElementById('sel-problema-pendiente').style.display = esModoB ? 'block' : 'none';
+
+  // Selectores que se ocultan en modo B
+  const ocultarEnModoB = ['wrap-sel-subtema', 'wrap-sel-libro', 'wrap-sel-capitulo', 'wrap-sel-seccion', 'input-num-problema'];
+  ocultarEnModoB.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = esModoB ? 'none' : '';
+  });
+
+  // Selector de grupo recall: solo visible en modo B
+  const wrapGrupo = document.getElementById('wrap-sel-grupo-recall');
+  if (wrapGrupo) wrapGrupo.style.display = esModoB ? 'block' : 'none';
+
+  // Formularios de resultado
   document.getElementById('formResultadoA').style.display = esModoB ? 'none' : 'block';
   document.getElementById('formResultadoB').style.display = esModoB ? 'block' : 'none';
-  if (esModoB) await mostrarColaErrores();
+
+  // En modo B cargar los grupos de recall
+  if (esModoB) {
+    const { poblarGruposRecall } = await import('./selectores.js');
+    const materia = document.getElementById('selMateria').value;
+    await poblarGruposRecall(materia);
+  }
 }
 
-// ===================== HISTORIAL DEL SUBTEMA (ACORDEÓN CON PAGINACIÓN) =====================
-const LIMITE_SESIONES = 20;
-let offsetSesiones = 0;
-let totalSesionesDisponibles = 0;
-
-export async function actualizarHistorialSubtema(reset = true) {
-  if (reset) offsetSesiones = 0;
-
+// ===================== HISTORIAL DEL SUBTEMA (ACORDEÓN) =====================
+export async function actualizarHistorialSubtema() {
   const subtemaId = document.getElementById('selSubtema').value;
   if (!subtemaId || subtemaId === '__agregar__') return;
 
   const modoActual = state.session.modo;
+  const libroActual = document.getElementById('selLibro').value;
   const seccionActual = document.getElementById('selSeccion')?.value;
 
-  const libroActual = document.getElementById('selLibro').value;
   let problemas = await db.sessions.where('tipo').equals('problema')
     .and(p => p.subtema_id === subtemaId && p.modo === modoActual && p.libro === libroActual)
     .toArray();
@@ -85,62 +111,56 @@ export async function actualizarHistorialSubtema(reset = true) {
     return { sid, probs, minTime };
   }).sort((a, b) => b.minTime - a.minTime);
 
-  totalSesionesDisponibles = gruposArray.length;
-  const gruposVisibles = gruposArray.slice(offsetSesiones, offsetSesiones + LIMITE_SESIONES);
+  let html = '';
 
-  const wrap = document.getElementById('historialSubtemaTableWrap');
-  wrap.innerHTML = '';
-
-  const fragment = document.createDocumentFragment();
-
-  gruposVisibles.forEach((grupo, index) => {
+  gruposArray.forEach((grupo, index) => {
     grupo.probs.sort((a, b) => new Date(b.timestamp || b.fecha).getTime() - new Date(a.timestamp || a.fecha).getTime());
     const fecha = grupo.probs[0].fecha || new Date(grupo.probs[0].timestamp).toLocaleDateString('en-CA');
-    const openClass = (offsetSesiones === 0 && index === 0) ? ' open' : '';
+    const openClass = (index === 0) ? ' open' : '';
 
-    const div = document.createElement('div');
-    div.className = `sesion-group${openClass}`;
-    div.innerHTML = `
-      <div class="sesion-header">
-        <span>Sesión ${totalSesionesDisponibles - (offsetSesiones + index)} · ${fecha}</span>
-        <span class="arrow">▶</span>
-      </div>
-      <div class="sesion-content">
-        <table>
-          <tr><th>#</th><th>Tiempo</th><th>Resultado</th><th>Sección</th></tr>
-          ${grupo.probs.map(p => {
-            const res = p.resultado === 'bien' ? 'B' : (p.resultado === 'mal' ? 'M' : 'NR');
-            const badgeClass = `result-${p.resultado === 'bien' ? 'b' : (p.resultado === 'mal' ? 'm' : 'nr')}`;
-            return `
-              <tr class="editable-problem" data-problem-id="${p.id}" style="cursor:pointer;">
-                <td>${p.problema_num || '-'}</td>
-                <td>${formatTime(p.tiempo_s)}</td>
-                <td><span class="${badgeClass}">${res}</span></td>
-                <td>${p.seccion || '-'}</td>
-              </tr>
-            `;
-          }).join('')}
-        </table>
+    html += `
+      <div class="sesion-group${openClass}">
+        <div class="sesion-header">
+          <span>Sesión ${gruposArray.length - index} · ${fecha}</span>
+          <span class="arrow">▶</span>
+        </div>
+        <div class="sesion-content">
+          <table>
+            <tr><th>#</th><th>Tiempo</th><th>Resultado</th><th>Sección</th></tr>
+            ${grupo.probs.map(p => {
+              const res = p.resultado === 'bien' ? 'B' : (p.resultado === 'mal' ? 'M' : 'NR');
+              const badgeClass = `result-${p.resultado === 'bien' ? 'b' : (p.resultado === 'mal' ? 'm' : 'nr')}`;
+              return `
+                <tr class="editable-problem" data-problem-id="${p.id}" style="cursor:pointer;">
+                  <td>${p.problema_num || '-'}</td>
+                  <td>${formatTime(p.tiempo_s)}</td>
+                  <td><span class="${badgeClass}">${res}</span></td>
+                  <td>${p.seccion || '-'}</td>
+                </tr>
+              `;
+            }).join('')}
+          </table>
+        </div>
       </div>
     `;
-    fragment.appendChild(div);
   });
 
-  // Botón "Cargar más"
-  if (offsetSesiones + LIMITE_SESIONES < totalSesionesDisponibles) {
-    const btn = document.createElement('button');
-    btn.textContent = 'Cargar más sesiones';
-    btn.className = 'small';
-    btn.style.margin = '10px auto';
-    btn.addEventListener('click', () => {
-      offsetSesiones += LIMITE_SESIONES;
-      actualizarHistorialSubtema(false);
-    });
-    fragment.appendChild(btn);
-  }
-
-  wrap.appendChild(fragment);
+  const wrap = document.getElementById('historialSubtemaTableWrap');
+  wrap.innerHTML = html;
 }
+
+// Delegación de eventos para historial del subtema
+document.getElementById('historialSubtemaTableWrap').addEventListener('click', (e) => {
+  const header = e.target.closest('.sesion-header');
+  if (header) {
+    header.parentElement.classList.toggle('open');
+    return;
+  }
+  const tr = e.target.closest('.editable-problem');
+  if (tr) {
+    editarProblema(tr.dataset.problemId);
+  }
+});
 
 // ===================== EDITAR PROBLEMA (CON SELECTS) =====================
 export async function editarProblema(id) {
@@ -257,20 +277,6 @@ export async function editarProblema(id) {
   }
 }
 
-// Delegación de eventos para historial del subtema
-document.getElementById('historialSubtemaTableWrap').addEventListener('click', (e) => {
-  const header = e.target.closest('.sesion-header');
-  if (header) {
-    header.parentElement.classList.toggle('open');
-    return;
-  }
-
-  const tr = e.target.closest('.editable-problem');
-  if (tr) {
-    editarProblema(tr.dataset.problemId);
-  }
-});
-
 // ===================== CONJETURAS DE SESIÓN =====================
 export async function actualizarConjeturasSesion() {
   const conjs = await db.conjeturas.orderBy('timestamp').reverse().limit(20).toArray();
@@ -333,16 +339,25 @@ async function actualizarErrorParcial(errorId, cambios) {
   return await guardarLocalYOutbox('errores', 'errores', { ...existente, ...cambios, id: errorId });
 }
 
-export async function crearErrorDesdeProblema({ materia, subtemaId, subtemaNombre, etiqueta, fase, idProblema }) {
+export async function crearErrorDesdeProblema({ materia, subtemaId, subtemaNombre, etiqueta, fase, idProblema, libro, seccion }) {
   await getPesosCongelados(materia);
   const ahora = new Date();
   const cardVacia = createEmptyCard(ahora);
   await guardarLocalYOutbox('errores', 'errores', {
-    materia, subtema_id: subtemaId, subtema_nombre: subtemaNombre, etiqueta,
-    condicion_origen: fase, fecha_creacion: ahora.toISOString(),
-    sesion_id_origen: idProblema, estado: 'activo',
-    fsrs_estabilidad: cardVacia.stability, fsrs_dificultad: cardVacia.difficulty,
-    fsrs_reps: cardVacia.reps, proxima_revision: cardVacia.due.toISOString()
+    materia,
+    subtema_id: subtemaId,
+    subtema_nombre: subtemaNombre,
+    etiqueta,
+    condicion_origen: fase,
+    fecha_creacion: ahora.toISOString(),
+    sesion_id_origen: idProblema,
+    estado: 'activo',
+    libro: libro || null,
+    seccion: seccion || null,
+    fsrs_estabilidad: cardVacia.stability,
+    fsrs_dificultad: cardVacia.difficulty,
+    fsrs_reps: cardVacia.reps,
+    proxima_revision: cardVacia.due.toISOString()
   });
 }
 
@@ -358,17 +373,23 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
   const calBtn = document.querySelector('#toggleCalificacion .toggle-btn.active');
   if (!calBtn) { showToast('Selecciona una calificación.'); return; }
   const calificacion = calBtn.dataset.val === 'bien' ? 3 : 1;
+
+  const g = state.grupoRecallActual;
+  const materia = g ? g.materia : document.getElementById('selMateria').value;
+  const subtema = g ? g.subtema_id : document.getElementById('selSubtema').value;
+  const subtemaNombre = g ? g.subtema_nombre : (document.getElementById('selSubtema').selectedOptions[0]?.textContent || '');
+  const libro = g ? g.libro : document.getElementById('selLibro').value;
+  const seccion = g ? g.seccion : (document.getElementById('selSeccion')?.value || null);
+  const capitulo = document.getElementById('selCapitulo')?.value || null;
   const consultoSolucion = document.getElementById('chkConsultoSolucion').checked;
-  const materia = document.getElementById('selMateria').value;
-  const subtema = document.getElementById('selSubtema').value;
-  const subtemaNombre = document.getElementById('selSubtema').selectedOptions[0]?.textContent || '';
-  const seccion = document.getElementById('selSeccion')?.value || null;
+
   const pesos = await getPesosCongelados(materia);
   const f = crearInstanciaFSRS(pesos);
   const ultimaRevision = await obtenerUltimaRevision(state.errorSeleccionado.id, state.errorSeleccionado.fecha_creacion);
   const cardReconstruida = reconstruirCardDesdeError(state.errorSeleccionado, ultimaRevision);
   const ahora = new Date();
   const resultado = f.next(cardReconstruida, ahora, calificacion);
+
   await guardarLocalYOutbox('repasos', 'repasos', {
     error_id: state.errorSeleccionado.id,
     fecha: hoyLocal(),
@@ -381,23 +402,31 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
     estabilidad: resultado.card.stability,
     dificultad: resultado.card.difficulty
   });
+
   await actualizarErrorParcial(state.errorSeleccionado.id, {
     fsrs_estabilidad: resultado.card.stability,
     fsrs_dificultad: resultado.card.difficulty,
     fsrs_reps: resultado.card.reps,
     proxima_revision: resultado.card.due.toISOString()
   });
+
   await guardarLocalYOutbox('study_sessions', 'sessions', {
-    tipo: 'problema', fecha: hoyLocal(), timestamp: Date.now(),
-    modo: 'B', fase: document.getElementById('selFase').value, materia, subtema_id: subtema,
+    tipo: 'problema',
+    fecha: hoyLocal(),
+    timestamp: Date.now(),
+    modo: 'B',
+    fase: document.getElementById('selFase').value,
+    materia,
+    subtema_id: subtema,
     subtema_nombre: subtemaNombre,
-    libro: document.getElementById('selLibro').value,
-    capitulo: document.getElementById('selCapitulo').value,
+    libro,
+    capitulo,
     seccion,
     tiempo_s: Math.round(state.blindTimer.seconds * 10) / 10,
     resultado: calificacion >= 3 ? 'bien' : 'mal',
     sesion_id: state.session.tempId
   });
+
   document.getElementById('cardResultado').style.display = 'none';
   document.getElementById('timerDisplay').style.display = 'block';
   document.getElementById('conjetura-inline').classList.remove('hidden');
@@ -407,7 +436,12 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
   document.querySelectorAll('#toggleCalificacion .toggle-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('chkConsultoSolucion').checked = false;
   state.errorSeleccionado = null;
+
+  // Recargar grupos y cola de errores para reflejar el nuevo conteo
+  const { poblarGruposRecall } = await import('./selectores.js');
+  await poblarGruposRecall(materia);
   await mostrarColaErrores();
+
   const { actualizarMetricas } = await import('./metricas.js');
   const { actualizarTodo } = await import('./app.js');
   actualizarMetricas();
