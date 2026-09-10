@@ -17,7 +17,6 @@ export async function mostrarColaErrores() {
     .filter(e => new Date(e.proxima_revision) <= finDeHoy);
 
   if (state.session.modo === 'B' && state.grupoRecallActual) {
-    // Filtrar por grupo exacto
     const g = state.grupoRecallActual;
     errores = errores.filter(e =>
       e.materia === g.materia &&
@@ -25,11 +24,13 @@ export async function mostrarColaErrores() {
       (e.subtema_id || 'sin-subtema') === g.subtema_id &&
       (e.seccion || 'Sin sección') === g.seccion
     );
-  } else {
-    // Comportamiento clásico: filtrar por materia y subtema seleccionados
+  } else if (state.session.modo !== 'B') {
     const materia = document.getElementById('selMateria').value;
     const subtema = document.getElementById('selSubtema').value;
     errores = errores.filter(e => e.materia === materia && e.subtema_id === subtema);
+  } else {
+    // Modo B sin grupo seleccionado
+    errores = [];
   }
 
   errores.sort((a, b) => new Date(a.proxima_revision) - new Date(b.proxima_revision));
@@ -59,14 +60,14 @@ export async function mostrarColaErrores() {
 export async function actualizarUIPorModo() {
   const esModoB = state.session.modo === 'B';
 
-  // Selectores que se ocultan en modo B
+  // Ocultar selectores en modo B
   const ocultarEnModoB = ['wrap-sel-subtema', 'wrap-sel-libro', 'wrap-sel-capitulo', 'wrap-sel-seccion', 'input-num-problema'];
   ocultarEnModoB.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = esModoB ? 'none' : '';
   });
 
-  // Selector de grupo recall: solo visible en modo B
+  // Mostrar/ocultar selector de grupo recall
   const wrapGrupo = document.getElementById('wrap-sel-grupo-recall');
   if (wrapGrupo) wrapGrupo.style.display = esModoB ? 'block' : 'none';
 
@@ -74,11 +75,17 @@ export async function actualizarUIPorModo() {
   document.getElementById('formResultadoA').style.display = esModoB ? 'none' : 'block';
   document.getElementById('formResultadoB').style.display = esModoB ? 'block' : 'none';
 
-  // En modo B cargar los grupos de recall
   if (esModoB) {
     const { poblarGruposRecall } = await import('./selectores.js');
     const materia = document.getElementById('selMateria').value;
+    state.grupoRecallActual = null;
     await poblarGruposRecall(materia);
+    const selGrupo = document.getElementById('selGrupoRecall');
+    if (selGrupo) selGrupo.value = '';
+    document.getElementById('selProblemaPendiente').innerHTML = '<option value="">Selecciona un grupo primero</option>';
+  } else {
+    state.grupoRecallActual = null;
+    await mostrarColaErrores();
   }
 }
 
@@ -149,7 +156,6 @@ export async function actualizarHistorialSubtema() {
   wrap.innerHTML = html;
 }
 
-// Delegación de eventos para historial del subtema
 document.getElementById('historialSubtemaTableWrap').addEventListener('click', (e) => {
   const header = e.target.closest('.sesion-header');
   if (header) {
@@ -437,7 +443,6 @@ document.getElementById('btnGuardarRepaso').addEventListener('click', async () =
   document.getElementById('chkConsultoSolucion').checked = false;
   state.errorSeleccionado = null;
 
-  // Recargar grupos y cola de errores para reflejar el nuevo conteo
   const { poblarGruposRecall } = await import('./selectores.js');
   await poblarGruposRecall(materia);
   await mostrarColaErrores();

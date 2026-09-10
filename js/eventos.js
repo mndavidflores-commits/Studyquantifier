@@ -13,7 +13,7 @@ import {
   poblarSecciones, verificarAgregarSubtema, verificarAgregarSeccion,
   poblarGruposRecall, aplicarGrupoRecall
 } from './selectores.js';
-import { actualizarHistorialSubtema, mostrarColaErrores } from './repasos.js';
+import { actualizarHistorialSubtema, mostrarColaErrores, actualizarUIPorModo } from './repasos.js';
 import { actualizarSleepHistorial, actualizarGraficoSueno, calcularHoras } from './suenoNotas.js';
 import { actualizarMetas, actualizarChecklist } from './checklistMetas.js';
 import { actualizarConjeturasFull } from './conjeturas.js';
@@ -363,6 +363,12 @@ export function initEventos() {
   });
   document.getElementById('comparativaSemana').addEventListener('change', () => {
     actualizarComparativa();
+  });
+
+  // ===================== SELECTOR MODO =====================
+  document.getElementById('selModo').addEventListener('change', async function() {
+    state.session.modo = this.value;
+    await actualizarUIPorModo();
   });
 
   // ===================== SELECTOR MATERIA =====================
