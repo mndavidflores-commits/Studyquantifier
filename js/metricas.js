@@ -61,7 +61,8 @@ export async function actualizarPanelMetricas() {
   const tiempoTotalSegundos = sesiones
     .filter(s => s.tipo === 'pomodoro')
     .reduce((acc, s) => acc + (s.tiempo_pomodoro || 0), 0);
-  document.getElementById('tiempoTotalEstudio').textContent = formatHMS(tiempoTotalSegundos);
+document.getElementById('totalTime').textContent = formatHMS(tiempoTotalSegundos);
+
 
   const bienGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'bien').length;
   const malGeneral = sesiones.filter(s => s.tipo === 'problema' && s.resultado === 'mal').length;
