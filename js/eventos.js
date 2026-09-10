@@ -451,4 +451,15 @@ export function initEventos() {
     const horas = calcularHoras(acostar, despertar);
     document.getElementById('horasCalculadas').textContent = horas ? horas + ' h' : '--';
   }
+
+  // ===================== ALERTA AL CERRAR/ACTUALIZAR CON SESIÓN ACTIVA =====================
+  window.addEventListener('beforeunload', (e) => {
+    const sessionActiva = state.session.state !== State.IDLE && state.session.state !== State.SESSION_ENDING;
+    const problemaEnCurso = state.blindTimer.running;
+    if (sessionActiva || problemaEnCurso) {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    }
+  });
 }

@@ -18,6 +18,7 @@ export async function transition(newState) {
     state.session.remainingSeconds = parseInt(document.getElementById('pomoWork').value) * 60;
     state.session.pomodoroMode = 'countdown';
     state.session.pomoStartTime = null;
+    state.grupoRecallActual = null;
     actualizarBotonModoPomodoro();
     updatePomoDisplay();
     document.getElementById('pomoCircle').classList.remove('break');
@@ -28,7 +29,14 @@ export async function transition(newState) {
     document.getElementById('lecturaAcumulado').textContent = '0:00';
     state.session.modo = null; state.errorSeleccionado = null;
     document.getElementById('topbar').classList.remove('hidden');
-    document.getElementById('auth-section').classList.remove('hidden');
+
+    // Solo mostrar auth-section si NO hay sesión activa
+    if (!state.sessionActual?.user) {
+      document.getElementById('auth-section').classList.remove('hidden');
+    } else {
+      document.getElementById('auth-section').classList.add('hidden');
+    }
+
     document.getElementById('idle-view').classList.remove('hidden');
     document.getElementById('active-view').classList.remove('active');
     document.getElementById('active-view').classList.remove('cronometro-corriendo');
@@ -42,7 +50,9 @@ export async function transition(newState) {
   if (newState === State.FOCUS_RUNNING || newState === State.BREAK_RUNNING) {
     if (prev === State.IDLE) {
       const materia = document.getElementById('selMateria').value, subtema = document.getElementById('selSubtema').value;
-      if (materia === '__agregar__' || subtema === '__agregar__') { showToast('Selecciona materia y subtema válidos.'); return; }
+      if (materia === '__agregar__' || (!state.grupoRecallActual && subtema === '__agregar__')) {
+        showToast('Selecciona materia y subtema válidos.'); return;
+      }
       state.session.tempId = 'temp_' + Date.now();
       state.session.distracciones = 0; state.session.lecturaSeconds = 0;
       document.getElementById('lecturaAcumulado').textContent = '0:00';
@@ -64,7 +74,7 @@ export async function transition(newState) {
         void activeView.offsetWidth;
         activeView.classList.add('fade-in');
       }, 400);
-      
+
       document.getElementById('pomo-float').classList.remove('hidden');
       document.getElementById('left-panel').classList.remove('hidden');
       document.getElementById('nombreSubtemaHistorial').textContent = document.getElementById('selSubtema').selectedOptions[0]?.textContent || '';
@@ -84,7 +94,6 @@ export async function transition(newState) {
       document.getElementById('btnLecturaStart').disabled = false; document.getElementById('btnLecturaStop').disabled = false;
     }
 
-    // Configurar el inicio real del temporizador
     state.session.pomoStartTime = Date.now() - state.session.elapsedTotal * 1000;
     state.session.state = newState;
     stopPomoInterval();
@@ -124,7 +133,6 @@ export async function transition(newState) {
 
   if (newState === State.FOCUS_PAUSED || newState === State.BREAK_PAUSED) {
     stopPomoInterval(); stopLecturaInterval(); detenerTemporizadorCiego();
-    // Al pausar no se resetea pomoStartTime; el elapsedTotal ya está actualizado
     state.session.state = newState;
     updatePomoStatusText(); updatePomoButtons();
     return;

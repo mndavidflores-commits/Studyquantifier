@@ -29,7 +29,6 @@ export async function mostrarColaErrores() {
     const subtema = document.getElementById('selSubtema').value;
     errores = errores.filter(e => e.materia === materia && e.subtema_id === subtema);
   } else {
-    // Modo B sin grupo seleccionado
     errores = [];
   }
 
@@ -61,7 +60,16 @@ export async function actualizarUIPorModo() {
   const esModoB = state.session.modo === 'B';
 
   // Ocultar selectores en modo B
-  const ocultarEnModoB = ['wrap-sel-subtema', 'wrap-sel-libro', 'wrap-sel-capitulo', 'wrap-sel-seccion', 'input-num-problema'];
+  const ocultarEnModoB = [
+    'wrap-sel-subtema',
+    'wrap-sel-libro',
+    'wrap-sel-capitulo',
+    'wrap-sel-seccion',
+    'input-num-problema',
+    'agregarSubtemaRow',
+    'agregarSeccionRow',
+    'agregarMateriaRow'
+  ];
   ocultarEnModoB.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = esModoB ? 'none' : '';
@@ -78,11 +86,20 @@ export async function actualizarUIPorModo() {
   if (esModoB) {
     const { poblarGruposRecall } = await import('./selectores.js');
     const materia = document.getElementById('selMateria').value;
-    state.grupoRecallActual = null;
-    await poblarGruposRecall(materia);
-    const selGrupo = document.getElementById('selGrupoRecall');
-    if (selGrupo) selGrupo.value = '';
-    document.getElementById('selProblemaPendiente').innerHTML = '<option value="">Selecciona un grupo primero</option>';
+
+    // Si ya había un grupo seleccionado, respetarlo
+    if (!state.grupoRecallActual) {
+      await poblarGruposRecall(materia);
+      const selGrupo = document.getElementById('selGrupoRecall');
+      if (selGrupo) selGrupo.value = '';
+      document.getElementById('selProblemaPendiente').innerHTML = '<option value="">Selecciona un grupo primero</option>';
+    } else {
+      await poblarGruposRecall(materia);
+      const selGrupo = document.getElementById('selGrupoRecall');
+      const clave = `${state.grupoRecallActual.materia}|${state.grupoRecallActual.libro}|${state.grupoRecallActual.subtema_id}|${state.grupoRecallActual.seccion}`;
+      if (selGrupo) selGrupo.value = clave;
+      await mostrarColaErrores();
+    }
   } else {
     state.grupoRecallActual = null;
     await mostrarColaErrores();
