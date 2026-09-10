@@ -37,6 +37,7 @@ export async function initApp() {
   await syncAll();
   await migrarSeccionesAntiguas();
   await migrarChecklistAntiguo();
+  await migrarErroresConLibroSeccion();
   const storedTemario = await db.temario.get('activo');
   if (storedTemario?.contenido) {
     state.currentTemario.length = 0;
@@ -115,5 +116,49 @@ async function migrarChecklistAntiguo() {
     }
   } catch (e) {
     console.warn('No se pudo migrar checklist antiguo:', e);
+  }
+}
+
+// ===================== MIGRACIÓN DE ERRORES SIN LIBRO/SECCIÓN =====================
+async function migrarErroresConLibroSeccion() {
+  try {
+    const erroresSinDatos = await db.errores
+      .filter(e => !e.libro || !e.seccion)
+      .toArray();
+
+    if (erroresSinDatos.length === 0) return;
+
+    let migrados = 0;
+    let sinOrigen = 0;
+
+    for (const err of erroresSinDatos) {
+      if (!err.sesion_id_origen) {
+        sinOrigen++;
+        continue;
+      }
+      const problemaOriginal = await db.sessions.get(err.sesion_id_origen);
+      if (!problemaOriginal) {
+        sinOrigen++;
+        continue;
+      }
+
+      const cambios = {};
+      if (!err.libro && problemaOriginal.libro) cambios.libro = problemaOriginal.libro;
+      if (!err.seccion && problemaOriginal.seccion) cambios.seccion = problemaOriginal.seccion;
+      if (!err.capitulo && problemaOriginal.capitulo) cambios.capitulo = problemaOriginal.capitulo;
+
+      if (Object.keys(cambios).length > 0) {
+        await db.errores.update(err.id, cambios);
+        migrados++;
+      } else {
+        sinOrigen++;
+      }
+    }
+
+    if (migrados > 0) {
+      console.log(`Migrados ${migrados} errores con libro/sección desde su problema original. Sin origen: ${sinOrigen}`);
+    }
+  } catch (e) {
+    console.warn('No se pudo migrar errores con libro/sección:', e);
   }
 }
