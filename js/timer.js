@@ -160,13 +160,16 @@ document.getElementById('btnSiguienteProblema').addEventListener('click', async 
   const nota = (resultado === 'mal' || resultado === 'no_resuelto') ? document.getElementById('notaProblema').value.trim() : null;
   const subtemaNombreProblema = document.getElementById('selSubtema').selectedOptions[0]?.textContent || '';
   const seccion = document.getElementById('selSeccion')?.value || null;
+  const libro = document.getElementById('selLibro').value || null;
+  const capitulo = document.getElementById('selCapitulo').value || null;
+
   const idProblema = await guardarLocalYOutbox('study_sessions', 'sessions', {
     tipo: 'problema',
     fecha: hoyLocal(),
     timestamp: Date.now(),
     modo, fase, materia, subtema_id: subtema, subtema_nombre: subtemaNombreProblema,
-    libro: document.getElementById('selLibro').value,
-    capitulo: document.getElementById('selCapitulo').value,
+    libro,
+    capitulo,
     seccion,
     problema_num: state.blindTimer.previousProblemaNum,
     tiempo_s: Math.round(state.blindTimer.seconds * 10) / 10,
@@ -177,10 +180,17 @@ document.getElementById('btnSiguienteProblema').addEventListener('click', async 
     sesion_id: state.session.tempId
   });
 
+  // FIX: pasar libro y seccion al crear el error
   if (modo === 'A' && (resultado === 'mal' || resultado === 'no_resuelto')) {
     await crearErrorDesdeProblema({
-      materia, subtemaId: subtema, subtemaNombre: subtemaNombreProblema,
-      etiqueta: codError, fase, idProblema
+      materia,
+      subtemaId: subtema,
+      subtemaNombre: subtemaNombreProblema,
+      etiqueta: codError,
+      fase,
+      idProblema,
+      libro,
+      seccion
     });
   }
 

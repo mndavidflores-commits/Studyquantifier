@@ -216,11 +216,22 @@ export async function poblarGruposRecall(materia) {
 export async function aplicarGrupoRecall(clave) {
   if (!clave) {
     state.grupoRecallActual = null;
+    const elNombre = document.getElementById('nombreSubtemaHistorial');
+    if (elNombre) elNombre.textContent = '—';
     return;
   }
   const [materia, libro, subtema_id, seccion] = clave.split('|');
-  const subtemaObj = state.currentTemario.find(t => t.id.toString() === subtema_id);
-  const subtemaNombre = subtemaObj?.nombre || subtema_id;
+
+  // FIX #4: manejar subtemas extra_xyz
+  let subtemaNombre = subtema_id;
+  if (subtema_id.startsWith('extra_')) {
+    const extraId = subtema_id.replace('extra_', '');
+    const extra = await db.subtemas_extra.get(extraId);
+    subtemaNombre = extra?.nombre || subtema_id;
+  } else {
+    const tema = state.currentTemario.find(t => t.id.toString() === subtema_id);
+    subtemaNombre = tema?.nombre || subtema_id;
+  }
 
   state.grupoRecallActual = {
     materia,
@@ -230,6 +241,10 @@ export async function aplicarGrupoRecall(clave) {
     subtema_nombre: subtemaNombre
   };
 
+  // FIX #3: actualizar nombre del subtema en panel izquierdo
+  const elNombre = document.getElementById('nombreSubtemaHistorial');
+  if (elNombre) elNombre.textContent = subtemaNombre;
+
   // Sincronizar selectores ocultos por si otros módulos los consultan
   const selLibro = document.getElementById('selLibro');
   const selSeccion = document.getElementById('selSeccion');
@@ -238,7 +253,6 @@ export async function aplicarGrupoRecall(clave) {
 
   if (selMateria && selMateria.value !== materia) selMateria.value = materia;
   if (selSubtema) {
-    // Buscar opción que coincida
     for (const opt of selSubtema.options) {
       if (opt.value === subtema_id) { selSubtema.value = subtema_id; break; }
     }
@@ -255,4 +269,5 @@ export async function aplicarGrupoRecall(clave) {
   }
 
   await mostrarColaErrores();
+  await actualizarHistorialSubtema();
 }

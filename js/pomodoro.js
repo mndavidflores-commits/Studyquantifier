@@ -48,12 +48,12 @@ export async function transition(newState) {
   }
 
   if (newState === State.FOCUS_RUNNING || newState === State.BREAK_RUNNING) {
-
     if (prev === State.IDLE) {
       const materia = document.getElementById('selMateria').value;
       const modo = document.getElementById('selModo').value;
       const g = state.grupoRecallActual;
 
+      // FIX #5: usar grupoRecallActual si estamos en modo B
       let subtema, libro, seccion;
       if (modo === 'B' && g) {
         subtema = g.subtema_id;
@@ -93,7 +93,9 @@ export async function transition(newState) {
 
       document.getElementById('pomo-float').classList.remove('hidden');
       document.getElementById('left-panel').classList.remove('hidden');
-      document.getElementById('nombreSubtemaHistorial').textContent = (modo === 'B' && g) ? g.subtema_nombre : (document.getElementById('selSubtema').selectedOptions[0]?.textContent || '');
+      document.getElementById('nombreSubtemaHistorial').textContent = (modo === 'B' && g)
+        ? g.subtema_nombre
+        : (document.getElementById('selSubtema').selectedOptions[0]?.textContent || '');
       await actualizarHistorialSubtema();
       setConfigEnabled(false);
 
@@ -109,7 +111,6 @@ export async function transition(newState) {
       document.getElementById('btnDistraje').disabled = false;
       document.getElementById('btnLecturaStart').disabled = false; document.getElementById('btnLecturaStop').disabled = false;
     }
-
 
     state.session.pomoStartTime = Date.now() - state.session.elapsedTotal * 1000;
     state.session.state = newState;

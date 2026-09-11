@@ -77,12 +77,21 @@ async function migrarSeccionesAntiguas() {
       .and(p => !p.seccion)
       .toArray();
 
-    if (problemasSinSeccion.length > 0) {
-      await db.sessions.bulkPut(
-        problemasSinSeccion.map(p => ({ ...p, seccion: 'Problemas resueltos' }))
-      );
-      console.log(`Migrados ${problemasSinSeccion.length} problemas antiguos a "Problemas resueltos"`);
+    if (problemasSinSeccion.length === 0) return;
+
+    for (const p of problemasSinSeccion) {
+      const actualizado = { ...p, seccion: 'Problemas resueltos', updated_at: new Date().toISOString() };
+      await db.sessions.put(actualizado);
+      await db.outbox.put({
+        table: 'study_sessions',
+        record_id: p.id,
+        operation: 'insert',
+        data: actualizado,
+        onConflict: 'id',
+        created_at: new Date().toISOString()
+      });
     }
+    console.log(`Migrados ${problemasSinSeccion.length} problemas antiguos a "Problemas resueltos" (con outbox).`);
   } catch (e) {
     console.warn('No se pudo migrar secciones antiguas:', e);
   }
@@ -112,7 +121,17 @@ async function migrarChecklistAntiguo() {
 
     if (nuevos.length > 0) {
       await db.checklist_completo.bulkPut(nuevos);
-      console.log(`Migrados ${nuevos.length} elementos de checklist antiguo a checklist_completo`);
+      for (const n of nuevos) {
+        await db.outbox.put({
+          table: 'checklist_completo',
+          record_id: n.id,
+          operation: 'insert',
+          data: n,
+          onConflict: 'id',
+          created_at: new Date().toISOString()
+        });
+      }
+      console.log(`Migrados ${nuevos.length} elementos de checklist a checklist_completo (con outbox).`);
     }
   } catch (e) {
     console.warn('No se pudo migrar checklist antiguo:', e);
@@ -148,7 +167,16 @@ async function migrarErroresConLibroSeccion() {
       if (!err.capitulo && problemaOriginal.capitulo) cambios.capitulo = problemaOriginal.capitulo;
 
       if (Object.keys(cambios).length > 0) {
-        await db.errores.update(err.id, cambios);
+        const actualizado = { ...err, ...cambios, updated_at: new Date().toISOString() };
+        await db.errores.put(actualizado);
+        await db.outbox.put({
+          table: 'errores',
+          record_id: err.id,
+          operation: 'insert',
+          data: actualizado,
+          onConflict: 'id',
+          created_at: new Date().toISOString()
+        });
         migrados++;
       } else {
         sinOrigen++;
@@ -156,7 +184,7 @@ async function migrarErroresConLibroSeccion() {
     }
 
     if (migrados > 0) {
-      console.log(`Migrados ${migrados} errores con libro/sección desde su problema original. Sin origen: ${sinOrigen}`);
+      console.log(`Migrados ${migrados} errores con libro/sección (con outbox). Sin origen: ${sinOrigen}`);
     }
   } catch (e) {
     console.warn('No se pudo migrar errores con libro/sección:', e);
