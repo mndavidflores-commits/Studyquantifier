@@ -59,7 +59,7 @@ export async function mostrarColaErrores() {
 export async function actualizarUIPorModo() {
   const esModoB = state.session.modo === 'B';
 
-  // Ocultar selectores en modo B
+  // Ocultar en modo B
   const ocultarEnModoB = [
     'wrap-sel-subtema',
     'wrap-sel-libro',
@@ -75,6 +75,17 @@ export async function actualizarUIPorModo() {
     if (el) el.style.display = esModoB ? 'none' : '';
   });
 
+  // FIX: mostrar selector de problemas pendientes en modo B
+  const selPendiente = document.getElementById('sel-problema-pendiente');
+  if (selPendiente) selPendiente.style.display = esModoB ? 'block' : 'none';
+
+  // FIX: ocultar selector "Tipo de problema" en modo B
+  const selTipo = document.getElementById('selTipoProblema');
+  if (selTipo) {
+    const wrapper = selTipo.closest('div');
+    if (wrapper) wrapper.style.display = esModoB ? 'none' : '';
+  }
+
   // Mostrar/ocultar selector de grupo recall
   const wrapGrupo = document.getElementById('wrap-sel-grupo-recall');
   if (wrapGrupo) wrapGrupo.style.display = esModoB ? 'block' : 'none';
@@ -87,14 +98,13 @@ export async function actualizarUIPorModo() {
     const { poblarGruposRecall } = await import('./selectores.js');
     const materia = document.getElementById('selMateria').value;
 
-    // Si ya había un grupo seleccionado, respetarlo
+    await poblarGruposRecall(materia);
+
     if (!state.grupoRecallActual) {
-      await poblarGruposRecall(materia);
       const selGrupo = document.getElementById('selGrupoRecall');
       if (selGrupo) selGrupo.value = '';
       document.getElementById('selProblemaPendiente').innerHTML = '<option value="">Selecciona un grupo primero</option>';
     } else {
-      await poblarGruposRecall(materia);
       const selGrupo = document.getElementById('selGrupoRecall');
       const clave = `${state.grupoRecallActual.materia}|${state.grupoRecallActual.libro}|${state.grupoRecallActual.subtema_id}|${state.grupoRecallActual.seccion}`;
       if (selGrupo) selGrupo.value = clave;
@@ -108,16 +118,31 @@ export async function actualizarUIPorModo() {
 
 // ===================== HISTORIAL DEL SUBTEMA (ACORDEÓN) =====================
 export async function actualizarHistorialSubtema() {
-  const subtemaId = document.getElementById('selSubtema').value;
+  const modoActual = state.session.modo;
+
+  // FIX: en modo B usar grupoRecallActual; si no, los selectores visibles
+  let subtemaId, libroActual, seccionActual;
+  if (modoActual === 'B' && state.grupoRecallActual) {
+    const g = state.grupoRecallActual;
+    subtemaId = g.subtema_id;
+    libroActual = g.libro;
+    seccionActual = g.seccion;
+  } else {
+    subtemaId = document.getElementById('selSubtema').value;
+    libroActual = document.getElementById('selLibro').value;
+    seccionActual = document.getElementById('selSeccion')?.value;
+  }
+
   if (!subtemaId || subtemaId === '__agregar__') return;
 
-  const modoActual = state.session.modo;
-  const libroActual = document.getElementById('selLibro').value;
-  const seccionActual = document.getElementById('selSeccion')?.value;
-
+  // FIX: en modo B mostrar todos los modos del mismo grupo, en modo A solo el actual
   let problemas = await db.sessions.where('tipo').equals('problema')
-    .and(p => p.subtema_id === subtemaId && p.modo === modoActual && p.libro === libroActual)
+    .and(p => p.subtema_id === subtemaId && p.libro === libroActual)
     .toArray();
+
+  if (modoActual !== 'B') {
+    problemas = problemas.filter(p => p.modo === modoActual);
+  }
 
   if (seccionActual && seccionActual !== '__agregar__') {
     problemas = problemas.filter(p => p.seccion === seccionActual);
@@ -150,7 +175,7 @@ export async function actualizarHistorialSubtema() {
         </div>
         <div class="sesion-content">
           <table>
-            <tr><th>#</th><th>Tiempo</th><th>Resultado</th><th>Sección</th></tr>
+            <tr><th>#</th><th>Tiempo</th><th>Resultado</th><th>Modo</th></tr>
             ${grupo.probs.map(p => {
               const res = p.resultado === 'bien' ? 'B' : (p.resultado === 'mal' ? 'M' : 'NR');
               const badgeClass = `result-${p.resultado === 'bien' ? 'b' : (p.resultado === 'mal' ? 'm' : 'nr')}`;
@@ -159,7 +184,7 @@ export async function actualizarHistorialSubtema() {
                   <td>${p.problema_num || '-'}</td>
                   <td>${formatTime(p.tiempo_s)}</td>
                   <td><span class="${badgeClass}">${res}</span></td>
-                  <td>${p.seccion || '-'}</td>
+                  <td>${p.modo || '-'}</td>
                 </tr>
               `;
             }).join('')}
@@ -185,7 +210,7 @@ document.getElementById('historialSubtemaTableWrap').addEventListener('click', (
   }
 });
 
-// ===================== EDITAR PROBLEMA (CON SELECTS) =====================
+// ===================== EDITAR PROBLEMA =====================
 export async function editarProblema(id) {
   const problema = await db.sessions.get(id);
   if (!problema) return;
@@ -314,7 +339,7 @@ export async function actualizarConjeturasSesion() {
   wrap.innerHTML = html;
 }
 
-// ===================== FSRS Y DOMINIO =====================
+// ===================== FSRS =====================
 export function crearInstanciaFSRS(pesos) {
   return fsrs(generatorParameters({
     request_retention: 0.9,

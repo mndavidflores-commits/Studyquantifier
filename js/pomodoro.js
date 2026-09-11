@@ -48,15 +48,31 @@ export async function transition(newState) {
   }
 
   if (newState === State.FOCUS_RUNNING || newState === State.BREAK_RUNNING) {
+
     if (prev === State.IDLE) {
-      const materia = document.getElementById('selMateria').value, subtema = document.getElementById('selSubtema').value;
-      if (materia === '__agregar__' || (!state.grupoRecallActual && subtema === '__agregar__')) {
+      const materia = document.getElementById('selMateria').value;
+      const modo = document.getElementById('selModo').value;
+      const g = state.grupoRecallActual;
+
+      let subtema, libro, seccion;
+      if (modo === 'B' && g) {
+        subtema = g.subtema_id;
+        libro = g.libro;
+        seccion = g.seccion;
+      } else {
+        subtema = document.getElementById('selSubtema').value;
+        libro = document.getElementById('selLibro').value;
+        seccion = document.getElementById('selSeccion').value;
+      }
+
+      if (materia === '__agregar__' || (modo === 'B' && !g) || (modo !== 'B' && subtema === '__agregar__')) {
         showToast('Selecciona materia y subtema válidos.'); return;
       }
+
       state.session.tempId = 'temp_' + Date.now();
       state.session.distracciones = 0; state.session.lecturaSeconds = 0;
       document.getElementById('lecturaAcumulado').textContent = '0:00';
-      state.session.modo = document.getElementById('selModo').value;
+      state.session.modo = modo;
       await actualizarUIPorModo();
       document.getElementById('topbar').classList.add('hidden');
       document.getElementById('auth-section').classList.add('hidden');
@@ -77,10 +93,10 @@ export async function transition(newState) {
 
       document.getElementById('pomo-float').classList.remove('hidden');
       document.getElementById('left-panel').classList.remove('hidden');
-      document.getElementById('nombreSubtemaHistorial').textContent = document.getElementById('selSubtema').selectedOptions[0]?.textContent || '';
+      document.getElementById('nombreSubtemaHistorial').textContent = (modo === 'B' && g) ? g.subtema_nombre : (document.getElementById('selSubtema').selectedOptions[0]?.textContent || '');
       await actualizarHistorialSubtema();
       setConfigEnabled(false);
-      const libro = document.getElementById('selLibro').value;
+
       const problemasPrevios = await db.sessions
           .where('tipo').equals('problema')
           .and(p => p.subtema_id === subtema && p.libro === libro)
@@ -93,6 +109,7 @@ export async function transition(newState) {
       document.getElementById('btnDistraje').disabled = false;
       document.getElementById('btnLecturaStart').disabled = false; document.getElementById('btnLecturaStop').disabled = false;
     }
+
 
     state.session.pomoStartTime = Date.now() - state.session.elapsedTotal * 1000;
     state.session.state = newState;
